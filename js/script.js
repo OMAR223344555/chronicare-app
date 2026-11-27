@@ -378,8 +378,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         'timeline-archive': ['nav.timeline', 'Timeline & Archive']
     };
 
+    const bootSplash = document.getElementById('boot-splash');
     function showView(viewName, updateHash = true) {
         if (!viewName) viewName = 'auth';
+        if (bootSplash) bootSplash.classList.add('hidden');
 
         if (viewName === 'auth') {
             if (authView) authView.classList.remove('hidden');
@@ -899,6 +901,44 @@ document.addEventListener('DOMContentLoaded', async () => {
             </tr>`).join('') || `<tr><td colspan="5" class="text-center text-slate-400 py-6">${T('lt.noResults')}</td></tr>`;
     }
 
+    // Biomarker summary cards: built from state.labs (real API data when signed in).
+    function renderBiomarkers() {
+        const wrap = document.getElementById('biomarkerCards');
+        const empty = document.getElementById('biomarkerEmpty');
+        if (!wrap) return;
+        const defs = [
+            { test: 'HBA1C', labelKey: 'lt.hba1c', fallback: 'HbA1c (Glycated Hemoglobin)' },
+            { test: 'SBP', labelKey: 'lt.bp', fallback: 'Blood Pressure (Systolic)' },
+            { test: 'EGFR', labelKey: 'lt.egfr', fallback: 'eGFR (Kidney Function)' },
+        ];
+        const cards = defs.map(d => {
+            const points = state.labs.filter(l => l.test === d.test).sort((a, b) => b.date.localeCompare(a.date));
+            if (!points.length) return '';
+            const latest = points[0];
+            const oor = outOfRange(latest);
+            const chip = oor
+                ? `<span class="bg-red-100 text-red-700 text-xs font-bold px-2.5 py-0.5 rounded-full">${T('st.outRange', 'Out of range')}</span>`
+                : `<span class="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-0.5 rounded-full">${T('st.inRange', 'In range')}</span>`;
+            const pct = latest.max != null && latest.max > 0 ? Math.min(100, Math.round((latest.value / latest.max) * 100)) : 100;
+            const bar = oor ? 'bg-red-500' : 'bg-green-500';
+            return `<div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-bold text-slate-500">${T(d.labelKey, d.fallback)}</p>
+                        <p class="text-2xl font-black text-[#0c2340] mt-1">${latest.value} <span class="text-xs font-semibold text-slate-400">${latest.unit}</span></p>
+                    </div>
+                    ${chip}
+                </div>
+                <div class="w-full bg-slate-100 h-2 rounded-full mt-4 overflow-hidden">
+                    <div class="${bar} h-full rounded-full" style="width: ${pct}%"></div>
+                </div>
+                <p class="text-xs text-slate-400 mt-2">${Tp('lt.latestTest', { date: fmtDate(latest.date) })}</p>
+            </div>`;
+        }).filter(Boolean);
+        wrap.innerHTML = cards.join('');
+        if (empty) empty.classList.toggle('hidden', cards.length > 0);
+    }
+
     const labDateFrom = document.getElementById('labDateFrom');
     const labDateTo = document.getElementById('labDateTo');
     const activeLabMetrics = new Set(['HBA1C']);
@@ -973,7 +1013,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             <p class="text-xs text-slate-400 mt-1">${T('lt.overlayNote')}</p>`;
     }
 
-    if (labTestSelect) labTestSelect.addEventListener('change', () => { renderLabTable(); renderTrendChart(); });
+    if (labTestSelect) labTestSelect.addEventListener('change', () => { renderLabTable(); renderTrendChart();
+ renderBiomarkers(); });
     if (labEntryForm) {
         labEntryForm.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -992,6 +1033,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         });
                         renderLabTable();
                         renderTrendChart();
+                        renderBiomarkers();
                         labEntryForm.reset();
                         showToast(Tp('toast.labSaved', { label: labLabel(meta) }));
                     })
@@ -1005,6 +1047,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             renderLabTable();
             renderTrendChart();
+            renderBiomarkers();
             labEntryForm.reset();
             showToast(Tp('toast.labSaved', { label: labLabel(meta) }));
         });
@@ -1082,6 +1125,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     if (apiMode) applyLiveOverview();
     renderTrendChart();
+    renderBiomarkers();
 
     // ==========================================================================
     // 9. Stage 2: overview chart, count-up stats, notifications, palette
@@ -1154,6 +1198,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderShares();
         renderLabTable();
         renderTrendChart();
+        renderBiomarkers();
         renderCarePlan();
         const bc = document.getElementById('breadcrumb-current');
         const curView = (window.location.hash || '').replace('#', '');
@@ -1276,6 +1321,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         ].sort((a, b) => String(b.date).localeCompare(String(a.date))).slice(0, 10);
         renderTimeline();
         renderOverviewChart();
+        renderLabTable();
+        renderTrendChart();
+        renderBiomarkers();
     }
 
     // count-up stats when overview shows
@@ -1389,9 +1437,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (activeLabMetrics.has(m)) { activeLabMetrics.delete(m); chip.classList.remove('active'); }
             else { activeLabMetrics.add(m); chip.classList.add('active'); }
             renderTrendChart();
+            renderBiomarkers();
         });
     });
-    [labDateFrom, labDateTo].forEach(inp => inp && inp.addEventListener('change', () => { renderLabTable(); renderTrendChart(); }));
+    [labDateFrom, labDateTo].forEach(inp => inp && inp.addEventListener('change', () => { renderLabTable(); renderTrendChart();
+ renderBiomarkers(); }));
 
     function labRowsForExport() {
         const test = labTestSelect ? labTestSelect.value : 'all';

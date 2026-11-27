@@ -33,10 +33,16 @@
 <body class="sidebar-luxe bg-slate-100 min-h-screen font-[Inter] antialiased">
     <a href="#main-content" class="skip-link" data-i18n="a11y.skip">Skip to main content</a>
 
+    <!-- Neutral boot splash: replaced by the right view once the session check runs (no sign-in flash) -->
+    <div id="boot-splash" class="min-h-screen flex flex-col items-center justify-center gap-4" style="background: inherit;">
+        <img src="./img/logo-transparent.png" alt="Chronicare" class="w-16 h-16 opacity-80">
+        <div class="w-8 h-8 border-4 border-slate-200 border-t-cyan-600 rounded-full animate-spin"></div>
+    </div>
+
     <!-- ======================================================================
          1. AUTHENTICATION VIEW (Cloned from Login Folder)
          ====================================================================== -->
-    <div id="auth-view" class="w-full min-h-screen">
+    <div id="auth-view" class="w-full min-h-screen hidden">
         <main class="main-container grid grid-cols-12 bg-white overflow-hidden">
 
             <!-- LEFT PANEL -->
@@ -1128,48 +1134,9 @@
                         <p class="text-sm text-slate-500 mt-1" data-i18n="lt.sub">Track chronic indicators over time with automatic lab result parsing.</p>
                     </div>
 
-                    <div class="grid md:grid-cols-3 gap-5 mb-6">
-                        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <p class="text-xs font-bold text-slate-500" data-i18n="lt.hba1c">HbA1c (Glycated Hemoglobin)</p>
-                                    <p class="text-2xl font-black text-[#0c2340] mt-1">6.4 <span class="text-xs font-semibold text-slate-400">%</span></p>
-                                </div>
-                                <span class="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-0.5 rounded-full" data-i18n="lt.target">Target &lt; 7.0</span>
-                            </div>
-                            <div class="w-full bg-slate-100 h-2 rounded-full mt-4 overflow-hidden">
-                                <div class="bg-green-500 h-full rounded-full" style="width: 64%"></div>
-                            </div>
-                            <p class="text-xs text-slate-400 mt-2" data-i18n="lt.latestHba1c">Latest test: 18 Nov 2026 (Down 0.3%)</p>
-                        </div>
-
-                        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <p class="text-xs font-bold text-slate-500" data-i18n="lt.bp">Blood Pressure</p>
-                                    <p class="text-2xl font-black text-[#0c2340] mt-1">128/82 <span class="text-xs font-semibold text-slate-400">mmHg</span></p>
-                                </div>
-                                <span class="bg-yellow-100 text-yellow-800 text-xs font-bold px-2.5 py-0.5 rounded-full" data-i18n="lt.stage1">Stage 1 Pre</span>
-                            </div>
-                            <div class="w-full bg-slate-100 h-2 rounded-full mt-4 overflow-hidden">
-                                <div class="bg-yellow-500 h-full rounded-full" style="width: 72%"></div>
-                            </div>
-                            <p class="text-xs text-slate-400 mt-2" data-i18n="lt.latestBp">Latest reading: 12 Nov 2026</p>
-                        </div>
-
-                        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <p class="text-xs font-bold text-slate-500" data-i18n="lt.egfr">eGFR (Kidney Function)</p>
-                                    <p class="text-2xl font-black text-[#0c2340] mt-1">88 <span class="text-xs font-semibold text-slate-400">mL/min</span></p>
-                                </div>
-                                <span class="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-0.5 rounded-full" data-i18n="lt.normal">Normal Range</span>
-                            </div>
-                            <div class="w-full bg-slate-100 h-2 rounded-full mt-4 overflow-hidden">
-                                <div class="bg-green-500 h-full rounded-full" style="width: 88%"></div>
-                            </div>
-                            <p class="text-xs text-slate-400 mt-2" data-i18n="lt.latestEgfr">Latest test: 04 Nov 2026</p>
-                        </div>
+                    <div id="biomarkerCards" class="grid md:grid-cols-3 gap-5 mb-6"></div>
+                    <div id="biomarkerEmpty" class="hidden bg-white p-6 rounded-2xl border border-slate-100 shadow-sm mb-6 text-center">
+                        <p class="text-sm text-slate-400" data-i18n="lt.noBiomarkers">No lab results yet. Add your first result below to start tracking your biomarkers.</p>
                     </div>
 
                     <div class="grid lg:grid-cols-12 gap-6 items-start">
