@@ -1,5 +1,9 @@
+import uuid
+from datetime import timedelta
+
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.utils import timezone
 
 
 class User(AbstractUser):
@@ -49,3 +53,28 @@ class User(AbstractUser):
     @property
     def is_platform_admin(self):
         return self.role == self.Role.ADMIN or self.is_staff or self.is_superuser
+
+
+class PasswordResetToken(models.Model):
+    """One-time password-reset token, emailed as a reset link.
+
+    Valid for 30 minutes and marked used after a successful reset.
+    """
+
+    EXPIRY_MINUTES = 30
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="password_reset_tokens")
+    token = models.UUIDField(default=uuid.uuid4, unique=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    used_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "password_reset_tokens"
+
+    @property
+    def is_expired(self):
+        return timezone.now() > self.created_at + timedelta(minutes=self.EXPIRY_MINUTES)
+
+    @property
+    def is_usable(self):
+        return self.used_at is None and not self.is_expired

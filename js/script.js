@@ -153,6 +153,95 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // ---- Forgot / reset password panels ----
+    const forgotBox = document.getElementById('forgot-form-box');
+    const resetBox = document.getElementById('reset-form-box');
+    const authPanels = [signInForm, signUpForm, forgotBox, resetBox].filter(Boolean);
+    const showAuthPanel = (panel) => {
+        authPanels.forEach(p => p.classList.toggle('hidden', p !== panel));
+        if (signInHero) signInHero.classList.remove('hidden');
+        if (signUpHero) signUpHero.classList.add('hidden');
+        refreshIcons();
+    };
+    const toForgotBtn = document.getElementById('to-forgot-btn');
+    if (toForgotBtn && forgotBox) {
+        toForgotBtn.addEventListener('click', (e) => { e.preventDefault(); showAuthPanel(forgotBox); });
+    }
+    const forgotBackBtn = document.getElementById('forgot-back-btn');
+    if (forgotBackBtn) forgotBackBtn.addEventListener('click', () => showAuthPanel(signInForm));
+    const resetBackBtn = document.getElementById('reset-back-btn');
+    if (resetBackBtn) resetBackBtn.addEventListener('click', () => {
+        history.replaceState(null, '', location.pathname);
+        showAuthPanel(signInForm);
+    });
+
+    // Opened from a reset link (index.html#reset?token=...), at load or via hash change
+    let resetToken = '';
+    const openResetFromHash = () => {
+        const m = location.hash.match(/^#reset\?token=([0-9a-fA-F-]{36})/);
+        if (m && resetBox) {
+            resetToken = m[1];
+            showAuthPanel(resetBox);
+        }
+    };
+    openResetFromHash();
+    window.addEventListener('hashchange', openResetFromHash);
+
+    const forgotForm = document.getElementById('forgot-form');
+    if (forgotForm) {
+        forgotForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = (document.getElementById('forgot-email') || {}).value || '';
+            const resultBox = document.getElementById('forgot-result');
+            const resultText = document.getElementById('forgot-result-text');
+            const demoLink = document.getElementById('forgot-demo-link');
+            if (!(window.CCApi && (await CCApi.ping()))) {
+                showToast(CCApi.L('Live server unreachable - password reset needs the live server', 'الخادم غير متاح - استعادة كلمة المرور تحتاج الخادم'), 'warn');
+                return;
+            }
+            try {
+                const res = await CCApi.post('/auth/password-reset/request/', { email: email.trim() });
+                if (resultBox && resultText) {
+                    resultBox.classList.remove('hidden');
+                    if (res && res.demo_reset_link && demoLink) {
+                        resultText.textContent = T('auth.resetDemoNote', 'Demo note: no email server is connected, so here is your reset link:');
+                        demoLink.textContent = res.demo_reset_link;
+                        demoLink.href = res.demo_reset_link;
+                        demoLink.classList.remove('hidden');
+                    } else {
+                        resultText.textContent = T('auth.resetSent', 'If an account exists for this email, a reset link has been sent.');
+                        if (demoLink) demoLink.classList.add('hidden');
+                    }
+                }
+            } catch (err) {
+                showToast(CCApi.L('Could not start the reset: ', 'تعذر بدء الاستعادة: ') + (err.message || err), 'warn');
+            }
+        });
+    }
+
+    const resetForm = document.getElementById('reset-form');
+    if (resetForm) {
+        resetForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const pass = (document.getElementById('reset-password') || {}).value || '';
+            const confirm = (document.getElementById('reset-confirm') || {}).value || '';
+            if (pass !== confirm) {
+                showToast(CCApi.L('Passwords do not match', 'كلمتا المرور غير متطابقتين'), 'warn');
+                return;
+            }
+            try {
+                await CCApi.post('/auth/password-reset/confirm/', { token: resetToken, password: pass });
+                showToast(T('auth.resetDone', 'Password updated. You can sign in with the new password.'), 'success');
+                history.replaceState(null, '', location.pathname);
+                resetToken = '';
+                resetForm.reset();
+                showAuthPanel(signInForm);
+            } catch (err) {
+                showToast((err && err.message) ? err.message : CCApi.L('This reset link is invalid or has expired.', 'رابط الاستعادة غير صالح أو منتهي.'), 'warn');
+            }
+        });
+    }
+
     document.querySelectorAll('.toggle-password-btn').forEach(button => {
         button.addEventListener('click', () => {
             const input = document.getElementById(button.getAttribute('data-target'));
@@ -1121,6 +1210,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             : L('No active shares', 'لا مشاركات نشطة'));
         const mb = totalBytes / (1024 * 1024);
         if (mb >= 1024) { setNum('statStorageNum', (mb / 1024).toFixed(1), 1); setText('statStorageUnit', 'GB'); }
+        else if (mb < 0.1 && totalBytes > 0) { setNum('statStorageNum', Math.max(1, Math.round(totalBytes / 1024))); setText('statStorageUnit', 'KB'); }
         else { setNum('statStorageNum', mb.toFixed(1), 1); setText('statStorageUnit', 'MB'); }
 
         // recent records table
