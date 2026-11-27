@@ -890,6 +890,15 @@ html.dark mark { background: rgba(34,211,238,.25); color: #e6eef7; }
 .fab-btn:active { transform: scale(0.94); }
 html.dark .fab-btn { background: #16283c; border-color: #22364d; color: #e6eef7; }
 
+/* Keep floating buttons clear of page content */
+#auth-view { padding-bottom: 110px; }
+.portal-subview { padding-bottom: 96px; }
+@media (max-width: 480px) {
+    .fab-stack { bottom: 12px; right: 12px; gap: 8px; }
+    .fab-btn { width: 40px; height: 40px; font-size: 12px; }
+    html[dir="rtl"] .fab-stack { right: auto; left: 12px; }
+}
+
 /* ---------- Skeleton loaders ---------- */
 .skeleton {
     position: relative;
