@@ -304,6 +304,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
     const categoryDemo = { 'Lab Report': 9, 'Prescription': 6, 'Imaging': 4, 'Specialist Report': 3, 'Discharge Summary': 2 };
     let chartRefs = [];
+    // In live mode, count real audit events per day (event time is "YYYY-MM-DD HH:MM").
+    function last7DayCounts(action) {
+        const out = [];
+        for (let i = 6; i >= 0; i--) {
+            const day = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
+            out.push(auditEvents.filter(a => String(a.time || '').startsWith(day) && a.action === action).length);
+        }
+        return out;
+    }
     function last7DayLabels() {
         const out = [];
         for (let i = 6; i >= 0; i--) {
@@ -336,9 +345,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 data: {
                     labels: last7DayLabels(),
                     datasets: [
-                        { label: T('au.views'), data: activityDemo.views, borderColor: viewsColor, backgroundColor: viewsFill, fill: true, tension: 0.4, pointRadius: 3 },
-                        { label: T('au.shares'), data: activityDemo.shares, borderColor: '#06b6d4', backgroundColor: 'rgba(6,182,212,0.08)', fill: true, tension: 0.4, pointRadius: 3 },
-                        { label: T('an.uploads'), data: activityDemo.uploads, borderColor: '#8b5cf6', backgroundColor: 'rgba(139,92,246,0.08)', fill: true, tension: 0.4, pointRadius: 3 },
+                        { label: T('au.views'), data: apiMode ? last7DayCounts('view') : activityDemo.views, borderColor: viewsColor, backgroundColor: viewsFill, fill: true, tension: 0.4, pointRadius: 3 },
+                        { label: T('au.shares'), data: apiMode ? last7DayCounts('share') : activityDemo.shares, borderColor: '#06b6d4', backgroundColor: 'rgba(6,182,212,0.08)', fill: true, tension: 0.4, pointRadius: 3 },
+                        { label: T('an.uploads'), data: apiMode ? last7DayCounts('upload') : activityDemo.uploads, borderColor: '#8b5cf6', backgroundColor: 'rgba(139,92,246,0.08)', fill: true, tension: 0.4, pointRadius: 3 },
                     ],
                 },
                 options: {
@@ -350,12 +359,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         const cat = document.getElementById('chartCategories');
         if (cat) {
-            const keys = Object.keys(categoryDemo);
+            const adminStats = apiMode && window.CCApi && CCApi.adminStats ? CCApi.adminStats() : null;
+            const catData = adminStats && adminStats.categories
+                ? Object.fromEntries(adminStats.categories.filter(c => c.count > 0).map(c => [c.name, c.count]))
+                : categoryDemo;
+            const keys = Object.keys(catData);
+            if (keys.length === 0) {
+                cat.parentElement.innerHTML = '<p class="text-sm" style="color: var(--cc-muted); padding: 2rem; text-align: center;">' + T('admin.noFilesYet', 'No files uploaded yet.') + '</p>';
+            }
             chartRefs.push(new Chart(cat, {
                 type: 'doughnut',
                 data: {
                     labels: keys.map(k => catLabel(k)),
-                    datasets: [{ data: keys.map(k => categoryDemo[k]), backgroundColor: ['#06b6d4', isDark ? '#e6eef7' : '#0c2340', '#8b5cf6', '#f59e0b', '#10b981'], borderWidth: 2, borderColor: doughnutBorder }],
+                    datasets: [{ data: keys.map(k => catData[k]), backgroundColor: ['#06b6d4', isDark ? '#e6eef7' : '#0c2340', '#8b5cf6', '#f59e0b', '#10b981'], borderWidth: 2, borderColor: doughnutBorder }],
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false, cutout: '62%',

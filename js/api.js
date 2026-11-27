@@ -152,6 +152,8 @@ window.CCApi = (function () {
             specialty: f.specialty || '',
             archived: !!f.archived,
             fileUrl: f.file_url || '',
+            size: Number(f.file_size) || 0,
+            uploaded: String(f.uploaded_at || '').slice(0, 10) || f.record_date,
         };
     }
     function toShare(s, countOverride) {
@@ -268,6 +270,9 @@ window.CCApi = (function () {
             all('/admin/users/'), all('/categories/'), all('/conditions/'),
             all('/lab-test-types/'), all('/admin/audit-log/'),
         ]);
+        try {
+            refs.adminStats = await req('/admin/users/stats/');
+        } catch (e) { refs.adminStats = null; }
         refs.cats = cats; refs.conds = conds; refs.testTypes = types;
         d.pendingDoctors.length = 0;
         usersL.filter(u => u.role === 'doctor' && u.status === 'pending').forEach(u => d.pendingDoctors.push({
@@ -352,6 +357,7 @@ window.CCApi = (function () {
     return {
         base, setBase, token, user, hasSession, clearSession, L,
         req, get, post, patch, all, ping,
+        adminStats: () => refs.adminStats || null,
         login, register, logout,
         hydratePatient, hydrateDoctor, hydrateAdmin,
         toRecord, toShare, uploadFile, testTypeId, allCategoryIds, populateShareForm,

@@ -44,3 +44,27 @@ class AdminUserViewSet(viewsets.ReadOnlyModelViewSet):
         user.save(update_fields=["status"])
         log_action(request.user, "activate", target_user=user)
         return Response(UserSerializer(user).data)
+
+    @action(detail=False, methods=["get"])
+    def stats(self, request):
+        """Platform analytics for the admin dashboard: real file counts per
+        category and total storage, computed from the records tables."""
+        from django.db.models import Count
+        from records.models import Category, MedicalFile
+
+        cats = (
+            Category.objects.annotate(n=Count("files"))
+            .order_by("name")
+            .values("name", "n")
+        )
+        total_bytes = 0
+        for f in MedicalFile.objects.only("file"):
+            try:
+                total_bytes += f.file.size if f.file else 0
+            except OSError:
+                pass
+        return Response({
+            "files_total": MedicalFile.objects.count(),
+            "storage_bytes": total_bytes,
+            "categories": [{"name": c["name"], "count": c["n"]} for c in cats],
+        })

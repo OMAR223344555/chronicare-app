@@ -20,11 +20,12 @@ class MedicalFileSerializer(serializers.ModelSerializer):
     condition_name = serializers.CharField(source="condition.name", read_only=True)
     owner_email = serializers.CharField(source="owner.email", read_only=True)
     file_url = serializers.SerializerMethodField()
+    file_size = serializers.SerializerMethodField()
 
     class Meta:
         model = MedicalFile
         fields = [
-            "id", "owner", "owner_email", "file", "file_url", "title",
+            "id", "owner", "owner_email", "file", "file_url", "file_size", "title",
             "category", "category_name", "condition", "condition_name",
             "record_date", "issuing_facility", "issuing_doctor", "specialty",
             "archived", "uploaded_at", "updated_at",
@@ -36,3 +37,9 @@ class MedicalFileSerializer(serializers.ModelSerializer):
         if obj.file and request:
             return request.build_absolute_uri(obj.file.url)
         return None
+
+    def get_file_size(self, obj):
+        try:
+            return obj.file.size if obj.file else 0
+        except (OSError, ValueError):
+            return 0

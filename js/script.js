@@ -710,6 +710,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         });
                         renderRecords();
                         renderTimeline();
+                        if (apiMode) applyLiveOverview();
                         CCApi.populateShareForm(state);
                         uploadForm.reset();
                         if (uploadFileName) uploadFileName.textContent = T('upload.drop');
@@ -961,6 +962,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     share.revoked = true;
                     share.active = false;
                     renderShares();
+                    if (apiMode) applyLiveOverview();
                     showToast(Tp('toast.shareRevoked', { name: share.doctorKey ? T(share.doctorKey) : share.doctor }), 'warn');
                 }).catch(err => showToast(String(err.message || err), 'warn'));
                 return;
@@ -980,6 +982,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderTimeline();
     renderShares();
     renderLabTable();
+
+    // Real current date in the hero banner (both demo and live mode)
+    const heroDateEl = document.getElementById('heroDate');
+    if (heroDateEl) {
+        heroDateEl.textContent = new Intl.DateTimeFormat(window.CCi18n && CCi18n.isRTL ? 'ar-EG' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
+        heroDateEl.removeAttribute('data-i18n');
+    }
+    if (apiMode) applyLiveOverview();
     renderTrendChart();
 
     // ==========================================================================
@@ -1002,6 +1012,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const canvas = document.getElementById('overviewChart');
         if (!canvas || typeof Chart === 'undefined') return;
         const rows = state.labs.filter(l => l.test === overviewMetric).slice().sort((a, b) => a.date.localeCompare(b.date));
+        const emptyEl = document.getElementById('overviewChartEmpty');
+        if (emptyEl) emptyEl.classList.toggle('hidden', rows.length > 0);
+        if (!rows.length) { if (overviewChart) overviewChart.destroy(); return; }
         const c = chartColors();
         const meta = rows[0] || {};
         if (overviewChart) overviewChart.destroy();
@@ -1060,6 +1073,117 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     const ovCanvas = document.getElementById('overviewChart');
     if (ovCanvas) renderOverviewChart();
+
+    // ---- Live mode: render every overview region from the signed-in user's data ----
+    function applyLiveOverview() {
+        const L = (en, ar) => (window.CCApi ? CCApi.L(en, ar) : en);
+        const now = new Date();
+        const monthKey = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+        const activeShares = state.shares.filter(s => !s.revoked);
+        const filesThisMonth = state.records.filter(r => String(r.uploaded || r.date || '').startsWith(monthKey)).length;
+        const distinctTests = new Set(state.labs.map(l => l.test)).size;
+        const totalBytes = state.records.reduce((m, r) => m + (r.size || 0), 0);
+
+        const setNum = (id, val, decimals) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.dataset.count = val;
+            el.textContent = decimals ? Number(val).toFixed(decimals) : String(val);
+        };
+        const setText = (id, text) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = text;
+            el.removeAttribute('data-i18n');
+        };
+
+        // hero summary line
+        setText('heroSub', state.records.length
+            ? L(`You have ${filesThisMonth} new record${filesThisMonth === 1 ? '' : 's'} this month and ${state.labs.length} lab result${state.labs.length === 1 ? '' : 's'} tracked.`,
+                `لديك ${filesThisMonth} سجل جديد هذا الشهر و${state.labs.length} نتيجة تحاليل متتبعة.`)
+            : L('No records yet. Upload your first record to start your health journey.',
+                'لا توجد سجلات بعد. ارفع أول سجل لبدء رحلتك الصحية.'));
+
+        // stat cards
+        setNum('statFilesNum', state.records.length);
+        setText('statFilesSub', filesThisMonth
+            ? L(`+${filesThisMonth} added this month`, `+${filesThisMonth} هذا الشهر`)
+            : L('No files added this month', 'لا ملفات جديدة هذا الشهر'));
+        setNum('statLabsNum', state.labs.length);
+        setText('statLabsSub', state.labs.length
+            ? L(`Across ${distinctTests} test type${distinctTests === 1 ? '' : 's'}`, `عبر ${distinctTests} نوع تحليل`)
+            : L('No lab results yet', 'لا نتائج تحاليل بعد'));
+        setNum('statSharesNum', activeShares.length);
+        setText('statSharesSub', activeShares.length
+            ? L(`${activeShares.length} doctor${activeShares.length === 1 ? '' : 's'} with access`, `${activeShares.length} طبيب لديه صلاحية`)
+            : L('No active shares', 'لا مشاركات نشطة'));
+        const mb = totalBytes / (1024 * 1024);
+        if (mb >= 1024) { setNum('statStorageNum', (mb / 1024).toFixed(1), 1); setText('statStorageUnit', 'GB'); }
+        else { setNum('statStorageNum', mb.toFixed(1), 1); setText('statStorageUnit', 'MB'); }
+
+        // recent records table
+        const rb = document.getElementById('recentRecordsBody');
+        if (rb) {
+            const rows = state.records.slice().sort((a, b) => String(b.date).localeCompare(String(a.date))).slice(0, 3);
+            rb.innerHTML = rows.length ? rows.map(r => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="p-3 font-bold text-[#0c2340]">${r.name}<br>
+                        <span class="text-xs font-normal text-slate-500">${catLabel(r.category)}</span></td>
+                    <td class="p-3 text-slate-600">${condLabel(r.condition)}</td>
+                    <td class="p-3 text-slate-600">${fmtDate(r.date)}</td>
+                    <td class="p-3"><span class="bg-cyan-100 text-cyan-700 text-xs font-bold px-3 py-1 rounded-full">${r.archived ? T('st.archived', 'Archived') : T('st.private', 'Private')}</span></td>
+                </tr>`).join('')
+                : `<tr><td colspan="4" class="p-6 text-center text-sm text-slate-400">${L('No records yet - upload your first record.', 'لا توجد سجلات بعد - ارفع أول سجل.')}</td></tr>`;
+        }
+
+        // recent activity (derived from real records and shares)
+        const al = document.getElementById('recentActivityList');
+        if (al) {
+            const rel = d => {
+                const days = Math.floor((now - new Date(String(d) + 'T00:00:00')) / 86400000);
+                return days <= 0 ? L('today', 'اليوم') : days + 'd';
+            };
+            const items = [];
+            state.records.slice().sort((a, b) => String(b.uploaded || b.date).localeCompare(String(a.uploaded || a.date))).slice(0, 2)
+                .forEach(r => items.push({ icon: 'upload', bg: '#ecfdf5', fg: '#047857', title: L('New file uploaded successfully', 'تم رفع ملف جديد بنجاح'), sub: `${r.name} • ${condLabel(r.condition)}`, when: rel(r.uploaded || r.date) }));
+            activeShares.filter(s => s.expires && (new Date(s.expires) - now) / 86400000 <= 7).slice(0, 1)
+                .forEach(s => items.push({ icon: 'clock', bg: '#fffbeb', fg: '#b45309', title: L('Access expires soon', 'صلاحية الوصول تنتهي قريبًا'), sub: `${s.doctor || ''} • ${fmtDate(s.expires)}`, when: rel(s.expires) }));
+            al.innerHTML = items.length ? items.map(i => `
+                <div class="flex justify-between items-start gap-3">
+                    <span class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5" style="background:${i.bg};color:${i.fg}"><i data-lucide="${i.icon}" class="w-4 h-4"></i></span>
+                    <div class="flex-1">
+                        <p class="font-bold text-[#0c2340]">${i.title}</p>
+                        <p class="text-xs text-slate-500 mt-0.5">${i.sub}</p>
+                    </div>
+                    <span class="text-xs text-slate-400 font-medium">${i.when}</span>
+                </div>`).join('')
+                : `<p class="text-sm text-slate-400">${L('No activity yet.', 'لا يوجد نشاط بعد.')}</p>`;
+            refreshIcons();
+        }
+
+        // health profile conditions
+        const chips = document.getElementById('profileChips');
+        const psub = document.getElementById('profileSub');
+        if (chips && psub) {
+            const conds = [...new Set(state.records.map(r => r.condition).filter(Boolean))];
+            setText('profileSub', conds.length
+                ? L(`${conds.length} condition${conds.length === 1 ? '' : 's'} actively tracked`, `${conds.length} حالة قيد المتابعة`)
+                : L('No conditions tracked yet', 'لا حالات قيد المتابعة بعد'));
+            chips.innerHTML = conds.map(c => `<span class="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-xs font-semibold">${condLabel(c)}</span>`).join('');
+        }
+
+        // medications and appointments are not part of the backend - hide for real accounts
+        const cp = document.getElementById('carePlanCard');
+        if (cp) cp.classList.add('hidden');
+
+        // timeline: derive from the real records and lab results
+        const mon = d => new Date(String(d) + 'T00:00:00').toLocaleDateString('en-US', { month: 'short' });
+        state.timeline = [
+            ...state.records.map(r => ({ month: mon(r.date), type: r.category === 'lab' ? 'lab' : 'visit', title: r.name, text: [r.facility, r.doctor].filter(Boolean).join(' • '), date: fmtDate(r.date) })),
+            ...state.labs.map(l => ({ month: mon(l.date), type: 'lab', title: `${l.label}: ${l.value}${l.unit ? ' ' + l.unit : ''}`, text: '', date: fmtDate(l.date) })),
+        ].sort((a, b) => String(b.date).localeCompare(String(a.date))).slice(0, 10);
+        renderTimeline();
+    }
 
     // count-up stats when overview shows
     function animateStats() {
@@ -1306,6 +1430,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     sh.id = s.id;
                     state.shares.push(sh);
                     renderShares();
+                    if (apiMode) applyLiveOverview();
                     newShareForm.reset();
                     showToast(Tp('toast.shared', { name: sh.doctor, date: fmtDate(sh.expires) }));
                     hideShareModal();

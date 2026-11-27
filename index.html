@@ -3,10 +3,13 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="color-scheme" content="light dark">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script>
         try {
-            if (localStorage.getItem('cc-theme') === 'dark') document.documentElement.classList.add('dark');
+            var __dark = localStorage.getItem('cc-theme') === 'dark';
+            if (__dark) document.documentElement.classList.add('dark');
+            document.documentElement.style.background = __dark ? '#0a1522' : '#f1f5f9';
             var __lang = localStorage.getItem('cc-lang') || 'en';
             document.documentElement.lang = __lang;
             document.documentElement.dir = (__lang === 'ar' ? 'rtl' : 'ltr');
@@ -24,7 +27,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Stylesheet -->
-    <link rel="stylesheet" href="./css/style.css?v=17">
+    <link rel="stylesheet" href="./css/style.css?v=18">
 </head>
 
 <body class="sidebar-luxe bg-slate-100 min-h-screen font-[Inter] antialiased">
@@ -564,9 +567,9 @@
                     <!-- HERO BANNER -->
                     <div class="hero-banner bg-[#0c2340] text-white rounded-2xl p-6 md:p-8 flex items-center justify-between overflow-hidden relative shadow-md mb-6">
                         <div class="relative z-10 max-w-2xl">
-                            <p class="text-[11px] tracking-widest text-cyan-300 font-semibold uppercase" data-i18n="hero.date">Saturday, 21 November 2026</p>
+                            <p class="text-[11px] tracking-widest text-cyan-300 font-semibold uppercase" id="heroDate" data-i18n="hero.date">Saturday, 21 November 2026</p>
                             <h3 class="text-2xl md:text-3xl font-bold mt-2" data-i18n="hero.greeting">Good morning, Maya ✨</h3>
-                            <p class="text-sm text-cyan-100 mt-1.5 leading-relaxed" data-i18n="hero.sub">Your health journey, clearly organized. You have 3 new record updates and 1 lab trend to review.</p>
+                            <p class="text-sm text-cyan-100 mt-1.5 leading-relaxed" id="heroSub" data-i18n="hero.sub">Your health journey, clearly organized. You have 3 new record updates and 1 lab trend to review.</p>
                             <div class="flex flex-wrap gap-3 mt-5">
                                 <button type="button" class="trigger-upload-btn bg-cyan-400 hover:bg-cyan-300 text-[#0c2340] font-bold text-sm px-4 py-2.5 rounded-xl transition flex items-center gap-2">
                                     <i data-lucide="plus" class="w-4 h-4"></i>
@@ -589,8 +592,8 @@
                                     <i data-lucide="file-text" class="w-4 h-4"></i>
                                 </div>
                             </div>
-                            <p class="text-3xl font-extrabold text-[#0c2340] mt-3 stat-num" data-count="42">42</p>
-                            <p class="text-xs text-green-600 font-semibold mt-1" data-i18n="stat.filesSub">+4 added this month</p>
+                            <p class="text-3xl font-extrabold text-[#0c2340] mt-3 stat-num" data-count="42" id="statFilesNum">42</p>
+                            <p class="text-xs text-green-600 font-semibold mt-1" id="statFilesSub" data-i18n="stat.filesSub">+4 added this month</p>
                         </div>
 
                         <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm cursor-pointer hover:border-cyan-200 transition" data-navigate="lab-trends">
@@ -600,8 +603,8 @@
                                     <i data-lucide="trending-up" class="w-4 h-4"></i>
                                 </div>
                             </div>
-                            <p class="text-3xl font-extrabold text-[#0c2340] mt-3 stat-num" data-count="18">18</p>
-                            <p class="text-xs text-slate-500 mt-1" data-i18n="stat.labsSub">Across 4 test types</p>
+                            <p class="text-3xl font-extrabold text-[#0c2340] mt-3 stat-num" data-count="18" id="statLabsNum">18</p>
+                            <p class="text-xs text-slate-500 mt-1" id="statLabsSub" data-i18n="stat.labsSub">Across 4 test types</p>
                         </div>
 
                         <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm cursor-pointer hover:border-cyan-200 transition" data-navigate="sharing-access">
@@ -611,8 +614,8 @@
                                     <i data-lucide="share-2" class="w-4 h-4"></i>
                                 </div>
                             </div>
-                            <p class="text-3xl font-extrabold text-[#0c2340] mt-3 stat-num" data-count="3">3</p>
-                            <p class="text-xs text-slate-500 mt-1" data-i18n="stat.sharesSub">2 doctors • 1 specialist</p>
+                            <p class="text-3xl font-extrabold text-[#0c2340] mt-3 stat-num" data-count="3" id="statSharesNum">3</p>
+                            <p class="text-xs text-slate-500 mt-1" id="statSharesSub" data-i18n="stat.sharesSub">2 doctors • 1 specialist</p>
                         </div>
 
                         <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
@@ -622,7 +625,7 @@
                                     <i data-lucide="hard-drive" class="w-4 h-4"></i>
                                 </div>
                             </div>
-                            <p class="text-3xl font-extrabold text-[#0c2340] mt-3"><span class="stat-num" data-count="1.8" data-decimals="1">1.8</span> <span class="text-base font-normal text-slate-400">GB</span></p>
+                            <p class="text-3xl font-extrabold text-[#0c2340] mt-3"><span class="stat-num" data-count="1.8" data-decimals="1" id="statStorageNum">1.8</span> <span class="text-base font-normal text-slate-400" id="statStorageUnit">GB</span></p>
                             <p class="text-xs text-slate-500 mt-1" data-i18n="stat.storageSub">of 5 GB available</p>
                         </div>
                     </div>
@@ -640,11 +643,11 @@
                                 <button type="button" class="chart-chip" data-metric="SBP" data-i18n="lab.short.SBP">Systolic BP</button>
                             </div>
                         </div>
-                        <div style="position:relative;height:240px"><canvas id="overviewChart" aria-label="Health trends chart" role="img"></canvas></div>
+                        <div style="position:relative;height:240px"><canvas id="overviewChart" aria-label="Health trends chart" role="img"></canvas><div id="overviewChartEmpty" class="hidden absolute inset-0 flex items-center justify-center text-sm text-slate-400" data-i18n="chart.empty">No lab results yet</div></div>
                     </div>
 
                     <!-- TODAY'S CARE PLAN: medications + appointments -->
-                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm mb-5">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm mb-5" id="carePlanCard">
                         <div class="flex justify-between items-center mb-4">
                             <div>
                                 <h3 class="font-bold text-[#0c2340] text-base" data-i18n="careplan.title">Today's care plan</h3>
@@ -679,7 +682,7 @@
                                             <th class="p-3 rounded-r-lg font-bold" data-i18n="th.status">STATUS</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="divide-y divide-slate-100">
+                                    <tbody class="divide-y divide-slate-100" id="recentRecordsBody">
                                         <tr class="hover:bg-slate-50 transition">
                                             <td class="p-3 font-bold text-[#0c2340]">
                                                 HbA1c Lab Report<br>
@@ -720,7 +723,7 @@
                                 </div>
                                 <p class="text-xs text-slate-500 mb-4" data-i18n="act.sub">Updates across your records</p>
 
-                                <div class="space-y-4 text-sm">
+                                <div class="space-y-4 text-sm" id="recentActivityList">
                                     <div class="flex justify-between items-start gap-3">
                                         <span class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5" style="background:#f5f3ff;color:#6d28d9"><i data-lucide="eye" class="w-4 h-4"></i></span>
                                         <div class="flex-1">
@@ -753,8 +756,8 @@
                                     <p class="font-bold text-[#0c2340] text-sm" data-i18n="profile.title">Your health profile</p>
                                     <span class="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-0.5 rounded-full" data-i18n="st.upToDate">Up to date</span>
                                 </div>
-                                <p class="text-xs text-slate-500 mt-1" data-i18n="profile.sub">3 conditions are being actively tracked</p>
-                                <div class="flex flex-wrap gap-2 mt-3">
+                                <p class="text-xs text-slate-500 mt-1" id="profileSub" data-i18n="profile.sub">3 conditions are being actively tracked</p>
+                                <div class="flex flex-wrap gap-2 mt-3" id="profileChips">
                                     <span class="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-xs font-semibold" data-i18n="cond.diabetes">Diabetes</span>
                                     <span class="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-xs font-semibold" data-i18n="cond.hypertension">Hypertension</span>
                                     <span class="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-xs font-semibold" data-i18n="cond.ckdShort">CKD</span>
@@ -1274,10 +1277,10 @@
     <!-- Application Script -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
-    <script src="./js/api.js?v=17"></script>
-    <script src="./js/shared.js?v=17"></script>
-    <script src="./js/i18n.js?v=17"></script>
-    <script src="./js/script.js?v=17"></script>
+    <script src="./js/api.js?v=18"></script>
+    <script src="./js/shared.js?v=18"></script>
+    <script src="./js/i18n.js?v=18"></script>
+    <script src="./js/script.js?v=18"></script>
 
     <!-- Floating theme + language controls -->
     <div class="fab-stack">
