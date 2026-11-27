@@ -454,7 +454,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         { icon: 'user-check', kind: 'success', textKey: 'na.2', timeKey: 'tm.yest', unread: true },
         { icon: 'shield-alert', kind: 'info', textKey: 'na.3', timeKey: 'tm.2d', unread: false },
     ];
-    window.CC_NOTIFS = () => adminNotifs.map(n => ({ ...n, text: T(n.textKey), time: T(n.timeKey) }));
+    window.CC_NOTIFS = () => apiMode ? [] : adminNotifs.map(n => ({ ...n, text: T(n.textKey), time: T(n.timeKey) }));
     window.CC_NOTIFS_MARK_READ = () => adminNotifs.forEach(n => { n.unread = false; });
     window.CC_SOURCES = () => {
         const t = (k, f) => window.CCi18n ? CCi18n.t(k, f) : f;

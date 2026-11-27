@@ -678,6 +678,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </td>
             </tr>`).join('') || `<tr><td colspan="6" class="text-center text-slate-400 py-8">${T('mf.empty')}</td></tr>`;
 
+        renderConditionCounts(active);
         if (recordCount) recordCount.textContent = `${visible.length} ${T('mf.records')}`;
         if (tableFooter) tableFooter.textContent = Tp('mf.showing', { a: visible.length, b: active.length });
         const archived = state.records.filter(r => r.archived).length;
@@ -696,16 +697,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderRecords();
     });
 
-    document.querySelectorAll('.condition-row').forEach(row => {
-        row.addEventListener('click', () => {
-            if (!conditionFilter) return;
-            const text = row.textContent.toLowerCase();
-            if (text.includes('diabetes')) conditionFilter.value = 'diabetes';
-            else if (text.includes('hypertension')) conditionFilter.value = 'hypertension';
-            else conditionFilter.value = 'all';
-            renderRecords();
-        });
+    const conditionCountsEl = document.getElementById('conditionCounts');
+    if (conditionCountsEl) conditionCountsEl.addEventListener('click', (e) => {
+        const row = e.target.closest('.condition-row');
+        if (!row || !conditionFilter) return;
+        const key = row.dataset.cond || 'all';
+        if (key !== 'all' && ![...conditionFilter.options].some(o => o.value === key)) {
+            const opt = document.createElement('option');
+            opt.value = key; opt.textContent = condLabel(key);
+            conditionFilter.appendChild(opt);
+        }
+        conditionFilter.value = key;
+        renderRecords();
     });
+    function renderConditionCounts(active) {
+        if (!conditionCountsEl) return;
+        const counts = {};
+        active.forEach(r => { if (r.condition) counts[r.condition] = (counts[r.condition] || 0) + 1; });
+        const cur = conditionFilter ? conditionFilter.value : 'all';
+        const row = (key, label, n) => `<div class="condition-row${cur === key ? ' active' : ''}" data-cond="${key}" style="cursor:pointer"><span>${label}</span> <span>${n}</span></div>`;
+        conditionCountsEl.innerHTML = row('all', T('mf.allConditions'), active.length)
+            + Object.keys(counts).map(k => row(k, condLabel(k), counts[k])).join('');
+    }
 
     // Archive / restore
     // Sort toggle for the records table
@@ -1460,7 +1473,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         { icon: 'clock', kind: 'warn', textKey: 'np.4', timeKey: 'tm.2d', unread: false },
         { icon: 'calendar-check', kind: 'success', textKey: 'np.5', timeKey: 'tm.3d', unread: false },
     ];
-    window.CC_NOTIFS = () => patientNotifs.map(n => ({ ...n, text: T(n.textKey), time: T(n.timeKey) }));
+    window.CC_NOTIFS = () => apiMode ? [] : patientNotifs.map(n => ({ ...n, text: T(n.textKey), time: T(n.timeKey) }));
     window.CC_NOTIFS_MARK_READ = () => patientNotifs.forEach(n => { n.unread = false; });
 
     // command palette sources (patient)

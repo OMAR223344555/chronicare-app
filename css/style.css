@@ -1666,3 +1666,20 @@ canvas { max-width: 100%; }
 :root { color-scheme: light; }
 html.dark { color-scheme: dark; }
 input[type="checkbox"], input[type="radio"] { accent-color: #0e7490; }
+
+
+/* v30: records table becomes cards on phones (no sideways scroll) */
+@media screen and (max-width: 640px) {
+    .records-table, .records-table tbody { display: block; width: 100%; white-space: normal; }
+    .records-table thead { display: none; }
+    .records-table tbody tr { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; padding: 12px; margin: 0 0 10px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; }
+    .records-table tbody td { display: block; border: 0; padding: 0; font-size: 12px; min-width: 0; }
+    .records-table tbody td:nth-child(1) { grid-column: 1 / -1; white-space: normal; overflow-wrap: anywhere; margin-bottom: 4px; }
+    .records-table tbody td:nth-child(2), .records-table tbody td:nth-child(3), .records-table tbody td:nth-child(4) { grid-column: 1; }
+    .records-table tbody td:nth-child(5) { grid-column: 2; grid-row: 2; justify-self: end; }
+    .records-table tbody td:nth-child(6) { grid-column: 2; grid-row: 3 / span 2; justify-self: end; align-self: end; }
+    .records-table tbody td[colspan] { grid-column: 1 / -1; grid-row: auto; justify-self: stretch; }
+    .table-wrapper { overflow-x: hidden; }
+}
+html.dark .records-table tbody tr { background: #101e30; border-color: #1b2c40; }
+.condition-row.active { font-weight: 700; color: #0891b2; }
