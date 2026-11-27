@@ -251,25 +251,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const mobileMenuBtn = document.getElementById('mobile-menu-btn');
     const mobileMenuClose = document.getElementById('mobile-menu-close');
+    function openMobileSidebar() {
+        if (!sidebar) return;
+        sidebar.classList.remove('hidden');
+        sidebar.classList.add('mobile-open');
+        document.body.classList.add('drawer-open');
+        if (!document.querySelector('.drawer-overlay')) {
+            const overlay = document.createElement('div');
+            overlay.className = 'drawer-overlay';
+            overlay.addEventListener('click', closeMobileSidebar);
+            document.body.appendChild(overlay);
+        }
+        refreshIcons();
+    }
     function closeMobileSidebar() {
+        if (!sidebar) return;
         sidebar.classList.add('hidden');
-        sidebar.classList.remove('fixed', 'inset-0', 'z-50', 'flex');
+        sidebar.classList.remove('mobile-open');
+        document.body.classList.remove('drawer-open');
+        const overlay = document.querySelector('.drawer-overlay');
+        if (overlay) overlay.remove();
     }
     if (mobileMenuBtn && sidebar) {
         mobileMenuBtn.addEventListener('click', () => {
-            const isOpen = !sidebar.classList.contains('hidden');
-            if (isOpen) {
+            if (sidebar.classList.contains('mobile-open')) {
                 closeMobileSidebar();
             } else {
-                sidebar.classList.remove('hidden');
-                sidebar.classList.add('fixed', 'inset-0', 'z-50', 'flex');
-                refreshIcons();
+                openMobileSidebar();
             }
         });
     }
     if (mobileMenuClose && sidebar) {
         mobileMenuClose.addEventListener('click', closeMobileSidebar);
     }
+    window.addEventListener('resize', () => {
+        if (window.innerWidth >= 768) closeMobileSidebar();
+    });
     // Close the drawer after picking a section on phones
     document.querySelectorAll('#sidebar [data-navigate]').forEach(elem => {
         elem.addEventListener('click', () => {

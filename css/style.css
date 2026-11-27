@@ -735,3 +735,53 @@ textarea:focus-visible {
 .mobile-scroll::-webkit-scrollbar-track {
     background: transparent;
 }
+
+/* ---------- Mobile drawer (all portals) ---------- */
+.drawer-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(12, 35, 64, 0.45);
+    z-index: 55;
+    animation: drawerFadeIn 0.2s ease;
+}
+
+body.drawer-open {
+    overflow: hidden;
+}
+
+@media (max-width: 767px) {
+    #sidebar.mobile-open {
+        display: flex !important;
+        flex-direction: column;
+        justify-content: flex-start;
+        gap: 4px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: min(78vw, 300px);
+        height: 100%;
+        height: 100dvh;
+        z-index: 60;
+        background: #ffffff;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        box-shadow: 4px 0 32px rgba(12, 35, 64, 0.22);
+        animation: drawerSlideIn 0.25s ease;
+    }
+
+    /* keep the bottom block (profile / sign out) pinned low without breaking top alignment */
+    #sidebar.mobile-open > :last-child {
+        margin-top: auto;
+    }
+}
+
+@keyframes drawerSlideIn {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+}
+
+@keyframes drawerFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
