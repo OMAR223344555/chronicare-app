@@ -13,9 +13,23 @@
             var __lang = localStorage.getItem('cc-lang') || 'en';
             document.documentElement.lang = __lang;
             document.documentElement.dir = (__lang === 'ar' ? 'rtl' : 'ltr');
-        } catch (e) {}
+            // No saved session: skip the boot splash entirely, the sign-in page shows instantly.
+            if (!localStorage.getItem('cc-api-token')) document.documentElement.classList.add('cc-no-session');
+        } catch (e) { try { document.documentElement.classList.add('cc-no-session'); } catch (e2) {} }
     </script>
+    <style>
+        /* Boot failsafe: in no-session (or timed-out boot) mode the splash never shows and the auth view wins over .hidden */
+        .cc-no-session #boot-splash { display: none !important; }
+        .cc-no-session #auth-view { display: block !important; }
+    </style>
     <title>Chronicare - Health Management System</title>
+
+    <!-- Faster first paint on slow connections -->
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <link rel="preconnect" href="https://unpkg.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -27,7 +41,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Stylesheet -->
-    <link rel="stylesheet" href="./css/style.css?v=22">
+    <link rel="stylesheet" href="./css/style.css?v=23">
 </head>
 
 <body class="sidebar-luxe bg-slate-100 min-h-screen font-[Inter] antialiased">
@@ -215,7 +229,7 @@
                         <!-- REMEMBER -->
                         <div class="flex items-center justify-between text-sm">
 
-                            <label class="flex items-center gap-2 text-slate-700"><input type="checkbox" class="w-5 h-5"><span data-i18n="auth.remember">Remember me</span></label>
+                            <label class="flex items-center gap-2 text-slate-700"><input type="checkbox" class="w-5 h-5 accent-cyan-700 bg-white border-slate-300 rounded"><span data-i18n="auth.remember">Remember me</span></label>
 
                             <a href="#" id="to-forgot-btn" class="text-blue-700 font-semibold hover:underline" data-i18n="auth.forgot">Forgot password?</a>
 
@@ -227,13 +241,13 @@
                             <i data-lucide="user-check" class="w-5 h-5 absolute left-4 top-4 text-[#0c2340]"></i>
 
                             <select id="signin-role"
-                                class="auth-input w-full pl-12 pr-8 py-4 text-sm bg-slate-50 border border-slate-200 rounded-2xl appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                class="auth-input w-full pl-12 pr-8 py-4 text-sm text-[#0c2340] bg-slate-50 border border-slate-200 rounded-2xl appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 <option value="patient" data-i18n="auth.rolePatient">Sign in as: Patient</option>
                                 <option value="doctor" data-i18n="auth.roleDoctor">Sign in as: Doctor</option>
                                 <option value="admin" data-i18n="auth.roleAdmin">Sign in as: Administrator</option>
                             </select>
 
-                            <i data-lucide="chevron-down" class="w-4 h-4 absolute right-4 top-4 pointer-events-none"></i>
+                            <i data-lucide="chevron-down" class="w-4 h-4 absolute right-4 top-4 pointer-events-none text-[#0c2340]"></i>
                         </div>
 
 
@@ -356,12 +370,12 @@
                         <div class="relative">
                             <i data-lucide="user-check" class="w-5 h-5 absolute left-4 top-4 text-[#0c2340]"></i>
 
-                            <select id="signup-role" class="auth-input w-full pl-12 pr-8 py-3.5 text-sm bg-slate-50 border border-slate-200 rounded-2xl appearance-none">
+                            <select id="signup-role" class="auth-input w-full pl-12 pr-8 py-3.5 text-sm text-[#0c2340] bg-slate-50 border border-slate-200 rounded-2xl appearance-none">
                                 <option value="patient" data-i18n="auth.rolePatient">Patient</option>
                                 <option value="doctor" data-i18n="auth.roleDoctor">Doctor</option>
                             </select>
 
-                            <i data-lucide="chevron-down" class="w-4 h-4 absolute right-4 top-4 pointer-events-none"></i>
+                            <i data-lucide="chevron-down" class="w-4 h-4 absolute right-4 top-4 pointer-events-none text-[#0c2340]"></i>
                         </div>
 
 
@@ -385,7 +399,7 @@
 
                         <!-- TERMS -->
                         <div class="flex items-start gap-2 text-xs text-slate-600 pt-2">
-                            <input type="checkbox" id="terms" class="mt-0.5" required>
+                            <input type="checkbox" id="terms" class="mt-0.5 w-4 h-4 accent-cyan-700 bg-white border-slate-300 rounded" required>
 
                             <label for="terms">
                                 <span data-i18n="auth.termsAgree">I agree to the</span>
@@ -1302,12 +1316,22 @@
     </div>
 
     <!-- Application Script -->
+    <script>
+        // Boot failsafe: with a saved session the splash can show while the app boots, but never
+        // longer than ~1.5s. Fall through to sign-in; if the session check succeeds, the app
+        // switches to the portal itself.
+        setTimeout(function () {
+            if (window.__ccBootHandled) return;
+            window.__ccBootHandled = true;
+            document.documentElement.classList.add('cc-no-session');
+        }, 1500);
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
-    <script src="./js/api.js?v=22"></script>
-    <script src="./js/shared.js?v=22"></script>
-    <script src="./js/i18n.js?v=22"></script>
-    <script src="./js/script.js?v=22"></script>
+    <script src="./js/api.js?v=23"></script>
+    <script src="./js/shared.js?v=23"></script>
+    <script src="./js/i18n.js?v=23"></script>
+    <script src="./js/script.js?v=23"></script>
 
     <!-- Floating theme + language controls -->
     <div class="fab-stack">

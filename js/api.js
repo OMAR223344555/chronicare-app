@@ -44,7 +44,17 @@ window.CCApi = (function () {
             headers['Content-Type'] = 'application/json';
             body = JSON.stringify(opts.json);
         }
-        const res = await fetch(base() + path, { method: opts.method || 'GET', headers, body });
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), opts.timeoutMs || 10000);
+        let res;
+        try {
+            res = await fetch(base() + path, { method: opts.method || 'GET', headers, body, signal: ctrl.signal });
+        } catch (e) {
+            clearTimeout(timer);
+            if (e && e.name === 'AbortError') { const te = new Error('Request timed out'); te.status = 0; te.timeout = true; throw te; }
+            throw e;
+        }
+        clearTimeout(timer);
         let data = null;
         try { data = await res.json(); } catch (e) { /* empty body */ }
         if (!res.ok) {

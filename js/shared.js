@@ -127,6 +127,9 @@
     // ---- Count-up animation for stat numbers ----
     function countUp(el, target, opts) {
         if (!el) return;
+        // Token guard: a newer write (e.g. real API data landing mid-animation) cancels this run.
+        el.__ccAnim = (el.__ccAnim || 0) + 1;
+        const animToken = el.__ccAnim;
         opts = opts || {};
         const dur = opts.duration || 900;
         const decimals = opts.decimals || 0;
@@ -137,6 +140,7 @@
         }
         const start = performance.now();
         function tick(now) {
+            if (el.__ccAnim !== animToken) return;
             const p = Math.min(1, (now - start) / dur);
             const eased = 1 - Math.pow(1 - p, 3);
             el.textContent = (target * eased).toFixed(decimals) + suffix;

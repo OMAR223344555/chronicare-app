@@ -400,6 +400,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const bootSplash = document.getElementById('boot-splash');
     function showView(viewName, updateHash = true) {
         if (!viewName) viewName = 'auth';
+        window.__ccBootHandled = true;
+        document.documentElement.classList.remove('cc-no-session');
         if (bootSplash) bootSplash.classList.add('hidden');
 
         if (viewName === 'auth') {
@@ -1245,6 +1247,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const setNum = (id, val, decimals) => {
             const el = document.getElementById(id);
             if (!el) return;
+            el.__ccAnim = (el.__ccAnim || 0) + 1; // cancel any in-flight count-up animation
             el.dataset.count = val;
             el.textContent = decimals ? Number(val).toFixed(decimals) : String(val);
         };
@@ -1357,7 +1360,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             CCUI.countUp(el, parseFloat(el.dataset.count), { decimals: +(el.dataset.decimals || 0) });
         });
     }
-    if (document.querySelector('.stat-num')) animateStats();
+
 
     // notifications (patient)
     const patientNotifs = [
@@ -1631,4 +1634,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Live session: apply real per-user data once everything above is initialized
     if (apiMode) applyLiveOverview();
+    // Run the count-up last so it animates toward real API numbers, not the HTML placeholders
+    if (document.querySelector('.stat-num')) animateStats();
 });
