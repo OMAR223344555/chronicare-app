@@ -24,4 +24,4 @@ to built-in demo data.
 | Patient | maya@chronicare.demo     | Patient@12345 |
 | Doctor  | dr.sara@chronicare.demo  | Doctor@12345  |
 | Doctor  | dr.karim@chronicare.demo | Doctor@12345  |
-| Admin   | admin@chronicare.demo    | Admin@12345   |
+| Admin   | admin@chronicare.demo    | (private, ask the project owner) |

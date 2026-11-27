@@ -1,7 +1,7 @@
 """Seed demo data for the Chronicare live demo.
 
 Creates (idempotently):
-- admin@chronicare.demo      / Admin@12345    (platform admin)
+- admin@chronicare.demo      / $DEMO_ADMIN_PASSWORD (platform admin; random if unset)
 - maya@chronicare.demo       / Patient@12345  (patient, "Maya Hassan")
 - dr.sara@chronicare.demo    / Doctor@12345   (approved doctor)
 - dr.karim@chronicare.demo   / Doctor@12345   (PENDING doctor, for the admin approval demo)
@@ -13,6 +13,8 @@ Run: python manage.py seed_demo
 """
 import datetime
 import io
+import os
+import secrets
 
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
@@ -51,7 +53,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         admin = make_user(
-            "admin@chronicare.demo", "Admin@12345",
+            "admin@chronicare.demo", os.environ.get("DEMO_ADMIN_PASSWORD") or secrets.token_urlsafe(18),
             User.Role.ADMIN, User.Status.ACTIVE, "System Administrator",
         )
         admin.is_staff = True
@@ -172,7 +174,7 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(
             "Demo data ready:\n"
-            "  admin@chronicare.demo    / Admin@12345   (admin)\n"
+            "  admin@chronicare.demo    / (from DEMO_ADMIN_PASSWORD, else random)\n"
             "  maya@chronicare.demo     / Patient@12345 (patient)\n"
             "  dr.sara@chronicare.demo  / Doctor@12345  (approved doctor)\n"
             "  dr.karim@chronicare.demo / Doctor@12345  (pending approval)"

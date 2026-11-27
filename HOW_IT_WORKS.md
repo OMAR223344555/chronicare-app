@@ -123,7 +123,7 @@ are demo-only and must never be real ones.
 | Patient | maya@chronicare.demo     | Patient@12345 | has files, labs, one share   |
 | Doctor  | dr.sara@chronicare.demo  | Doctor@12345  | approved; sees Maya's files  |
 | Doctor  | dr.karim@chronicare.demo | Doctor@12345  | pending; login blocked until admin approves |
-| Admin   | admin@chronicare.demo    | Admin@12345   | approves doctors, sees audit log |
+| Admin   | admin@chronicare.demo    | (private)     | approves doctors, sees audit log |
 
 ## Where everything lives in this repo
 

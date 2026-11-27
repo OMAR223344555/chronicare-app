@@ -1,3 +1,7 @@
+import json
+import urllib.parse
+import urllib.request
+
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.core.mail import send_mail
@@ -50,12 +54,114 @@ class LoginView(APIView):
             )
         if user.status == User.Status.PENDING:
             return Response(
-                {"detail": "Your doctor account is awaiting administrator approval."},
+                {"detail": "Your doctor account is awaiting administrator approval.",
+                 "code": "account_pending"},
                 status=status.HTTP_403_FORBIDDEN,
             )
         if user.status == User.Status.DEACTIVATED:
             return Response(
-                {"detail": "This account has been deactivated. Contact the administrator."},
+                {"detail": "This account has been deactivated. Contact the administrator.",
+                 "code": "account_deactivated"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        token, _ = Token.objects.get_or_create(user=user)
+        log_action(user, "login")
+        return Response({"token": token.key, "user": UserSerializer(user).data})
+
+
+class GoogleLoginView(APIView):
+    """Sign in (or create a patient account) with a Google ID token.
+
+    The frontend's "Continue with Google" button sends the credential JWT
+    Google issued; we verify it with Google and match it to a user by email.
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        credential = (request.data.get("credential") or "").strip()
+        client_id = getattr(settings, "GOOGLE_CLIENT_ID", "")
+        if not client_id:
+            return Response(
+                {"detail": "Google sign-in is not configured on the server."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+        if not credential:
+            return Response({"detail": "Missing Google credential."}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            url = "https://oauth2.googleapis.com/tokeninfo?id_token=" + urllib.parse.quote(credential)
+            with urllib.request.urlopen(url, timeout=8) as resp:
+                payload = json.loads(resp.read().decode("utf-8"))
+        except Exception:
+            return Response(
+                {"detail": "Google rejected the sign-in token."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+        if payload.get("aud") != client_id:
+            return Response(
+                {"detail": "Google token was not issued for this app."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+        email = (payload.get("email") or "").strip().lower()
+        if not email or payload.get("email_verified") not in (True, "true", "True"):
+            return Response(
+                {"detail": "The Google account has no verified email address."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        full_name = (payload.get("name") or email.split("@")[0]).strip()
+        requested_role = (request.data.get("role") or "patient").strip().lower()
+        user = User.objects.filter(email__iexact=email).first()
+        if user is None:
+            if requested_role == User.Role.DOCTOR:
+                # Doctors always need admin approval, however they register:
+                # create the account pending and hand out no token.
+                user = User(
+                    username=email,
+                    email=email,
+                    full_name=full_name,
+                    role=User.Role.DOCTOR,
+                    status=User.Status.PENDING,
+                )
+                user.set_unusable_password()
+                user.save()
+                log_action(user, "register", details="New doctor account via Google")
+                return Response(
+                    {"detail": "Doctor account created. It is pending administrator approval; "
+                               "you can sign in once approved.",
+                     "code": "account_pending"},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+            if requested_role == User.Role.ADMIN:
+                return Response(
+                    {"detail": "No account is registered for this Google email.",
+                     "code": "no_account"},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+            user = User(
+                username=email,
+                email=email,
+                full_name=full_name,
+                role=User.Role.PATIENT,
+                status=User.Status.ACTIVE,
+            )
+            user.set_unusable_password()
+            user.save()
+        elif requested_role in (User.Role.PATIENT, User.Role.DOCTOR, User.Role.ADMIN) and user.role != requested_role:
+            return Response(
+                {"detail": "This Google email is registered as a " + user.role +
+                           ". Pick the matching role and try again.",
+                 "code": "role_mismatch"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        if user.status == User.Status.PENDING:
+            return Response(
+                {"detail": "Your doctor account is awaiting administrator approval.",
+                 "code": "account_pending"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        if user.status == User.Status.DEACTIVATED:
+            return Response(
+                {"detail": "This account has been deactivated. Contact the administrator.",
+                 "code": "account_deactivated"},
                 status=status.HTTP_403_FORBIDDEN,
             )
         token, _ = Token.objects.get_or_create(user=user)
@@ -89,6 +195,11 @@ class PasswordResetRequestView(APIView):
             return Response({"detail": "Email is required."}, status=status.HTTP_400_BAD_REQUEST)
         data = {"detail": "If an account exists for this email, a reset link has been sent."}
         user = User.objects.filter(email__iexact=email).first()
+        # Admins and the shared demo logins never get a reset: same neutral
+        # answer as an unknown email, no token, no link, nothing to probe.
+        if user is not None and user.is_reset_protected:
+            log_action(user, "password_reset_blocked")
+            user = None
         if user is not None:
             # One active token at a time: invalidate earlier ones.
             user.password_reset_tokens.filter(used_at__isnull=True).update(used_at=timezone.now())
@@ -131,6 +242,10 @@ class PasswordResetConfirmView(APIView):
         if reset is None or not reset.is_usable:
             return Response({"detail": "This reset link is invalid or has expired."}, status=status.HTTP_400_BAD_REQUEST)
         user = reset.user
+        if user.is_reset_protected:
+            reset.used_at = timezone.now()
+            reset.save(update_fields=["used_at"])
+            return Response({"detail": "This reset link is invalid or has expired."}, status=status.HTTP_400_BAD_REQUEST)
         user.set_password(password)
         user.save(update_fields=["password"])
         reset.used_at = timezone.now()

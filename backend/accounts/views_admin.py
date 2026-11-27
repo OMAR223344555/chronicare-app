@@ -45,6 +45,21 @@ class AdminUserViewSet(viewsets.ReadOnlyModelViewSet):
         log_action(request.user, "activate", target_user=user)
         return Response(UserSerializer(user).data)
 
+    @action(detail=True, methods=["delete"])
+    def delete_account(self, request, pk=None):
+        user = self.get_object()
+        if user.role == User.Role.ADMIN:
+            return Response(
+                {"detail": "Admin accounts cannot be deleted."}, status=400
+            )
+        # Remove uploaded file bytes from storage before the cascade removes rows.
+        for medical_file in user.medical_files.all():
+            medical_file.file.delete(save=False)
+        log_action(request.user, "delete", target_user=user,
+                   details="deleted account " + user.email)
+        user.delete()
+        return Response(status=204)
+
     @action(detail=False, methods=["get"])
     def stats(self, request):
         """Platform analytics for the admin dashboard: real file counts per

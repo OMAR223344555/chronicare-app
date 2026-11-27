@@ -62,6 +62,13 @@ class MedicalFileViewSet(viewsets.ModelViewSet):
             )
         return MedicalFile.objects.none()
 
+    def get_object(self):
+        obj = super().get_object()
+        # Doctors and admins can read shared files but never change or delete them.
+        if self.action in ("update", "partial_update", "destroy") and obj.owner != self.request.user:
+            raise PermissionDenied("Only the owner can change or delete this file.")
+        return obj
+
     def perform_create(self, serializer):
         if not self.request.user.is_patient:
             raise PermissionDenied("Only patients upload medical files.")

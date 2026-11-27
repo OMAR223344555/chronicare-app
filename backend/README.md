@@ -41,7 +41,7 @@ built-in demo mode.
 | Patient | maya@chronicare.demo     | Patient@12345 | active, seeded records    |
 | Doctor  | dr.sara@chronicare.demo  | Doctor@12345  | approved                  |
 | Doctor  | dr.karim@chronicare.demo | Doctor@12345  | pending (needs admin OK)  |
-| Admin   | admin@chronicare.demo    | Admin@12345   | active                    |
+| Admin   | admin@chronicare.demo    | (private, ask the project owner) | active                    |
 
 ## Configuration (env vars, see .env.example)
 

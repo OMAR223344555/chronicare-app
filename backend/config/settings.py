@@ -151,6 +151,10 @@ PASSWORD_RESET_FRONTEND_URL = os.environ.get(
     "https://omar223344555.github.io/chronicare-app/index.html#reset",
 )
 # Email: real SMTP via env when available; console backend (no sending) otherwise.
+# Google sign-in: OAuth 2.0 web client ID used to verify ID tokens from the
+# "Continue with Google" button. Empty disables the endpoint (503).
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
+
 EMAIL_BACKEND = os.environ.get(
     "EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend"
 )

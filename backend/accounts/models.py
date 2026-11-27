@@ -6,6 +6,9 @@ from django.db import models
 from django.utils import timezone
 
 
+DEMO_EMAIL_SUFFIX = "@chronicare.demo"
+
+
 class User(AbstractUser):
     """Single users table with a role column, per the project design.
 
@@ -49,6 +52,18 @@ class User(AbstractUser):
     @property
     def is_approved_doctor(self):
         return self.is_doctor and self.status == self.Status.ACTIVE
+
+    @property
+    def is_reset_protected(self):
+        """Admins and the shared demo logins can never be reset through the
+        public forgot-password flow (the link would be shown on screen to
+        whoever typed the email)."""
+        return (
+            self.role == self.Role.ADMIN
+            or self.is_staff
+            or self.is_superuser
+            or (self.email or "").strip().lower().endswith(DEMO_EMAIL_SUFFIX)
+        )
 
     @property
     def is_platform_admin(self):

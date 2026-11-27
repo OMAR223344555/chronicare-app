@@ -20,6 +20,7 @@ class AuditLog(models.Model):
         APPROVE = "approve", "Account approved"
         DEACTIVATE = "deactivate", "Account deactivated"
         ACTIVATE = "activate", "Account reactivated"
+        DELETE = "delete", "Account deleted"
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,

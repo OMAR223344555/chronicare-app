@@ -44,6 +44,13 @@ class LabResultViewSet(viewsets.ModelViewSet):
             return LabResult.objects.filter(patient__in=patients_sharing_labs_with(user))
         return LabResult.objects.none()
 
+    def get_object(self):
+        obj = super().get_object()
+        # Doctors and admins can read shared results but never change or delete them.
+        if self.action in ("update", "partial_update", "destroy") and obj.patient != self.request.user:
+            raise PermissionDenied("Only the patient can change or delete this result.")
+        return obj
+
     def perform_create(self, serializer):
         if not self.request.user.is_patient:
             raise PermissionDenied("Only patients enter their own lab results.")
