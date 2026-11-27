@@ -31,9 +31,18 @@ document.addEventListener('DOMContentLoaded', () => {
         ],
         nextShareId: 4,
         timeline: [
-            { month: 'Nov', title: 'HbA1c Lab Test Complete', date: '18 Nov 2026', text: 'Report reviewed with Dr. Ahmed Farouk. Glucose control steady.' },
-            { month: 'Nov', title: 'Cardiology Follow-up Consultation', date: '12 Nov 2026', text: 'Dr. Salma Nabil reviewed blood pressure trends. Medication dosage maintained.' },
-            { month: 'Feb', title: 'Annual Cardiovascular Assessment', date: '25 Feb 2026', text: 'ECG and stress test completed with normal readings.' },
+            { month: 'Nov', type: 'lab', title: 'HbA1c Lab Test Complete', date: '18 Nov 2026', text: 'Report reviewed with Dr. Ahmed Farouk. Glucose control steady.' },
+            { month: 'Nov', type: 'visit', title: 'Cardiology Follow-up Consultation', date: '12 Nov 2026', text: 'Dr. Salma Nabil reviewed blood pressure trends. Medication dosage maintained.' },
+            { month: 'Feb', type: 'visit', title: 'Annual Cardiovascular Assessment', date: '25 Feb 2026', text: 'ECG and stress test completed with normal readings.' },
+            { month: 'Feb', type: 'prescription', title: 'Metformin Prescription Renewed', date: '10 Feb 2026', text: 'Dr. Ahmed Farouk renewed Metformin 500mg, twice daily.' },
+        ],
+        meds: [
+            { id: 1, name: 'Metformin 500mg', dose: '1 tablet, twice daily', time: '09:00', taken: false },
+            { id: 2, name: 'Metformin 500mg', dose: '1 tablet, twice daily', time: '21:00', taken: false },
+            { id: 3, name: 'Lisinopril 10mg', dose: '1 tablet, once daily', time: '09:00', taken: true },
+        ],
+        appointments: [
+            { id: 1, doctor: 'Dr. Salma Nabil', specialty: 'Cardiology', date: '2026-11-30', time: '11:30 AM', place: 'Heart Care Clinic' },
         ],
     };
 
@@ -470,14 +479,88 @@ document.addEventListener('DOMContentLoaded', () => {
     const uploadForm = document.getElementById('uploadForm');
     const uploadFileInput = document.getElementById('uploadFileInput');
     const uploadFileName = document.getElementById('uploadFileName');
+    const dropzone = document.getElementById('dropzone');
+    const uploadPreview = document.getElementById('uploadPreview');
+    const uploadProgress = document.getElementById('uploadProgress');
+    const uploadProgressBar = document.getElementById('uploadProgressBar');
+    const uploadProgressPct = document.getElementById('uploadProgressPct');
 
-    if (uploadFileInput && uploadFileName) {
+    function renderUploadPreview(file) {
+        if (!uploadPreview) return;
+        const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
+        const isImg = /^image\//.test(file.type);
+        const shell = inner => `
+            <div class="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl p-3">
+                ${inner}
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-bold text-[#0c2340] truncate">${file.name}</p>
+                    <p class="text-xs text-slate-500">${sizeMb} MB</p>
+                </div>
+                <button type="button" id="clearUploadFile" class="text-slate-400 hover:text-red-500" aria-label="Remove file"><i data-lucide="x-circle" class="w-5 h-5"></i></button>
+            </div>`;
+        uploadPreview.classList.remove('hidden');
+        if (isImg) {
+            const reader = new FileReader();
+            reader.onload = () => {
+                uploadPreview.innerHTML = shell(`<img src="${reader.result}" alt="" class="w-12 h-12 rounded-lg object-cover border border-slate-200">`);
+                afterPreview();
+            };
+            reader.readAsDataURL(file);
+        } else {
+            uploadPreview.innerHTML = shell(`<span class="w-12 h-12 rounded-lg bg-cyan-50 text-cyan-700 flex items-center justify-center"><i data-lucide="file-text" class="w-6 h-6"></i></span>`);
+            afterPreview();
+        }
+        function afterPreview() {
+            refreshIcons();
+            const clearBtn = document.getElementById('clearUploadFile');
+            if (clearBtn) clearBtn.addEventListener('click', () => {
+                uploadFileInput.value = '';
+                uploadPreview.classList.add('hidden');
+                uploadPreview.innerHTML = '';
+                if (uploadFileName) uploadFileName.textContent = 'Drag & drop your file here, or click to browse (PDF, JPG, PNG up to 10 MB)';
+            });
+        }
+    }
+
+    if (dropzone && uploadFileInput) {
+        dropzone.addEventListener('click', () => uploadFileInput.click());
+        dropzone.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); uploadFileInput.click(); } });
+        ['dragenter', 'dragover'].forEach(ev => dropzone.addEventListener(ev, (e) => { e.preventDefault(); dropzone.classList.add('dropzone-active'); }));
+        ['dragleave', 'drop'].forEach(ev => dropzone.addEventListener(ev, (e) => { e.preventDefault(); dropzone.classList.remove('dropzone-active'); }));
+        dropzone.addEventListener('drop', (e) => {
+            if (e.dataTransfer.files && e.dataTransfer.files.length) {
+                uploadFileInput.files = e.dataTransfer.files;
+                uploadFileName.textContent = e.dataTransfer.files[0].name;
+                renderUploadPreview(e.dataTransfer.files[0]);
+            }
+        });
         uploadFileInput.addEventListener('change', () => {
-            uploadFileName.textContent = uploadFileInput.files.length
-                ? uploadFileInput.files[0].name
-                : 'PDF, JPG or PNG, up to 10 MB';
+            if (uploadFileInput.files.length) {
+                uploadFileName.textContent = uploadFileInput.files[0].name;
+                renderUploadPreview(uploadFileInput.files[0]);
+            }
         });
     }
+
+    function simulateUploadProgress(done) {
+        if (!uploadProgress || !uploadProgressBar) { done(); return; }
+        uploadProgress.classList.remove('hidden');
+        let pct = 0;
+        const timer = setInterval(() => {
+            pct = Math.min(100, pct + 8 + Math.random() * 14);
+            uploadProgressBar.style.width = pct + '%';
+            if (uploadProgressPct) uploadProgressPct.textContent = Math.round(pct) + '%';
+            if (pct >= 100) {
+                clearInterval(timer);
+                setTimeout(() => {
+                    uploadProgress.classList.add('hidden');
+                    uploadProgressBar.style.width = '0%';
+                    done();
+                }, 250);
+            }
+        }, 90);
+    }
+
     if (uploadForm) {
         uploadForm.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -494,19 +577,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 specialty: f.get('specialty'),
                 archived: false,
             };
-            state.records.unshift(rec);
-            state.timeline.unshift({
-                month: new Date(rec.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short' }),
-                title: `Uploaded: ${rec.name}`,
-                date: fmtDate(rec.date),
-                text: `${CATEGORY_LABELS[rec.category]} for ${CONDITION_LABELS[rec.condition]}, issued by ${rec.doctor || rec.facility || 'unknown'}.`,
+            simulateUploadProgress(() => {
+                state.records.unshift(rec);
+                state.timeline.unshift({
+                    month: new Date(rec.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short' }),
+                    type: 'upload',
+                    title: `Uploaded: ${rec.name}`,
+                    date: fmtDate(rec.date),
+                    text: `${CATEGORY_LABELS[rec.category]} for ${CONDITION_LABELS[rec.condition]}, issued by ${rec.doctor || rec.facility || 'unknown'}.`,
+                });
+                renderRecords();
+                renderTimeline();
+                uploadForm.reset();
+                if (uploadFileName) uploadFileName.textContent = 'Drag & drop your file here, or click to browse (PDF, JPG, PNG up to 10 MB)';
+                if (uploadPreview) { uploadPreview.classList.add('hidden'); uploadPreview.innerHTML = ''; }
+                showView('medical-files');
+                showToast(`"${rec.name}" added to your records`);
             });
-            renderRecords();
-            renderTimeline();
-            uploadForm.reset();
-            if (uploadFileName) uploadFileName.textContent = 'PDF, JPG or PNG, up to 10 MB';
-            showView('medical-files');
-            showToast(`"${rec.name}" added to your records`);
         });
     }
 
@@ -514,9 +601,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // 5. Timeline (rendered from state)
     // ==========================================================================
     const timelineList = document.getElementById('timelineList');
+    let timelineFilter = 'all';
     function renderTimeline() {
         if (!timelineList) return;
-        timelineList.innerHTML = state.timeline.map(t => `
+        const items = state.timeline.filter(t => timelineFilter === 'all' || t.type === timelineFilter);
+        timelineList.innerHTML = (items.length ? items : [{ month: '-', title: 'No events in this category yet.', date: '', text: '' }]).map(t => `
             <div class="relative flex items-start gap-4">
                 <div class="w-8 h-8 rounded-full bg-cyan-100 text-cyan-700 flex items-center justify-center shrink-0 z-10 font-bold text-xs">${t.month}</div>
                 <div class="bg-slate-50 p-4 rounded-xl flex-1 border border-slate-100">
@@ -549,7 +638,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!labResultsTable) return;
         const test = labTestSelect ? labTestSelect.value : 'all';
         const rows = state.labs
-            .filter(l => test === 'all' || l.test === test)
+            .filter(l => (test === 'all' || l.test === test) && labInRange(l))
             .sort((a, b) => b.date.localeCompare(a.date));
         labResultsTable.innerHTML = rows.map(l => `
             <tr class="${outOfRange(l) ? 'bg-red-50' : ''}">
@@ -563,36 +652,78 @@ document.addEventListener('DOMContentLoaded', () => {
             </tr>`).join('') || `<tr><td colspan="5" class="text-center text-slate-400 py-6">No results yet.</td></tr>`;
     }
 
+    const labDateFrom = document.getElementById('labDateFrom');
+    const labDateTo = document.getElementById('labDateTo');
+    const activeLabMetrics = new Set(['HBA1C']);
+    const METRIC_COLORS = { HBA1C: '#0891b2', FBG: '#7c3aed', SBP: '#dc2626', EGFR: '#059669' };
+
+    function labInRange(l) {
+        const from = labDateFrom && labDateFrom.value ? labDateFrom.value : '0000-01-01';
+        const to = labDateTo && labDateTo.value ? labDateTo.value : '9999-12-31';
+        return l.date >= from && l.date <= to;
+    }
+
     function renderTrendChart() {
         if (!trendChart) return;
-        const test = labTestSelect && labTestSelect.value !== 'all' ? labTestSelect.value : 'HBA1C';
-        const meta = labTestTypes.find(l => l.test === test) || state.labs.find(l => l.test === test);
-        const points = state.labs.filter(l => l.test === test).sort((a, b) => a.date.localeCompare(b.date));
-        if (!points.length) {
-            trendChart.innerHTML = `<p class="text-sm text-slate-400 p-6">No data for this test yet.</p>`;
+        const metrics = [...activeLabMetrics];
+        if (!metrics.length) {
+            trendChart.innerHTML = `<p class="text-sm text-slate-400 p-6">Select at least one metric above.</p>`;
             return;
         }
         const W = 560, H = 190, PAD = 40;
-        const values = points.map(p => p.value);
-        const bounds = [...values, meta.min, meta.max].filter(v => v != null);
-        const vMin = Math.min(...bounds) * 0.95, vMax = Math.max(...bounds) * 1.05;
-        const x = i => PAD + (points.length === 1 ? (W - 2 * PAD) / 2 : i * (W - 2 * PAD) / (points.length - 1));
-        const y = v => H - PAD - ((v - vMin) / (vMax - vMin)) * (H - 2 * PAD);
-        const line = points.map((p, i) => `${x(i)},${y(p.value)}`).join(' ');
-        const rangeBand = (meta.min != null && meta.max != null)
-            ? `<rect x="${PAD}" y="${y(meta.max)}" width="${W - 2 * PAD}" height="${y(meta.min) - y(meta.max)}" fill="#dcfce7" opacity="0.6"/>`
-            : (meta.min != null ? `<rect x="${PAD}" y="${PAD}" width="${W - 2 * PAD}" height="${y(meta.min) - PAD}" fill="#dcfce7" opacity="0.6"/>` : '');
+        const series = metrics.map(m => ({
+            meta: labTestTypes.find(l => l.test === m) || state.labs.find(l => l.test === m),
+            points: state.labs.filter(l => l.test === m && labInRange(l)).sort((a, b) => a.date.localeCompare(b.date)),
+        })).filter(s => s.points.length);
+        if (!series.length) {
+            trendChart.innerHTML = `<p class="text-sm text-slate-400 p-6">No data in this date range.</p>`;
+            return;
+        }
+        if (series.length === 1) {
+            const { meta, points } = series[0];
+            const values = points.map(p => p.value);
+            const bounds = [...values, meta.min, meta.max].filter(v => v != null);
+            const vMin = Math.min(...bounds) * 0.95, vMax = Math.max(...bounds) * 1.05;
+            const x = i => PAD + (points.length === 1 ? (W - 2 * PAD) / 2 : i * (W - 2 * PAD) / (points.length - 1));
+            const y = v => H - PAD - ((v - vMin) / (vMax - vMin)) * (H - 2 * PAD);
+            const line = points.map((p, i) => `${x(i)},${y(p.value)}`).join(' ');
+            const color = METRIC_COLORS[meta.test] || '#0891b2';
+            const rangeBand = (meta.min != null && meta.max != null)
+                ? `<rect x="${PAD}" y="${y(meta.max)}" width="${W - 2 * PAD}" height="${y(meta.min) - y(meta.max)}" fill="#dcfce7" opacity="0.6"/>`
+                : (meta.min != null ? `<rect x="${PAD}" y="${PAD}" width="${W - 2 * PAD}" height="${y(meta.min) - PAD}" fill="#dcfce7" opacity="0.6"/>` : '');
+            trendChart.innerHTML = `
+                <svg viewBox="0 0 ${W} ${H}" class="w-full h-48">
+                    ${rangeBand}
+                    <line x1="${PAD}" y1="${H - PAD}" x2="${W - PAD}" y2="${H - PAD}" stroke="#e2e8f0"/>
+                    <polyline points="${line}" fill="none" stroke="${color}" stroke-width="2.5"/>
+                    ${points.map((p, i) => `
+                        <circle cx="${x(i)}" cy="${y(p.value)}" r="4.5" fill="${outOfRange(p) ? '#dc2626' : color}"/>
+                        <text x="${x(i)}" y="${y(p.value) - 10}" text-anchor="middle" font-size="10" fill="#0c2340" font-weight="bold">${p.value}</text>
+                        <text x="${x(i)}" y="${H - PAD + 16}" text-anchor="middle" font-size="9" fill="#94a3b8">${p.date.slice(5)}</text>`).join('')}
+                </svg>
+                <p class="text-xs text-slate-400 mt-2">${meta.label} over time (${meta.unit}). Green band = reference range; red points are outside it.</p>`;
+            return;
+        }
+        // multi-metric: each series normalized to its own min/max for overlay comparison
+        const maxLen = Math.max(...series.map(s => s.points.length));
+        const x = i => PAD + (maxLen === 1 ? (W - 2 * PAD) / 2 : i * (W - 2 * PAD) / (maxLen - 1));
         trendChart.innerHTML = `
             <svg viewBox="0 0 ${W} ${H}" class="w-full h-48">
-                ${rangeBand}
                 <line x1="${PAD}" y1="${H - PAD}" x2="${W - PAD}" y2="${H - PAD}" stroke="#e2e8f0"/>
-                <polyline points="${line}" fill="none" stroke="#0891b2" stroke-width="2.5"/>
-                ${points.map((p, i) => `
-                    <circle cx="${x(i)}" cy="${y(p.value)}" r="4.5" fill="${outOfRange(p) ? '#dc2626' : '#0891b2'}"/>
-                    <text x="${x(i)}" y="${y(p.value) - 10}" text-anchor="middle" font-size="10" fill="#0c2340" font-weight="bold">${p.value}</text>
-                    <text x="${x(i)}" y="${H - PAD + 16}" text-anchor="middle" font-size="9" fill="#94a3b8">${p.date.slice(5)}</text>`).join('')}
+                ${series.map(({ meta, points }) => {
+                    const vals = points.map(p => p.value);
+                    const lo = Math.min(...vals), hi = Math.max(...vals);
+                    const span = hi - lo || 1;
+                    const y = v => H - PAD - ((v - lo) / span) * (H - 2 * PAD);
+                    const color = METRIC_COLORS[meta.test] || '#0891b2';
+                    return `<polyline points="${points.map((p, i) => `${x(i)},${y(p.value)}`).join(' ')}" fill="none" stroke="${color}" stroke-width="2.5"/>
+                        ${points.map((p, i) => `<circle cx="${x(i)}" cy="${y(p.value)}" r="4" fill="${color}"><title>${meta.label}: ${p.value} ${meta.unit} (${p.date})</title></circle>`).join('')}`;
+                }).join('')}
             </svg>
-            <p class="text-xs text-slate-400 mt-2">${meta.label} over time (${meta.unit}). Green band = reference range; red points are outside it.</p>`;
+            <div class="flex flex-wrap gap-3 mt-2">
+                ${series.map(({ meta }) => `<span class="flex items-center gap-1.5 text-xs font-semibold text-slate-500"><span class="w-2.5 h-2.5 rounded-full" style="background:${METRIC_COLORS[meta.test]}"></span>${meta.label} (${meta.unit})</span>`).join('')}
+            </div>
+            <p class="text-xs text-slate-400 mt-1">Each line is scaled to its own range so trends can be compared. Hover a point for the exact value.</p>`;
     }
 
     if (labTestSelect) labTestSelect.addEventListener('change', () => { renderLabTable(); renderTrendChart(); });
@@ -656,32 +787,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    if (newShareForm) {
-        newShareForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const doctorSel = document.getElementById('shareDoctor');
-            const filesSel = document.getElementById('shareFiles');
-            const expiryInput = document.getElementById('shareExpiry');
-            const doctorText = doctorSel.options[doctorSel.selectedIndex].text;
-            const name = doctorText.split(' (')[0];
-            const specialty = (doctorText.match(/\(([^)]+)\)/) || [])[1] || '';
-            const fileText = filesSel.options[filesSel.selectedIndex].text;
-            const isAll = fileText.startsWith('All');
-            state.shares.push({
-                id: state.nextShareId++,
-                doctor: name,
-                specialty,
-                initials: name.replace('Dr. ', '').split(' ').map(w => w[0]).join(''),
-                color: 'bg-cyan-200',
-                files: fileText,
-                count: isAll ? state.records.filter(r => !r.archived).length : 1,
-                expires: expiryInput.value,
-            });
-            renderShares();
-            newShareForm.reset();
-            showToast(`Access shared with ${name} until ${fmtDate(expiryInput.value)}`);
-        });
-    }
+    // (share creation handled in section 10 via the review modal)
 
     // ==========================================================================
     // 8. Initial render
@@ -801,4 +907,207 @@ document.addEventListener('DOMContentLoaded', () => {
         ];
         return [...pages, ...recs, ...actions];
     };
+
+    // ==========================================================================
+    // 10. Stage 3: care plan, timeline filters, lab exports, share modal
+    // ==========================================================================
+
+    // --- Today's care plan: medication + appointment reminders ---
+    const carePlanList = document.getElementById('carePlanList');
+    const carePlanBadge = document.getElementById('carePlanBadge');
+    function renderCarePlan() {
+        if (!carePlanList) return;
+        const taken = state.meds.filter(m => m.taken).length;
+        if (carePlanBadge) carePlanBadge.textContent = `${taken} of ${state.meds.length} meds taken`;
+        const medCards = state.meds.map(m => `
+            <div class="flex items-center gap-3 border ${m.taken ? 'border-green-200 bg-green-50/60' : 'border-slate-100 bg-slate-50/60'} rounded-xl p-3.5">
+                <span class="w-9 h-9 rounded-lg ${m.taken ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'} flex items-center justify-center shrink-0">
+                    <i data-lucide="${m.taken ? 'check-circle-2' : 'pill'}" class="w-4.5 h-4.5"></i>
+                </span>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-bold text-[#0c2340] ${m.taken ? 'line-through opacity-60' : ''}">${m.name}</p>
+                    <p class="text-xs text-slate-500">${m.dose} • ${m.time}</p>
+                </div>
+                <button type="button" class="med-take-btn text-xs font-bold ${m.taken ? 'text-green-600' : 'text-cyan-700 hover:underline'}" data-id="${m.id}" ${m.taken ? 'disabled' : ''}>${m.taken ? 'Taken' : 'Mark taken'}</button>
+            </div>`).join('');
+        const apptCards = state.appointments.map(a => `
+            <div class="flex items-center gap-3 border border-cyan-100 bg-cyan-50/50 rounded-xl p-3.5">
+                <span class="w-9 h-9 rounded-lg bg-cyan-100 text-cyan-700 flex items-center justify-center shrink-0"><i data-lucide="calendar-clock" class="w-4.5 h-4.5"></i></span>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-bold text-[#0c2340]">Appointment: ${a.doctor}</p>
+                    <p class="text-xs text-slate-500">${a.specialty} • ${fmtDate(a.date)} at ${a.time} • ${a.place}</p>
+                </div>
+                <span class="text-[10px] font-bold text-cyan-700 bg-cyan-100 px-2 py-1 rounded-full uppercase tracking-wide">Upcoming</span>
+            </div>`).join('');
+        carePlanList.innerHTML = medCards + apptCards;
+        refreshIcons();
+    }
+    document.addEventListener('click', (e) => {
+        const takeBtn = e.target.closest('.med-take-btn');
+        if (!takeBtn) return;
+        const med = state.meds.find(m => m.id === Number(takeBtn.dataset.id));
+        if (med && !med.taken) {
+            med.taken = true;
+            renderCarePlan();
+            showToast(`${med.name} marked as taken`);
+        }
+    });
+    renderCarePlan();
+
+    // --- Timeline filter chips ---
+    const timelineFilters = document.getElementById('timelineFilters');
+    if (timelineFilters) {
+        timelineFilters.addEventListener('click', (e) => {
+            const chip = e.target.closest('[data-tfilter]');
+            if (!chip) return;
+            timelineFilter = chip.dataset.tfilter;
+            timelineFilters.querySelectorAll('.chart-chip').forEach(c => c.classList.toggle('active', c === chip));
+            renderTimeline();
+        });
+    }
+
+    // --- Lab metric chips + date range + exports ---
+    document.querySelectorAll('[data-labmetric]').forEach(chip => {
+        chip.addEventListener('click', () => {
+            const m = chip.dataset.labmetric;
+            if (activeLabMetrics.has(m)) { activeLabMetrics.delete(m); chip.classList.remove('active'); }
+            else { activeLabMetrics.add(m); chip.classList.add('active'); }
+            renderTrendChart();
+        });
+    });
+    [labDateFrom, labDateTo].forEach(inp => inp && inp.addEventListener('change', () => { renderLabTable(); renderTrendChart(); }));
+
+    function labRowsForExport() {
+        const test = labTestSelect ? labTestSelect.value : 'all';
+        return state.labs.filter(l => (test === 'all' || l.test === test) && labInRange(l)).sort((a, b) => a.date.localeCompare(b.date));
+    }
+    const exportCsvBtn = document.getElementById('exportCsvBtn');
+    if (exportCsvBtn) {
+        exportCsvBtn.addEventListener('click', () => {
+            const rows = labRowsForExport();
+            const csv = ['Test,Value,Unit,Reference min,Reference max,Date,Flag']
+                .concat(rows.map(l => [l.label, l.value, l.unit, l.min != null ? l.min : '', l.max != null ? l.max : '', l.date, outOfRange(l) ? 'Out of range' : 'In range'].join(',')))
+                .join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `chronicare-lab-results-${labDateFrom.value}-to-${labDateTo.value}.csv`;
+            a.click();
+            URL.revokeObjectURL(a.href);
+            showToast('Lab results exported as CSV');
+        });
+    }
+    const exportPdfBtn = document.getElementById('exportPdfBtn');
+    const printReport = document.getElementById('printReport');
+    if (exportPdfBtn && printReport) {
+        exportPdfBtn.addEventListener('click', () => {
+            const rows = labRowsForExport();
+            printReport.innerHTML = `
+                <h1>Chronicare - Lab Results Report</h1>
+                <p>Patient: Maya Hassan &nbsp;•&nbsp; Period: ${fmtDate(labDateFrom.value)} - ${fmtDate(labDateTo.value)} &nbsp;•&nbsp; Generated ${fmtDate(new Date().toISOString().slice(0, 10))}</p>
+                <table>
+                    <thead><tr><th>Test</th><th>Value</th><th>Reference</th><th>Date</th><th>Flag</th></tr></thead>
+                    <tbody>${rows.map(l => `<tr><td>${l.label}</td><td>${l.value} ${l.unit}</td><td>${l.min != null ? l.min : ''}${l.max != null ? ' - ' + l.max : ''} ${l.unit}</td><td>${fmtDate(l.date)}</td><td>${outOfRange(l) ? 'OUT OF RANGE' : 'In range'}</td></tr>`).join('')}</tbody>
+                </table>
+                <p class="note">Demo report generated from the Chronicare patient portal frontend.</p>`;
+            document.body.classList.add('printing');
+            const cleanup = () => { document.body.classList.remove('printing'); window.removeEventListener('afterprint', cleanup); };
+            window.addEventListener('afterprint', cleanup);
+            window.print();
+            setTimeout(cleanup, 1500);
+        });
+    }
+
+    // --- Share flow: review modal with summary + QR + link ---
+    const shareModal = document.getElementById('shareModal');
+    const shareSummary = document.getElementById('shareSummary');
+    const shareQr = document.getElementById('shareQr');
+    const shareLinkEl = document.getElementById('shareLink');
+    const confirmShareBtn = document.getElementById('confirmShareBtn');
+    const copyShareLink = document.getElementById('copyShareLink');
+    const closeShareModal = document.getElementById('closeShareModal');
+    let pendingShare = null;
+
+    function openShareModal() { if (shareModal) { shareModal.classList.remove('hidden'); shareModal.classList.add('flex'); refreshIcons(); } }
+    function hideShareModal() { if (shareModal) { shareModal.classList.add('hidden'); shareModal.classList.remove('flex'); } pendingShare = null; }
+    if (closeShareModal) closeShareModal.addEventListener('click', hideShareModal);
+    if (shareModal) shareModal.addEventListener('click', (e) => { if (e.target === shareModal) hideShareModal(); });
+
+    if (newShareForm) {
+        newShareForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const doctorSel = document.getElementById('shareDoctor');
+            const filesSel = document.getElementById('shareFiles');
+            const expiryInput = document.getElementById('shareExpiry');
+            const doctorText = doctorSel.options[doctorSel.selectedIndex].text;
+            const name = doctorText.split(' (')[0];
+            const specialty = (doctorText.match(/\(([^)]+)\)/) || [])[1] || '';
+            const fileText = filesSel.options[filesSel.selectedIndex].text;
+            const isAll = fileText.startsWith('All');
+            const perms = [...newShareForm.querySelectorAll('input[type=checkbox]')]
+                .map(cb => ({ label: cb.closest('label').querySelector('span').textContent, on: cb.checked }));
+            const code = Math.random().toString(36).slice(2, 10).toUpperCase();
+            pendingShare = {
+                id: state.nextShareId++,
+                doctor: name, specialty,
+                initials: name.replace('Dr. ', '').split(' ').map(w => w[0]).join(''),
+                color: 'bg-cyan-200',
+                files: fileText,
+                count: isAll ? state.records.filter(r => !r.archived).length : 1,
+                expires: expiryInput.value,
+                link: `https://chronicare.app/s/${code}`,
+            };
+            if (shareSummary) {
+                shareSummary.innerHTML = `
+                    <p><span class="font-bold text-[#0c2340]">Doctor:</span> ${name}${specialty ? ` (${specialty})` : ''}</p>
+                    <p><span class="font-bold text-[#0c2340]">Files:</span> ${fileText}</p>
+                    <p><span class="font-bold text-[#0c2340]">Expires:</span> ${fmtDate(expiryInput.value)}</p>
+                    <p><span class="font-bold text-[#0c2340]">Permissions:</span></p>
+                    <ul class="list-none space-y-1">${perms.map(p => `<li class="flex items-center gap-2 text-xs"><i data-lucide="${p.on ? 'check-circle-2' : 'x-circle'}" class="w-3.5 h-3.5 ${p.on ? 'text-green-600' : 'text-slate-400'}"></i>${p.label}</li>`).join('')}</ul>`;
+            }
+            if (shareLinkEl) shareLinkEl.textContent = pendingShare.link;
+            if (shareQr) {
+                shareQr.innerHTML = '';
+                try {
+                    if (typeof qrcode === 'function') {
+                        const qr = qrcode(0, 'M');
+                        qr.addData(pendingShare.link);
+                        qr.make();
+                        shareQr.innerHTML = qr.createImgTag(3, 4);
+                    } else {
+                        shareQr.innerHTML = '<span class="w-24 h-24 flex items-center justify-center text-slate-300"><i data-lucide="qr-code" class="w-12 h-12"></i></span>';
+                    }
+                } catch (err) {
+                    shareQr.innerHTML = '<span class="w-24 h-24 flex items-center justify-center text-slate-300"><i data-lucide="qr-code" class="w-12 h-12"></i></span>';
+                }
+            }
+            openShareModal();
+        });
+    }
+    if (confirmShareBtn) {
+        confirmShareBtn.addEventListener('click', () => {
+            if (!pendingShare) return;
+            state.shares.push(pendingShare);
+            renderShares();
+            newShareForm.reset();
+            showToast(`Access shared with ${pendingShare.doctor} until ${fmtDate(pendingShare.expires)}`);
+            hideShareModal();
+        });
+    }
+    if (copyShareLink) {
+        copyShareLink.addEventListener('click', () => {
+            const link = shareLinkEl ? shareLinkEl.textContent : '';
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(link).then(() => showToast('Share link copied'), () => showToast('Could not copy link', 'warn'));
+            } else {
+                const ta = document.createElement('textarea');
+                ta.value = link;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                ta.remove();
+                showToast('Share link copied');
+            }
+        });
+    }
 });

@@ -1181,3 +1181,40 @@ html.dark .notif-icon-share { background: rgba(167,139,250,.14); color: #c4b5fd;
 .chart-chip.active { background: #0c2340; border-color: #0c2340; color: #fff; }
 html.dark .chart-chip { background: #16283c; border-color: #22364d; color: #b3c2d4; }
 html.dark .chart-chip.active { background: #22d3ee; border-color: #22d3ee; color: #0c2340; }
+
+/* ==========================================================================
+   Stage 3: dropzone, print report, care plan & share modal polish
+   ========================================================================== */
+.dropzone-active {
+    border-color: #06b6d4 !important;
+    background: rgba(34, 211, 238, 0.08) !important;
+    transform: scale(1.01);
+}
+#dropzone { transition: border-color .15s, background .15s, transform .15s; }
+#dropzone:focus-visible { outline: 2px solid #06b6d4; outline-offset: 2px; }
+
+/* print report: hidden on screen, only thing visible when printing */
+.print-only { display: none; }
+@media print {
+    body.printing > *:not(main) { display: none !important; }
+    body.printing #view-lab-trends > *:not(.print-only) { display: none !important; }
+    body.printing .print-only { display: block !important; font-family: Inter, Arial, sans-serif; color: #111; padding: 24px; }
+    body.printing .print-only h1 { font-size: 20px; margin-bottom: 6px; }
+    body.printing .print-only p { font-size: 12px; margin-bottom: 14px; color: #444; }
+    body.printing .print-only table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    body.printing .print-only th, body.printing .print-only td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; }
+    body.printing .print-only th { background: #f0f4f8; }
+    body.printing .print-only .note { margin-top: 14px; font-size: 10px; color: #888; }
+}
+
+/* dark-mode tints for stage-3 components */
+html.dark .bg-green-50\/60, html.dark .bg-green-50 { background-color: rgba(16, 185, 129, 0.08); }
+html.dark .bg-green-100 { background-color: rgba(16, 185, 129, 0.15); }
+html.dark .bg-amber-100 { background-color: rgba(245, 158, 11, 0.15); }
+html.dark .text-amber-700 { color: #fbbf24; }
+html.dark .text-green-700, html.dark .text-green-600 { color: #34d399; }
+html.dark .bg-cyan-50\/50 { background-color: rgba(34, 211, 238, 0.06); }
+html.dark .border-cyan-100 { border-color: rgba(34, 211, 238, 0.25); }
+html.dark .bg-cyan-100 { background-color: rgba(34, 211, 238, 0.15); }
+html.dark #shareModal .bg-slate-50 { background-color: #16283c; }
+html.dark #shareQr { background: #fff; }
