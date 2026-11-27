@@ -217,6 +217,21 @@
                         </div>
 
 
+                        <!-- ROLE (demo routing: doctor/admin open their own portals) -->
+                        <div class="relative">
+                            <i data-lucide="user-check" class="w-5 h-5 absolute left-4 top-4 text-[#0c2340]"></i>
+
+                            <select id="signin-role"
+                                class="auth-input w-full pl-12 pr-8 py-4 text-sm bg-slate-50 border border-slate-200 rounded-2xl appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="patient">Sign in as: Patient</option>
+                                <option value="doctor">Sign in as: Doctor</option>
+                                <option value="admin">Sign in as: Administrator</option>
+                            </select>
+
+                            <i data-lucide="chevron-down" class="w-4 h-4 absolute right-4 top-4 pointer-events-none"></i>
+                        </div>
+
+
                         <!-- BUTTON -->
                         <button type="submit"
                             class="w-full bg-[#0c2340] hover:bg-blue-900 text-white font-semibold py-4 rounded-full flex items-center justify-center gap-3 shadow-lg transition">
@@ -337,12 +352,30 @@
                         <div class="relative">
                             <i data-lucide="user-check" class="w-5 h-5 absolute left-4 top-4 text-[#0c2340]"></i>
 
-                            <select class="auth-input w-full pl-12 pr-8 py-3.5 text-sm bg-slate-50 border border-slate-200 rounded-2xl appearance-none">
+                            <select id="signup-role" class="auth-input w-full pl-12 pr-8 py-3.5 text-sm bg-slate-50 border border-slate-200 rounded-2xl appearance-none">
                                 <option value="patient">Patient</option>
                                 <option value="doctor">Doctor</option>
                             </select>
 
                             <i data-lucide="chevron-down" class="w-4 h-4 absolute right-4 top-4 pointer-events-none"></i>
+                        </div>
+
+
+                        <!-- DOCTOR-ONLY FIELDS (shown when role = Doctor) -->
+                        <div id="doctor-fields" class="hidden space-y-3">
+                            <div class="relative">
+                                <i data-lucide="stethoscope" class="w-5 h-5 absolute left-4 top-4 text-[#0c2340]"></i>
+                                <input type="text" id="signup-specialty" placeholder="Specialty (e.g. Cardiology)"
+                                    class="auth-input w-full pl-12 pr-4 py-3.5 text-sm bg-slate-50 border border-slate-200 rounded-2xl">
+                            </div>
+                            <div class="relative">
+                                <i data-lucide="badge-check" class="w-5 h-5 absolute left-4 top-4 text-[#0c2340]"></i>
+                                <input type="text" id="signup-license" placeholder="Medical license number"
+                                    class="auth-input w-full pl-12 pr-4 py-3.5 text-sm bg-slate-50 border border-slate-200 rounded-2xl">
+                            </div>
+                            <p id="doctor-pending-note" class="hidden text-xs bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-3">
+                                Doctor accounts stay <strong>pending</strong> until an administrator verifies your license. You will be able to sign in after approval.
+                            </p>
                         </div>
 
 
@@ -428,7 +461,7 @@
                         <i data-lucide="folder-heart" class="w-5 h-5"></i>
                         <span>My Medical Files</span>
                     </button>
-                    <button type="button" class="trigger-upload-btn w-full flex items-center gap-3 p-3 rounded-xl transition text-sm font-semibold hover:bg-slate-50 text-slate-600">
+                    <button type="button" class="portal-nav-btn w-full flex items-center gap-3 p-3 rounded-xl transition text-sm font-semibold hover:bg-slate-50 text-slate-600" data-target="upload-file" data-navigate="upload-file">
                         <i data-lucide="upload" class="w-5 h-5"></i>
                         <span>Upload Record</span>
                     </button>
@@ -711,7 +744,7 @@
                             <h1>My Medical Files</h1>
                             <p>All your reports, prescriptions, and documents are organized in one secure archive.</p>
                         </div>
-                        <button type="button" class="upload-btn trigger-upload-btn" id="uploadBtn">
+                        <button type="button" class="upload-btn" id="uploadBtn" data-navigate="upload-file">
                             <i data-lucide="plus"></i>
                             <span>Upload Record</span>
                         </button>
@@ -723,18 +756,21 @@
                             <input id="searchInput" placeholder="Search files by name...">
                         </div>
 
-                        <select id="categoryFilter">
+                        <select id="conditionFilter">
                             <option value="all">All conditions</option>
                             <option value="diabetes">Diabetes</option>
                             <option value="hypertension">Hypertension</option>
                             <option value="cardiac">Cardiac</option>
+                            <option value="ckd">Chronic kidney disease</option>
                         </select>
 
-                        <select id="typeFilter">
+                        <select id="categoryFilter">
                             <option value="all">All categories</option>
                             <option value="lab">Lab Report</option>
                             <option value="prescription">Prescription</option>
                             <option value="imaging">Imaging</option>
+                            <option value="specialist">Specialist Report</option>
+                            <option value="discharge">Discharge Summary</option>
                         </select>
 
                         <button type="button" class="filter-btn" id="resetBtn">Reset filters</button>
@@ -764,61 +800,13 @@
                                         </tr>
                                     </thead>
                                     <tbody id="recordsTable">
-                                        <tr data-category="diabetes" data-type="lab">
-                                            <td><span class="file-icon">PDF</span><strong>HbA1c Lab Report</strong></td>
-                                            <td>Diabetes</td>
-                                            <td>Lab Report</td>
-                                            <td>18 Mar 2026</td>
-                                            <td><span class="status reviewed">Reviewed</span></td>
-                                            <td><button type="button" class="more-btn">•••</button></td>
-                                        </tr>
-                                        <tr data-category="hypertension" data-type="lab">
-                                            <td><span class="file-icon">PDF</span><strong>Cardiology Follow-up</strong></td>
-                                            <td>Hypertension</td>
-                                            <td>Lab Report</td>
-                                            <td>12 Mar 2026</td>
-                                            <td><span class="status review">Review</span></td>
-                                            <td><button type="button" class="more-btn">•••</button></td>
-                                        </tr>
-                                        <tr data-category="diabetes" data-type="lab">
-                                            <td><span class="file-icon">PDF</span><strong>Kidney Function Test</strong></td>
-                                            <td>Diabetes</td>
-                                            <td>Lab Report</td>
-                                            <td>04 Mar 2026</td>
-                                            <td><span class="status reviewed">Reviewed</span></td>
-                                            <td><button type="button" class="more-btn">•••</button></td>
-                                        </tr>
-                                        <tr data-category="cardiac" data-type="imaging">
-                                            <td><span class="file-icon">PDF</span><strong>ECG Report</strong></td>
-                                            <td>Cardiac</td>
-                                            <td>Imaging</td>
-                                            <td>25 Feb 2026</td>
-                                            <td><span class="status reviewed">Reviewed</span></td>
-                                            <td><button type="button" class="more-btn">•••</button></td>
-                                        </tr>
-                                        <tr data-category="hypertension" data-type="prescription">
-                                            <td><span class="file-icon">PDF</span><strong>Discharge Summary</strong></td>
-                                            <td>Hypertension</td>
-                                            <td>Prescription</td>
-                                            <td>10 Feb 2026</td>
-                                            <td><span class="status archived">Archived</span></td>
-                                            <td><button type="button" class="more-btn">•••</button></td>
-                                        </tr>
-                                        <tr data-category="diabetes" data-type="lab">
-                                            <td><span class="file-icon">PDF</span><strong>Fasting Glucose Result</strong></td>
-                                            <td>Diabetes</td>
-                                            <td>Lab Report</td>
-                                            <td>06 Feb 2026</td>
-                                            <td><span class="status review">Review</span></td>
-                                            <td><button type="button" class="more-btn">•••</button></td>
-                                        </tr>
+                                        <!-- Rendered by js/script.js from demo state -->
                                     </tbody>
                                 </table>
                             </div>
 
                             <div class="table-footer">
-                                <span>Showing 6 records</span>
-                                <span class="font-semibold cursor-pointer">‹ 1 2 3 ›</span>
+                                <span id="tableFooterCount">Showing 0 records</span>
                             </div>
                         </div>
 
@@ -836,11 +824,96 @@
                                 <p>Keep older records organized and accessible whenever you need them.</p>
                                 <div class="archive-info">
                                     <i data-lucide="archive"></i>
-                                    <strong>6 Files</strong>
+                                    <strong id="archiveCount">0 Files</strong>
                                 </div>
                                 <button type="button" class="archive-btn" data-navigate="timeline-archive">Open archive →</button>
                             </div>
                         </div>
+                    </div>
+                </section>
+
+
+                <!-- ----------------------------------------------------------
+                     SUBVIEW B2: UPLOAD FILE (FR-02)
+                     ---------------------------------------------------------- -->
+                <section id="view-upload-file" class="portal-subview hidden">
+                    <div class="page-heading">
+                        <div>
+                            <span class="eyebrow">NEW RECORD</span>
+                            <h1>Upload a medical file</h1>
+                            <p>Add a report, prescription or scan with its details so it stays easy to find.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 md:p-8 rounded-2xl border border-slate-100 shadow-sm max-w-3xl">
+                        <form id="uploadForm" class="space-y-5">
+                            <div>
+                                <label class="text-xs font-bold text-[#0c2340] block mb-1.5">File title *</label>
+                                <input type="text" name="title" required placeholder="e.g. HbA1c Lab Report"
+                                    class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-cyan-500 transition">
+                            </div>
+
+                            <div class="grid md:grid-cols-2 gap-5">
+                                <div>
+                                    <label class="text-xs font-bold text-[#0c2340] block mb-1.5">Category *</label>
+                                    <select name="category" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-cyan-500 transition">
+                                        <option value="lab">Lab Report</option>
+                                        <option value="prescription">Prescription</option>
+                                        <option value="imaging">Imaging</option>
+                                        <option value="specialist">Specialist Report</option>
+                                        <option value="discharge">Discharge Summary</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-bold text-[#0c2340] block mb-1.5">Chronic condition *</label>
+                                    <select name="condition" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-cyan-500 transition">
+                                        <option value="diabetes">Diabetes</option>
+                                        <option value="hypertension">Hypertension</option>
+                                        <option value="cardiac">Cardiac</option>
+                                        <option value="ckd">Chronic kidney disease</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="grid md:grid-cols-2 gap-5">
+                                <div>
+                                    <label class="text-xs font-bold text-[#0c2340] block mb-1.5">Record date *</label>
+                                    <input type="date" name="record_date" required value="2026-11-27"
+                                        class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-cyan-500 transition">
+                                </div>
+                                <div>
+                                    <label class="text-xs font-bold text-[#0c2340] block mb-1.5">Specialty</label>
+                                    <input type="text" name="specialty" placeholder="e.g. Cardiology"
+                                        class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-cyan-500 transition">
+                                </div>
+                            </div>
+
+                            <div class="grid md:grid-cols-2 gap-5">
+                                <div>
+                                    <label class="text-xs font-bold text-[#0c2340] block mb-1.5">Issuing doctor</label>
+                                    <input type="text" name="doctor" placeholder="e.g. Dr. Ahmed Farouk"
+                                        class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-cyan-500 transition">
+                                </div>
+                                <div>
+                                    <label class="text-xs font-bold text-[#0c2340] block mb-1.5">Issuing facility</label>
+                                    <input type="text" name="facility" placeholder="e.g. Cairo Lab"
+                                        class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-cyan-500 transition">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="text-xs font-bold text-[#0c2340] block mb-1.5">File *</label>
+                                <label class="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-slate-200 rounded-2xl p-8 cursor-pointer hover:border-cyan-400 hover:bg-cyan-50/40 transition text-center">
+                                    <i data-lucide="cloud-upload" class="w-8 h-8 text-cyan-600"></i>
+                                    <span id="uploadFileName" class="text-sm text-slate-500">PDF, JPG or PNG, up to 10 MB</span>
+                                    <input type="file" id="uploadFileInput" name="file" accept=".pdf,.jpg,.jpeg,.png" required class="hidden">
+                                </label>
+                            </div>
+
+                            <button type="submit" class="w-full bg-[#0c2340] hover:bg-blue-950 text-white font-semibold py-3.5 rounded-xl text-sm transition">
+                                Save record →
+                            </button>
+                        </form>
                     </div>
                 </section>
 
@@ -862,58 +935,11 @@
                                     <h3 class="font-bold text-[#0c2340] text-base">Active sharing permissions</h3>
                                     <p class="text-xs text-slate-500 mt-0.5">You decide which doctor sees each selected record</p>
                                 </div>
-                                <span class="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full">3 active shares</span>
+                                <span id="shareCountBadge" class="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full">3 active shares</span>
                             </div>
 
-                            <!-- DOCTOR 1 -->
-                            <div class="flex items-center gap-4 border border-slate-100 rounded-xl p-4 mb-3.5 hover:border-slate-200 transition">
-                                <div class="w-11 h-11 rounded-full bg-cyan-200 flex items-center justify-center font-bold text-[#0c2340] text-sm shrink-0">AF</div>
-                                <div class="flex-1 min-w-0">
-                                    <p class="font-bold text-sm text-[#0c2340]">Dr. Ahmed Farouk</p>
-                                    <p class="text-xs text-slate-500">Internal Medicine • Verified doctor</p>
-                                    <div class="flex flex-wrap items-center gap-2 mt-2">
-                                        <span class="bg-slate-100 text-slate-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">2 files shared</span>
-                                        <span class="text-xs text-slate-400">HbA1c • Prescription</span>
-                                    </div>
-                                </div>
-                                <div class="text-right shrink-0">
-                                    <span class="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-1 rounded-full">Active</span>
-                                    <p class="text-[11px] text-slate-400 mt-2">Expires 30 Dec 2026</p>
-                                </div>
-                            </div>
-
-                            <!-- DOCTOR 2 -->
-                            <div class="flex items-center gap-4 border border-slate-100 rounded-xl p-4 mb-3.5 hover:border-slate-200 transition">
-                                <div class="w-11 h-11 rounded-full bg-violet-200 flex items-center justify-center font-bold text-[#0c2340] text-sm shrink-0">SN</div>
-                                <div class="flex-1 min-w-0">
-                                    <p class="font-bold text-sm text-[#0c2340]">Dr. Salma Nabil</p>
-                                    <p class="text-xs text-slate-500">Cardiology • Verified doctor</p>
-                                    <div class="flex flex-wrap items-center gap-2 mt-2">
-                                        <span class="bg-slate-100 text-slate-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">1 file shared</span>
-                                        <span class="text-xs text-slate-400">Cardiology follow-up</span>
-                                    </div>
-                                </div>
-                                <div class="text-right shrink-0">
-                                    <span class="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-1 rounded-full">Active</span>
-                                    <p class="text-[11px] text-slate-400 mt-2">Expires 25 Nov 2026</p>
-                                </div>
-                            </div>
-
-                            <!-- DOCTOR 3 -->
-                            <div class="flex items-center gap-4 border border-slate-100 rounded-xl p-4 hover:border-slate-200 transition">
-                                <div class="w-11 h-11 rounded-full bg-orange-100 flex items-center justify-center font-bold text-[#0c2340] text-sm shrink-0">MK</div>
-                                <div class="flex-1 min-w-0">
-                                    <p class="font-bold text-sm text-[#0c2340]">Dr. Mariam Khaled</p>
-                                    <p class="text-xs text-slate-500">Nephrology • Verified doctor</p>
-                                    <div class="flex flex-wrap items-center gap-2 mt-2">
-                                        <span class="bg-slate-100 text-slate-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">1 file shared</span>
-                                        <span class="text-xs text-slate-400">Kidney function test</span>
-                                    </div>
-                                </div>
-                                <div class="text-right shrink-0">
-                                    <span class="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-1 rounded-full">Active</span>
-                                    <p class="text-[11px] text-slate-400 mt-2">Expires 12 Jan 2027</p>
-                                </div>
+                            <div id="sharesList">
+                                <!-- Rendered by js/script.js from demo state -->
                             </div>
 
                             <div class="flex justify-between items-center mt-5 pt-4 border-t border-slate-100">
@@ -937,7 +963,7 @@
                             <form id="newShareForm" class="mt-5 space-y-4">
                                 <div>
                                     <label class="text-xs font-bold text-[#0c2340] block mb-1.5">Select a verified doctor</label>
-                                    <select class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-cyan-500 transition">
+                                    <select id="shareDoctor" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-cyan-500 transition">
                                         <option>Dr. Ahmed Farouk (Internal Medicine)</option>
                                         <option>Dr. Salma Nabil (Cardiology)</option>
                                         <option>Dr. Mariam Khaled (Nephrology)</option>
@@ -946,7 +972,7 @@
 
                                 <div>
                                     <label class="text-xs font-bold text-[#0c2340] block mb-1.5">Choose files to share</label>
-                                    <select class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-cyan-500 transition">
+                                    <select id="shareFiles" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-cyan-500 transition">
                                         <option>All Current Medical Files</option>
                                         <option>HbA1c Lab Report</option>
                                         <option>Cardiology Follow-up</option>
@@ -957,7 +983,7 @@
 
                                 <div>
                                     <label class="text-xs font-bold text-[#0c2340] block mb-1.5">Access expires on</label>
-                                    <input type="date" value="2026-12-30" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-cyan-500 transition">
+                                    <input type="date" id="shareExpiry" value="2026-12-30" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-cyan-500 transition">
                                 </div>
 
                                 <div class="pt-2">
@@ -1040,18 +1066,69 @@
                         </div>
                     </div>
 
-                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                        <div class="flex justify-between items-center mb-6">
-                            <div>
-                                <h3 class="font-bold text-[#0c2340]">Trend Graph Preview</h3>
-                                <p class="text-xs text-slate-500">Quarterly clinical progression summary</p>
+                    <div class="grid lg:grid-cols-12 gap-6 items-start">
+                        <!-- RESULTS TABLE + CHART -->
+                        <div class="lg:col-span-7 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                            <div class="flex justify-between items-center mb-5 flex-wrap gap-3">
+                                <div>
+                                    <h3 class="font-bold text-[#0c2340]">Results & trend chart</h3>
+                                    <p class="text-xs text-slate-500">Values outside the reference range are highlighted</p>
+                                </div>
+                                <select id="labTestSelect" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-cyan-500 transition">
+                                    <option value="all">All tests</option>
+                                    <option value="HBA1C">HbA1c</option>
+                                    <option value="FBG">Fasting glucose</option>
+                                    <option value="SBP">Systolic BP</option>
+                                    <option value="EGFR">eGFR</option>
+                                </select>
                             </div>
-                            <button type="button" class="sort-btn" data-navigate="medical-files">View source files</button>
+
+                            <div id="trendChart" class="mb-6"></div>
+
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead>
+                                        <tr class="text-left text-xs text-slate-400 uppercase tracking-wider border-b border-slate-100">
+                                            <th class="py-2">Test</th>
+                                            <th>Value</th>
+                                            <th>Reference</th>
+                                            <th>Date</th>
+                                            <th>Flag</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="labResultsTable" class="divide-y divide-slate-50"></tbody>
+                                </table>
+                            </div>
                         </div>
-                        <div class="h-48 border border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400">
-                            <i data-lucide="chart-spline" class="w-10 h-10 mb-2 text-cyan-600"></i>
-                            <p class="text-sm font-semibold text-slate-600">All biomarkers are trending within therapeutic goals.</p>
-                            <p class="text-xs text-slate-400 mt-1">Next scheduled routine check: January 2027</p>
+
+                        <!-- ADD RESULT -->
+                        <div class="lg:col-span-5 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                            <h3 class="font-bold text-[#0c2340]">Add a lab result</h3>
+                            <p class="text-xs text-slate-500 mt-0.5">Enter the value exactly as printed on your report</p>
+                            <form id="labEntryForm" class="mt-5 space-y-4">
+                                <div>
+                                    <label class="text-xs font-bold text-[#0c2340] block mb-1.5">Test *</label>
+                                    <select name="test" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-cyan-500 transition">
+                                        <option value="HBA1C">HbA1c (%)</option>
+                                        <option value="FBG">Fasting glucose (mg/dL)</option>
+                                        <option value="SBP">Systolic blood pressure (mmHg)</option>
+                                        <option value="EGFR">eGFR (mL/min)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-bold text-[#0c2340] block mb-1.5">Value *</label>
+                                    <input type="number" name="value" step="0.01" min="0" required placeholder="e.g. 6.4"
+                                        class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-cyan-500 transition">
+                                </div>
+                                <div>
+                                    <label class="text-xs font-bold text-[#0c2340] block mb-1.5">Test date *</label>
+                                    <input type="date" name="measured_at" required value="2026-11-27"
+                                        class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-cyan-500 transition">
+                                </div>
+                                <button type="submit" class="w-full bg-[#0c2340] hover:bg-blue-950 text-white font-semibold py-3 rounded-xl text-sm transition">
+                                    Add result →
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </section>
@@ -1067,46 +1144,39 @@
                         <p class="text-sm text-slate-500 mt-1">Comprehensive historical record of visits, prescriptions, and lab tests.</p>
                     </div>
 
-                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                        <div class="space-y-6 relative before:absolute before:inset-0 before:left-3.5 before:w-0.5 before:bg-slate-200">
-                            <div class="relative flex items-start gap-4">
-                                <div class="w-8 h-8 rounded-full bg-cyan-100 text-cyan-700 flex items-center justify-center shrink-0 z-10 font-bold text-xs">Nov</div>
-                                <div class="bg-slate-50 p-4 rounded-xl flex-1 border border-slate-100">
-                                    <div class="flex justify-between items-start">
-                                        <p class="font-bold text-[#0c2340] text-sm">HbA1c Lab Test Complete</p>
-                                        <span class="text-xs text-slate-400">18 Nov 2026</span>
-                                    </div>
-                                    <p class="text-xs text-slate-600 mt-1">Report reviewed with Dr. Ahmed Farouk. Glucose control steady.</p>
-                                </div>
+                    <div class="grid lg:grid-cols-12 gap-6 items-start">
+                        <div class="lg:col-span-7 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                            <h3 class="font-bold text-[#0c2340] mb-5">Chronological history</h3>
+                            <div id="timelineList" class="space-y-6 relative before:absolute before:inset-0 before:left-3.5 before:w-0.5 before:bg-slate-200">
+                                <!-- Rendered by js/script.js from demo state -->
                             </div>
+                        </div>
 
-                            <div class="relative flex items-start gap-4">
-                                <div class="w-8 h-8 rounded-full bg-cyan-100 text-cyan-700 flex items-center justify-center shrink-0 z-10 font-bold text-xs">Nov</div>
-                                <div class="bg-slate-50 p-4 rounded-xl flex-1 border border-slate-100">
-                                    <div class="flex justify-between items-start">
-                                        <p class="font-bold text-[#0c2340] text-sm">Cardiology Follow-up Consultation</p>
-                                        <span class="text-xs text-slate-400">12 Nov 2026</span>
-                                    </div>
-                                    <p class="text-xs text-slate-600 mt-1">Dr. Salma Nabil reviewed blood pressure trends. Medication dosage maintained.</p>
-                                </div>
-                            </div>
-
-                            <div class="relative flex items-start gap-4">
-                                <div class="w-8 h-8 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center shrink-0 z-10 font-bold text-xs">Feb</div>
-                                <div class="bg-slate-50 p-4 rounded-xl flex-1 border border-slate-100">
-                                    <div class="flex justify-between items-start">
-                                        <p class="font-bold text-[#0c2340] text-sm">Annual Cardiovascular Assessment</p>
-                                        <span class="text-xs text-slate-400">25 Feb 2026</span>
-                                    </div>
-                                    <p class="text-xs text-slate-600 mt-1">ECG and stress test completed with normal readings.</p>
-                                </div>
+                        <div class="lg:col-span-5 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                            <h3 class="font-bold text-[#0c2340]">Archived files</h3>
+                            <p class="text-xs text-slate-500 mt-0.5 mb-5">Archived records are kept safe and can be restored at any time.</p>
+                            <div id="archiveList" class="space-y-3">
+                                <!-- Rendered by js/script.js from demo state -->
                             </div>
                         </div>
                     </div>
                 </section>
 
-                <p class="text-right text-[10px] text-slate-400 mt-8">CHRONICARE HEALTH SYSTEMS • CONCEPT UI</p>
+                <p class="text-right text-[10px] text-slate-400 mt-8">CHRONICARE HEALTH SYSTEMS</p>
             </main>
+        </div>
+    </div>
+
+    <!-- FILE DETAILS POP-UP -->
+    <div id="fileModal" class="hidden fixed inset-0 z-50 items-center justify-center bg-slate-900/50 p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 relative">
+            <button type="button" class="close-file-modal absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            <p class="text-xs font-bold tracking-widest text-cyan-700">MEDICAL RECORD</p>
+            <h3 id="modalFileName" class="text-xl font-extrabold text-[#0c2340] mt-1 mb-5"></h3>
+            <div id="modalFileBody"></div>
+            <button type="button" class="close-file-modal w-full mt-6 bg-slate-100 hover:bg-slate-200 text-[#0c2340] font-semibold py-3 rounded-xl text-sm transition">Close</button>
         </div>
     </div>
 
