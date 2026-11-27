@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chronicare - Doctor Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+
+<body class="bg-slate-100 min-h-screen font-[Inter] antialiased">
+
+    <div id="portal-view" class="flex min-h-screen">
+
+        <!-- SIDEBAR -->
+        <aside id="sidebar" class="w-64 bg-white border-r border-slate-200 p-5 hidden md:flex md:flex-col shrink-0">
+            <div class="flex items-center gap-3 mb-8">
+                <div class="relative flex items-center justify-center text-cyan-500">
+                    <i data-lucide="heart-pulse" class="w-10 h-10"></i>
+                    <i data-lucide="plus" class="w-4 h-4 absolute"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-extrabold text-[#0c2340]">Chronicare</h1>
+                    <p class="text-[11px] text-cyan-600 italic">Doctor Portal</p>
+                </div>
+            </div>
+
+            <p class="text-xs font-bold text-slate-400 tracking-wider mb-2">MY PRACTICE</p>
+            <div class="space-y-1 text-slate-600">
+                <button type="button" class="portal-nav-btn w-full flex items-center gap-3 p-3 rounded-xl transition text-sm font-semibold bg-cyan-50 text-[#0c2340]" data-target="patients" data-navigate="patients">
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                    <span>My Patients</span>
+                </button>
+                <button type="button" class="portal-nav-btn w-full flex items-center gap-3 p-3 rounded-xl transition text-sm font-semibold hover:bg-slate-50 hidden" data-target="patient-records" data-navigate="patient-records" id="patientRecordsNav">
+                    <i data-lucide="folder-heart" class="w-5 h-5"></i>
+                    <span>Patient Records</span>
+                </button>
+            </div>
+
+            <div class="mt-auto pt-6 border-t border-slate-200">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-full bg-cyan-200 flex items-center justify-center font-bold text-[#0c2340] text-sm">AF</div>
+                    <div>
+                        <p class="text-sm font-bold text-[#0c2340]">Dr. Ahmed Farouk</p>
+                        <p class="text-xs text-slate-500">Internal Medicine</p>
+                    </div>
+                </div>
+                <a href="./index.html" class="w-full flex items-center gap-3 p-3 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
+                    <span>Sign out</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- MAIN -->
+        <main class="flex-1 p-6 md:p-8 max-w-6xl w-full mx-auto">
+
+            <!-- SUBVIEW: MY PATIENTS -->
+            <section id="view-patients" class="portal-subview">
+                <div class="page-heading">
+                    <div>
+                        <span class="eyebrow">SHARED WITH ME</span>
+                        <h1>My Patients</h1>
+                        <p>Patients who chose to share their records with you. New or updated files are marked.</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                    <div class="table-wrapper">
+                        <table class="records-table w-full">
+                            <thead>
+                                <tr>
+                                    <th>PATIENT</th>
+                                    <th>CONDITIONS</th>
+                                    <th>SHARED FILES</th>
+                                    <th>LAST SHARED</th>
+                                    <th>STATUS</th>
+                                    <th>ACTION</th>
+                                </tr>
+                            </thead>
+                            <tbody id="patientsTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SUBVIEW: PATIENT RECORDS -->
+            <section id="view-patient-records" class="portal-subview hidden">
+                <div class="page-heading">
+                    <div>
+                        <span class="eyebrow">SHARED RECORDS</span>
+                        <h1 id="patientRecordsTitle">Patient Records</h1>
+                        <p id="patientRecordsSubtitle">Files and lab trends this patient shared with you.</p>
+                    </div>
+                    <button type="button" class="sort-btn" data-navigate="patients">← Back to My Patients</button>
+                </div>
+
+                <div class="grid lg:grid-cols-12 gap-6 items-start">
+                    <div class="lg:col-span-7 space-y-6">
+                        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                            <div class="p-5 border-b border-slate-100">
+                                <h3 class="font-bold text-[#0c2340]">Shared files</h3>
+                                <p class="text-xs text-slate-500">Only the files this patient granted you access to</p>
+                            </div>
+                            <div class="table-wrapper">
+                                <table class="records-table w-full">
+                                    <thead>
+                                        <tr>
+                                            <th>FILE NAME</th>
+                                            <th>CATEGORY</th>
+                                            <th>DATE</th>
+                                            <th>ACTION</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="patientFilesTable"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                            <div class="p-5 border-b border-slate-100">
+                                <h3 class="font-bold text-[#0c2340]">Lab trends</h3>
+                                <p class="text-xs text-slate-500">Values outside the reference range are highlighted</p>
+                            </div>
+                            <div class="table-wrapper">
+                                <table class="records-table w-full">
+                                    <thead>
+                                        <tr>
+                                            <th>TEST</th>
+                                            <th>VALUE</th>
+                                            <th>REFERENCE</th>
+                                            <th>DATE</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="patientLabsTable"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NOTES -->
+                    <div class="lg:col-span-5 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                        <h3 class="font-bold text-[#0c2340]">Clinical notes</h3>
+                        <p class="text-xs text-slate-500 mt-0.5 mb-5">The patient can read the notes you add here.</p>
+                        <div id="notesList" class="space-y-3 mb-5"></div>
+                        <form id="noteForm" class="space-y-3">
+                            <textarea id="noteText" rows="4" required placeholder="Add your interpretation or recommendation..."
+                                class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-cyan-500 transition"></textarea>
+                            <button type="submit" class="w-full bg-[#0c2340] hover:bg-blue-950 text-white font-semibold py-3 rounded-xl text-sm transition">
+                                Add note →
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <p class="text-right text-[10px] text-slate-400 mt-8">CHRONICARE HEALTH SYSTEMS</p>
+        </main>
+    </div>
+
+    <script src="./js/doctor.js"></script>
+</body>
+
+</html>
