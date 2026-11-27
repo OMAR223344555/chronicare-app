@@ -51,6 +51,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // ---- Optional live API mode: hydrate state from the Django backend ----
     let apiMode = false;
+    // Reflect the signed-in user in the demo-authored chrome (name, greeting, avatar)
+    let liveFirstName = '';
+    function setGreeting() {
+        if (!liveFirstName) return;
+        const greet = document.getElementById('heroGreeting');
+        if (greet) {
+            greet.textContent = (window.CCi18n && CCi18n.isRTL ? 'صباح الخير يا ' : 'Good morning, ') + liveFirstName + ' \u2728';
+            greet.removeAttribute('data-i18n');
+        }
+    }
+    function applyUserChrome(u) {
+        const fullName = (u && u.full_name) || '';
+        if (!fullName) return;
+        liveFirstName = fullName.split(' ')[0] || fullName;
+        const initials = fullName.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('') || 'ME';
+        document.querySelectorAll('[data-i18n="name.maya"]').forEach(el => { el.textContent = fullName; el.removeAttribute('data-i18n'); });
+        setGreeting();
+        document.querySelectorAll('div.rounded-full.bg-cyan-200').forEach(el => { if (el.textContent.trim() === 'MH') el.textContent = initials; });
+    }
     if (window.CCApi && CCApi.hasSession()) {
         const sessUser = CCApi.user();
         if (sessUser && sessUser.role === 'patient') {
@@ -58,17 +77,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 await CCApi.hydratePatient(state, CONDITION_LABELS, CATEGORY_LABELS);
                 apiMode = true;
                 CCApi.populateShareForm(state);
-                // Reflect the signed-in user in the demo-authored chrome (name, greeting, avatar)
-                const fullName = sessUser.full_name || '';
-                const firstName = fullName.split(' ')[0] || fullName;
-                const initials = fullName.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('') || 'ME';
-                document.querySelectorAll('[data-i18n="name.maya"]').forEach(el => { el.textContent = fullName; el.removeAttribute('data-i18n'); });
-                const greet = document.querySelector('[data-i18n="hero.greeting"]');
-                if (greet) {
-                    greet.textContent = (window.CCi18n && CCi18n.isRTL ? 'صباح الخير يا ' : 'Good morning, ') + firstName + ' \u2728';
-                    greet.removeAttribute('data-i18n');
-                }
-                document.querySelectorAll('div.rounded-full.bg-cyan-200').forEach(el => { if (el.textContent.trim() === 'MH') el.textContent = initials; });
+                applyUserChrome(sessUser);
             } catch (err) {
                 CCApi.clearSession();
             }
@@ -301,6 +310,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             await CCApi.hydratePatient(state, CONDITION_LABELS, CATEGORY_LABELS);
                             apiMode = true;
                             CCApi.populateShareForm(state);
+                            applyUserChrome(user);
                             applyLiveOverview();
                         } catch (e2) { /* keep built-in demo data */ }
                         landForRole(role);
@@ -342,6 +352,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         await CCApi.hydratePatient(state, CONDITION_LABELS, CATEGORY_LABELS);
                         apiMode = true;
                         CCApi.populateShareForm(state);
+                        applyUserChrome(CCApi.user());
                         applyLiveOverview();
                     } catch (e2) { /* land on the demo state */ }
                     landForRole('patient');
@@ -1126,11 +1137,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderLabTable();
 
     // Real current date in the hero banner (both demo and live mode)
-    const heroDateEl = document.getElementById('heroDate');
-    if (heroDateEl) {
-        heroDateEl.textContent = new Intl.DateTimeFormat(window.CCi18n && CCi18n.isRTL ? 'ar-EG' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
-        heroDateEl.removeAttribute('data-i18n');
+    function setHeroDate() {
+        const heroDateEl = document.getElementById('heroDate');
+        if (heroDateEl) {
+            heroDateEl.textContent = new Intl.DateTimeFormat(window.CCi18n && CCi18n.isRTL ? 'ar-EG' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
+            heroDateEl.removeAttribute('data-i18n');
+        }
     }
+    setHeroDate();
+    document.addEventListener('cc:lang', () => { setHeroDate(); setGreeting(); if (apiMode) applyLiveOverview(); });
     renderTrendChart();
     renderBiomarkers();
 
@@ -1331,6 +1346,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderLabTable();
         renderTrendChart();
         renderBiomarkers();
+        renderRecords();
+        renderArchiveList();
+        renderShares();
     }
 
     // count-up stats when overview shows
