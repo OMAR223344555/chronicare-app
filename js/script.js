@@ -241,7 +241,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                     return;
                 }
             }
-            if (role === 'doctor') { showPending(); return; } // demo: doctors stay pending
+            // Demo mode (no live server): say so clearly instead of faking a saved account
+            if (role === 'doctor') {
+                showToast(CCApi.L(
+                    'Demo mode - no live server, so nothing is saved. In the live demo, doctor accounts wait for admin approval.',
+                    'وضع تجريبي - لا يوجد خادم، لذا لن يُحفظ الحساب. في النسخة الحية تنتظر حسابات الأطباء موافقة المسؤول.'
+                ), 'info');
+                showPending(); return;
+            }
+            showToast(CCApi.L(
+                'Demo mode - no live server, so nothing is saved. You are browsing the built-in sample data (patient: Maya Hassan).',
+                'وضع تجريبي - لا يوجد خادم، لذا لن يُحفظ الحساب. تتصفح البيانات التجريبية المدمجة (المريضة: مايا حسن).'
+            ), 'info');
             landForRole('patient');
         });
     }
