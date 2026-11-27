@@ -1022,7 +1022,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td>${outOfRange(l)
                     ? `<span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded-full">${T('st.outRange')}</span>`
                     : `<span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded-full">${T('st.inRange')}</span>`}</td>
-            </tr>`).join('') || `<tr><td colspan="5" class="text-center text-slate-400 py-6">${T('lt.noResults')}</td></tr>`;
+            </tr>`).join('') || `<tr><td colspan="5" class="text-center text-slate-400 py-6">${state.labs.length ? LLab('No results in this date range or test filter.', 'لا نتائج في هذا المدى الزمني أو الفلتر.') : LLab('No lab results yet. Add your first one below.', 'لا توجد نتائج تحاليل بعد. أضف أول نتيجة من الأسفل.')}</td></tr>`;
     }
 
     // Biomarker summary cards: built from state.labs (real API data when signed in).
@@ -1068,6 +1068,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     const activeLabMetrics = new Set(['HBA1C']);
     const METRIC_COLORS = { HBA1C: '#0891b2', FBG: '#7c3aed', SBP: '#dc2626', EGFR: '#059669' };
 
+    const LLab = (en, ar) => (window.CCi18n && CCi18n.lang === 'ar') ? ar : en;
+    const LAB_LIMITS = {
+        HBA1C: { min: 3, max: 20, en: 'HbA1c', ar: 'HbA1c', unit: '%' },
+        FBG: { min: 20, max: 800, en: 'Fasting glucose', ar: 'سكر الصائم', unit: 'mg/dL' },
+        SBP: { min: 50, max: 260, en: 'Systolic blood pressure', ar: 'ضغط الدم الانقباضي', unit: 'mmHg' },
+        EGFR: { min: 1, max: 200, en: 'eGFR', ar: 'معدل الترشيح eGFR', unit: 'mL/min' },
+    };
+    const todayStr = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+    // Default date range: from one year ago to today; the entry date defaults to today
+    (function initLabDates() {
+        const t = todayStr();
+        const y = String(Number(t.slice(0, 4)) - 1) + t.slice(4);
+        if (labDateFrom) labDateFrom.value = y;
+        if (labDateTo) labDateTo.value = t;
+        const md = labEntryForm && labEntryForm.querySelector('[name=measured_at]');
+        if (md) { md.value = t; md.max = t; md.setAttribute('value', t); }
+        const vi = labEntryForm && labEntryForm.querySelector('[name=value]');
+        if (vi) vi.step = 'any';
+    })();
+
     function labInRange(l) {
         const from = labDateFrom && labDateFrom.value ? labDateFrom.value : '0000-01-01';
         const to = labDateTo && labDateTo.value ? labDateTo.value : '9999-12-31';
@@ -1078,7 +1098,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!trendChart) return;
         const metrics = [...activeLabMetrics];
         if (!metrics.length) {
-            trendChart.innerHTML = `<p class="text-sm text-slate-400 p-6">Select at least one metric above.</p>`;
+            trendChart.innerHTML = `<p class="text-sm text-slate-400 p-6">${LLab('Select at least one metric above.', 'اختر مؤشرا واحدا على الأقل من الأعلى.')}</p>`;
             return;
         }
         const W = 560, H = 190, PAD = 40;
@@ -1087,7 +1107,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             points: state.labs.filter(l => l.test === m && labInRange(l)).sort((a, b) => a.date.localeCompare(b.date)),
         })).filter(s => s.points.length);
         if (!series.length) {
-            trendChart.innerHTML = `<p class="text-sm text-slate-400 p-6">No data in this date range.</p>`;
+            trendChart.innerHTML = `<p class="text-sm text-slate-400 p-6">${state.labs.length ? LLab('No data for the selected metric and dates. Pick another metric above or widen the date range.', 'لا توجد بيانات للمؤشر والتواريخ المحددة. اختر مؤشرا آخر أو وسّع المدى الزمني.') : LLab('No lab results yet. Add your first result and the chart will appear here.', 'لا توجد نتائج تحاليل بعد. أضف أول نتيجة وسيظهر الرسم هنا.')}</p>`;
             return;
         }
         if (series.length === 1) {
@@ -1143,37 +1163,50 @@ document.addEventListener('DOMContentLoaded', async () => {
         labEntryForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const f = new FormData(labEntryForm);
-            const meta = labTestTypes.find(l => l.test === f.get('test'));
-            if (!meta) return;
+            const code = f.get('test');
+            const lim = LAB_LIMITS[code];
+            const raw = String(f.get('value') || '').trim().replace(',', '.');
+            const val = Math.round(Number(raw) * 100) / 100; // stored with up to 2 decimals
+            if (!raw || !isFinite(val)) { showToast(LLab('Enter a valid number for the value.', 'أدخل رقما صحيحا للقيمة.'), 'warn'); return; }
+            if (lim && (val < lim.min || val > lim.max)) {
+                showToast(LLab(`${lim.en} is normally between ${lim.min} and ${lim.max} ${lim.unit}. Please check the value or the test you selected.`,
+                    `${lim.ar} عادة بين ${lim.min} و${lim.max} ${lim.unit}. راجع القيمة أو نوع التحليل المختار.`), 'warn');
+                return;
+            }
+            const date = f.get('measured_at') || todayStr();
+            if (date > todayStr()) { showToast(LLab('The test date cannot be in the future.', 'تاريخ التحليل لا يمكن أن يكون في المستقبل.'), 'warn'); return; }
+            // Test metadata: from existing results, or from the server's test types (new accounts have no results yet)
+            let meta = labTestTypes.find(l => l.test === code) || state.labs.find(l => l.test === code);
+            if (!meta && apiMode && window.CCApi && CCApi._refs) {
+                const tt = CCApi._refs.testTypes.find(x => x._key === code);
+                if (tt) meta = { test: code, label: tt.name, unit: tt.unit, min: tt.ref_min != null ? Number(tt.ref_min) : null, max: tt.ref_max != null ? Number(tt.ref_max) : null };
+            }
+            if (!meta && lim) meta = { test: code, label: lim.en, unit: lim.unit, min: null, max: null };
+            if (!meta) { showToast(LLab('Unknown test type.', 'نوع تحليل غير معروف.'), 'warn'); return; }
+            const finish = () => {
+                state.labs.push({ test: meta.test, label: meta.label, unit: meta.unit, min: meta.min, max: meta.max, value: val, date });
+                if (labDateFrom && (!labDateFrom.value || date < labDateFrom.value)) labDateFrom.value = date;
+                if (labDateTo && (!labDateTo.value || date > labDateTo.value)) labDateTo.value = date;
+                if (labTestSelect && labTestSelect.value !== 'all' && labTestSelect.value !== code) labTestSelect.value = 'all';
+                activeLabMetrics.add(code);
+                document.querySelectorAll('[data-labmetric="' + code + '"]').forEach(c => c.classList.add('active'));
+                renderLabTable();
+                renderTrendChart();
+                renderBiomarkers();
+                labEntryForm.reset();
+                const md = labEntryForm.querySelector('[name=measured_at]');
+                if (md) md.value = todayStr();
+                showToast(Tp('toast.labSaved', { label: labLabel(meta) }));
+            };
             if (apiMode && window.CCApi) {
                 const ttId = CCApi.testTypeId(meta.test);
-                if (!ttId) { showToast('Lab test type not found on the server', 'warn'); return; }
-                CCApi.post('/lab-results/', { test_type: ttId, value: f.get('value'), measured_at: f.get('measured_at'), note: f.get('note') || '' })
-                    .then(() => {
-                        state.labs.push({
-                            test: meta.test, label: meta.label, unit: meta.unit,
-                            min: meta.min, max: meta.max,
-                            value: Number(f.get('value')), date: f.get('measured_at'),
-                        });
-                        renderLabTable();
-                        renderTrendChart();
-                        renderBiomarkers();
-                        labEntryForm.reset();
-                        showToast(Tp('toast.labSaved', { label: labLabel(meta) }));
-                    })
+                if (!ttId) { showToast(LLab('Lab test type not found on the server', 'نوع التحليل غير موجود على الخادم'), 'warn'); return; }
+                CCApi.post('/lab-results/', { test_type: ttId, value: String(val), measured_at: date, note: f.get('note') || '' })
+                    .then(finish)
                     .catch(err => showToast(String(err.message || err), 'warn'));
                 return;
             }
-            state.labs.push({
-                test: meta.test, label: meta.label, unit: meta.unit,
-                min: meta.min, max: meta.max,
-                value: Number(f.get('value')), date: f.get('measured_at'),
-            });
-            renderLabTable();
-            renderTrendChart();
-            renderBiomarkers();
-            labEntryForm.reset();
-            showToast(Tp('toast.labSaved', { label: labLabel(meta) }));
+            finish();
         });
     }
 

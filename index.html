@@ -76,7 +76,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Stylesheet -->
-    <link rel="stylesheet" href="./css/style.css?v=30">
+    <link rel="stylesheet" href="./css/style.css?v=31">
 </head>
 
 <body class="sidebar-luxe bg-slate-100 min-h-screen font-[Inter] antialiased">
@@ -1265,7 +1265,7 @@
                                 </div>
                                 <div>
                                     <label class="text-xs font-bold text-[#0c2340] block mb-1.5" data-i18n="lt.value">Value *</label>
-                                    <input type="number" name="value" step="0.01" min="0" required placeholder="e.g. 6.4" data-i18n-ph="lt.valuePh"
+                                    <input type="number" name="value" step="any" min="0" inputmode="decimal" required placeholder="e.g. 6.4" data-i18n-ph="lt.valuePh"
                                         class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-cyan-500 transition">
                                 </div>
                                 <div>
@@ -1362,20 +1362,20 @@
     <!-- Application Script -->
     <script>
         // Boot failsafe: with a saved session the splash can show while the app boots, but never
-        // longer than ~1.5s. Fall through to sign-in; if the session check succeeds, the app
+        // longer than ~1.5s (20s when a saved session exists, so a signed-in user never sees the sign-in page flash). Fall through to sign-in; if the session check succeeds, the app
         // switches to the portal itself.
         setTimeout(function () {
             if (window.__ccBootHandled) return;
             window.__ccBootHandled = true;
             document.documentElement.classList.add('cc-no-session');
-        }, 1500);
+        }, (function () { try { return localStorage.getItem('cc-api-token') ? 20000 : 1500; } catch (e) { return 1500; } })());
     </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
-    <script src="./js/api.js?v=30"></script>
-    <script src="./js/shared.js?v=30"></script>
-    <script src="./js/i18n.js?v=30"></script>
-    <script src="./js/script.js?v=30"></script>
+    <script src="./js/api.js?v=31"></script>
+    <script src="./js/shared.js?v=31"></script>
+    <script src="./js/i18n.js?v=31"></script>
+    <script src="./js/script.js?v=31"></script>
 
     <!-- Floating theme + language controls -->
     <div class="fab-stack">
