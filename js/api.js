@@ -284,13 +284,12 @@ window.CCApi = (function () {
     }
 
     async function hydrateAdmin(d) {
-        const [usersL, cats, conds, types, logs] = await Promise.all([
+        const [usersL, cats, conds, types, logs, stats] = await Promise.all([
             all('/admin/users/'), all('/categories/'), all('/conditions/'),
             all('/lab-test-types/'), all('/admin/audit-log/'),
+            req('/admin/users/stats/').catch(() => null),
         ]);
-        try {
-            refs.adminStats = await req('/admin/users/stats/');
-        } catch (e) { refs.adminStats = null; }
+        refs.adminStats = stats;
         refs.cats = cats; refs.conds = conds; refs.testTypes = types;
         d.pendingDoctors.length = 0;
         usersL.filter(u => u.role === 'doctor' && u.status === 'pending').forEach(u => d.pendingDoctors.push({

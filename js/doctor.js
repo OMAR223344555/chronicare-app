@@ -209,6 +209,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             CCApi.clearSession();
         }
     }
+    setTimeout(() => { if (window.ccGateOpen) window.ccGateOpen(); }, 60);
 
     function renderPatients() {
         const list = filteredPatients();

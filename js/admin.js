@@ -151,6 +151,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             CCApi.clearSession();
         }
     }
+    if (window.ccGateOpen && !apiMode) window.ccGateOpen();
 
     function renderPending() {
         const tbody = document.getElementById('pendingDoctorsTable');
@@ -425,6 +426,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderAudit();
     renderAnalytics();
     refreshIcons();
+    if (window.ccGateOpen) window.ccGateOpen();
     document.addEventListener('cc:lang', () => {
         renderPending();
         renderUsers();

@@ -16,13 +16,40 @@
         } catch (e) {}
     </script>
     <title>Chronicare - Doctor Portal</title>
+        <style>
+        html.cc-loading body > *:not(#cc-boot) { visibility: hidden !important; }
+        #cc-boot { display: none; }
+        html.cc-loading #cc-boot { display: flex; position: fixed; inset: 0; z-index: 99999; align-items: center; justify-content: center; flex-direction: column; gap: 14px; background: #f1f5f9; color: #0c2340; font-family: Inter, system-ui, sans-serif; font-weight: 600; font-size: 14px; visibility: visible !important; }
+        html.dark.cc-loading #cc-boot { background: #0a1522; color: #e2e8f0; }
+        #cc-boot .cc-spin { width: 38px; height: 38px; border-radius: 50%; border: 4px solid #cffafe; border-top-color: #06b6d4; animation: ccspin .8s linear infinite; }
+        @keyframes ccspin { to { transform: rotate(360deg); } }
+    </style>
+    <script>
+        /* Loading gate: while a signed-in page fetches its live data, show a spinner instead of demo placeholders / zeros. */
+        (function () {
+            try {
+                var u = JSON.parse(localStorage.getItem('cc-api-user') || 'null');
+                if (localStorage.getItem('cc-api-token') && u && u.role === 'doctor') {
+                    document.documentElement.classList.add('cc-loading');
+                    window.__ccGateTimer = setTimeout(function () { document.documentElement.classList.remove('cc-loading'); }, 15000);
+                }
+            } catch (e) {}
+            window.ccGateOpen = function () {
+                clearTimeout(window.__ccGateTimer);
+                document.documentElement.classList.remove('cc-loading');
+            };
+        })();
+    </script>
+    <link rel="preconnect" href="https://chronicare.pythonanywhere.com" crossorigin>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide@1.82.0/dist/umd/lucide.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./css/style.css?v=27">
+    <link rel="stylesheet" href="./css/style.css?v=28">
 </head>
 
 <body class="portal-luxe bg-slate-100 min-h-screen font-[Inter] antialiased">
+    <div id="cc-boot" role="status" aria-live="polite"><div class="cc-spin"></div><span id="cc-boot-t">Loading your data...</span></div>
+    <script>try{if((localStorage.getItem('cc-lang')||'en')==='ar'){document.getElementById('cc-boot-t').textContent='جاري تحميل بياناتك...';}}catch(e){}</script>
     <a href="#main-content" class="skip-link" data-i18n="a11y.skip">Skip to main content</a>
 
     <div id="portal-view" class="flex min-h-screen">
@@ -238,10 +265,10 @@
         </main>
     </div>
 
-    <script src="./js/api.js?v=27"></script>
-    <script src="./js/shared.js?v=27"></script>
-    <script src="./js/i18n.js?v=27"></script>
-    <script src="./js/doctor.js?v=27"></script>
+    <script src="./js/api.js?v=28"></script>
+    <script src="./js/shared.js?v=28"></script>
+    <script src="./js/i18n.js?v=28"></script>
+    <script src="./js/doctor.js?v=28"></script>
 
     <!-- Floating theme + language controls -->
     <div class="fab-stack">
