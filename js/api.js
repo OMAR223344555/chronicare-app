@@ -1,7 +1,8 @@
 /* ==========================================================================
    Chronicare API client (optional live mode)
    Connects the static frontend to the Django REST backend when available.
-   - Base URL: localStorage 'cc-api-url' -> window.CC_API_BASE -> http://127.0.0.1:8000/api
+   - Base URL: localStorage 'cc-api-url' -> window.CC_API_BASE -> hosted demo API
+   - (set localStorage 'cc-api-url' to http://127.0.0.1:8000/api for local dev)
    - Session: token + user cached in localStorage (cc-api-token / cc-api-user)
    - When no session exists or the server is unreachable, pages keep their
      built-in demo data (demo fallback).
@@ -10,7 +11,7 @@ window.CCApi = (function () {
     const LS_URL = 'cc-api-url';
     const LS_TOK = 'cc-api-token';
     const LS_USER = 'cc-api-user';
-    const DEFAULT_BASE = 'http://127.0.0.1:8000/api';
+    const DEFAULT_BASE = 'https://chronicare.pythonanywhere.com/api';
 
     // Mutable lookup tables filled during hydration
     const refs = { cats: [], conds: [], testTypes: [] };

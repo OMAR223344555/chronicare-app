@@ -3,8 +3,10 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = "django-insecure-chronicare-course-project-change-in-production"
-DEBUG = True
+SECRET_KEY = os.environ.get(
+    "SECRET_KEY", "django-insecure-chronicare-course-project-change-in-production"
+)
+DEBUG = os.environ.get("DEBUG", "1") == "1"
 ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
