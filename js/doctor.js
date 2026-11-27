@@ -193,6 +193,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             try {
                 await CCApi.hydrateDoctor(patients);
                 apiMode = true;
+                // Reflect the signed-in doctor in the demo-authored chrome
+                const nameEl = document.querySelector('[data-i18n="name.farouk"]');
+                if (nameEl) { nameEl.textContent = sessUser.full_name || nameEl.textContent; nameEl.removeAttribute('data-i18n'); }
+                if (sessUser.specialty) {
+                    const specEl = document.querySelector('[data-i18n="account.doctor"]');
+                    if (specEl) { specEl.textContent = sessUser.specialty; specEl.removeAttribute('data-i18n'); }
+                }
+                const initials = (sessUser.full_name || '').replace(/^Dr\.?\s+/i, '').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('') || 'DR';
+                document.querySelectorAll('div.rounded-full.bg-cyan-200').forEach(el => { if (el.textContent.trim() === 'AF') el.textContent = initials; });
             } catch (err) {
                 CCApi.clearSession();
             }

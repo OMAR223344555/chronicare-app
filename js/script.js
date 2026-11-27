@@ -58,6 +58,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                 await CCApi.hydratePatient(state, CONDITION_LABELS, CATEGORY_LABELS);
                 apiMode = true;
                 CCApi.populateShareForm(state);
+                // Reflect the signed-in user in the demo-authored chrome (name, greeting, avatar)
+                const fullName = sessUser.full_name || '';
+                const firstName = fullName.split(' ')[0] || fullName;
+                const initials = fullName.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('') || 'ME';
+                document.querySelectorAll('[data-i18n="name.maya"]').forEach(el => { el.textContent = fullName; el.removeAttribute('data-i18n'); });
+                const greet = document.querySelector('[data-i18n="hero.greeting"]');
+                if (greet) {
+                    greet.textContent = (window.CCi18n && CCi18n.isRTL ? 'صباح الخير يا ' : 'Good morning, ') + firstName + ' \u2728';
+                    greet.removeAttribute('data-i18n');
+                }
+                document.querySelectorAll('div.rounded-full.bg-cyan-200').forEach(el => { if (el.textContent.trim() === 'MH') el.textContent = initials; });
             } catch (err) {
                 CCApi.clearSession();
             }
