@@ -242,6 +242,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // Demo placeholder links (Terms / Privacy): clearly marked, not dead ends
+    document.querySelectorAll('[data-demo-link]').forEach(a => {
+        a.addEventListener('click', (e) => {
+            e.preventDefault();
+            showToast(CCApi.L('Demo placeholder - this page is not part of the course prototype.', 'صفحة تجريبية - غير مشمولة في النموذج الأولي للمشروع.'), 'info');
+        });
+    });
+
     document.querySelectorAll('.toggle-password-btn').forEach(button => {
         button.addEventListener('click', () => {
             const input = document.getElementById(button.getAttribute('data-target'));
@@ -1123,7 +1131,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         heroDateEl.textContent = new Intl.DateTimeFormat(window.CCi18n && CCi18n.isRTL ? 'ar-EG' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
         heroDateEl.removeAttribute('data-i18n');
     }
-    if (apiMode) applyLiveOverview();
     renderTrendChart();
     renderBiomarkers();
 
@@ -1603,4 +1610,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
     }
+
+    // Live session: apply real per-user data once everything above is initialized
+    if (apiMode) applyLiveOverview();
 });
