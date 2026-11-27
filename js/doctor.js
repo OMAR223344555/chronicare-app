@@ -64,6 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const ptEl = document.getElementById('patientsTable');
             if (ptEl) CCUI.withSkeleton(ptEl, renderPatients);
         }
+        if (window.CCHist) CCHist.pushView(name);
         window.scrollTo({ top: 0, behavior: 'smooth' });
         refreshIcons();
     }
@@ -82,6 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const mobileMenuClose = document.getElementById('mobile-menu-close');
     function openMobileSidebar() {
         if (!sidebar) return;
+        if (window.CCHist) CCHist.pushOverlay();
         sidebar.classList.remove('hidden');
         sidebar.classList.add('mobile-open');
         document.body.classList.add('drawer-open');
@@ -117,6 +119,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     window.addEventListener('resize', () => {
         if (window.innerWidth >= 768) closeMobileSidebar();
+    });
+    if (window.CCHist) CCHist.registerCloser(() => {
+        if (sidebar && sidebar.classList.contains('mobile-open')) { closeMobileSidebar(); return true; }
+        return false;
     });
 
     const T = (k, f) => window.CCi18n ? CCi18n.t(k, f) : (f || k);
@@ -335,8 +341,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Deep links: #patients or #patient-records-<id>
     function handleHashRoute() {
         const hash = window.location.hash.replace('#', '').trim();
-        if (hash === 'patients') {
+        if (hash === '' || hash === 'patients') {
             showView('patients');
+        } else if (hash === 'patient-records') {
+            if (currentPatient) showView('patient-records'); else showView('patients');
         } else if (hash.startsWith('patient-records-')) {
             const p = patients.find(x => x.id === Number(hash.split('-').pop()));
             if (p) {
@@ -348,6 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     window.addEventListener('hashchange', handleHashRoute);
+    document.addEventListener('cc:popview', handleHashRoute);
     handleHashRoute();
 
     // ---- Stage 2: notifications + palette (doctor) ----

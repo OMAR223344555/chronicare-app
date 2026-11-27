@@ -73,6 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
             item.classList.toggle('font-bold', active);
             item.classList.toggle('text-slate-600', !active);
         });
+        if (window.CCHist) CCHist.pushView(name);
         window.scrollTo({ top: 0, behavior: 'smooth' });
         refreshIcons();
     }
@@ -90,6 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const mobileMenuClose = document.getElementById('mobile-menu-close');
     function openMobileSidebar() {
         if (!sidebar) return;
+        if (window.CCHist) CCHist.pushOverlay();
         sidebar.classList.remove('hidden');
         sidebar.classList.add('mobile-open');
         document.body.classList.add('drawer-open');
@@ -125,6 +127,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     window.addEventListener('resize', () => {
         if (window.innerWidth >= 768) closeMobileSidebar();
+    });
+    if (window.CCHist) CCHist.registerCloser(() => {
+        if (sidebar && sidebar.classList.contains('mobile-open')) { closeMobileSidebar(); return true; }
+        return false;
     });
 
     // ---- Manage Users ----
@@ -386,9 +392,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Deep links: #users, #reference, #audit
     function handleHashRoute() {
         const hash = window.location.hash.replace('#', '').trim();
-        if (['analytics', 'users', 'reference', 'audit'].includes(hash)) showView(hash);
+        if (hash === '') showView('analytics');
+        else if (['analytics', 'users', 'reference', 'audit'].includes(hash)) showView(hash);
     }
     window.addEventListener('hashchange', handleHashRoute);
+    document.addEventListener('cc:popview', handleHashRoute);
     handleHashRoute();
 
     // ---- Stage 2: notifications + palette (admin) ----

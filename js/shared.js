@@ -37,6 +37,22 @@
     });
 
     // ---- Skeleton loaders ----
+    // ---- History-aware navigation (Back button support) ----
+    const ccClosers = [];
+    window.CCHist = {
+        pushView(name) {
+            const target = '#' + name;
+            if (window.location.hash !== target) history.pushState({ cc: 'view', view: name }, '', target);
+        },
+        pushOverlay() { history.pushState({ cc: 'overlay' }, '', window.location.href); },
+        registerCloser(fn) { ccClosers.push(fn); },
+    };
+    window.addEventListener('popstate', () => {
+        for (const close of ccClosers) { if (close()) return; }
+        const view = window.location.hash.replace('#', '').trim();
+        document.dispatchEvent(new CustomEvent('cc:popview', { detail: { view } }));
+    });
+
     function skeletonRows(container, rows, cols) {
         if (!container) return;
         rows = rows || 4;
@@ -185,6 +201,7 @@
     }
     function openPalette() {
         buildPalette();
+        window.CCHist.pushOverlay();
         paletteEl.classList.remove('hidden');
         paletteInput.value = '';
         renderPaletteItems();
@@ -193,6 +210,10 @@
         if (window.CCi18n) CCi18n.applyToDom(paletteEl);
     }
     function closePalette() { if (paletteEl) paletteEl.classList.add('hidden'); }
+    window.CCHist.registerCloser(() => {
+        if (paletteEl && !paletteEl.classList.contains('hidden')) { closePalette(); return true; }
+        return false;
+    });
     document.addEventListener('keydown', (e) => {
         const typing = /^(INPUT|TEXTAREA|SELECT)$/.test((e.target.tagName || '')) || e.target.isContentEditable;
         if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openPalette(); }
@@ -266,11 +287,16 @@
         e.preventDefault();
         buildNotifPanel();
         if (notifPanel.classList.contains('hidden')) {
+            window.CCHist.pushOverlay();
             renderNotifs();
             notifPanel.classList.remove('hidden');
         } else {
             notifPanel.classList.add('hidden');
         }
+    });
+    window.CCHist.registerCloser(() => {
+        if (notifPanel && !notifPanel.classList.contains('hidden')) { notifPanel.classList.add('hidden'); return true; }
+        return false;
     });
     document.addEventListener('DOMContentLoaded', updateNotifDot);
 

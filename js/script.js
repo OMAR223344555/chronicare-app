@@ -203,7 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (viewName === 'auth') {
             if (authView) authView.classList.remove('hidden');
             if (portalView) portalView.classList.add('hidden');
-            if (updateHash) history.replaceState(null, null, '#auth');
+            if (updateHash && window.CCHist) CCHist.pushView('auth');
         } else {
             if (authView) authView.classList.add('hidden');
             if (portalView) portalView.classList.remove('hidden');
@@ -245,7 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (breadcrumbCurrent && viewTitles[viewName]) {
                 breadcrumbCurrent.textContent = T(viewTitles[viewName][0], viewTitles[viewName][1]);
             }
-            if (updateHash) history.replaceState(null, null, `#${viewName}`);
+            if (updateHash && window.CCHist) CCHist.pushView(viewName);
             if (sidebar && !sidebar.classList.contains('hidden') && window.innerWidth < 768) {
                 sidebar.classList.add('hidden');
             }
@@ -270,6 +270,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     window.addEventListener('hashchange', handleHashRoute);
+    document.addEventListener('cc:popview', handleHashRoute);
     handleHashRoute();
 
     const signOutBtn = document.getElementById('sign-out-btn');
@@ -284,6 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const mobileMenuClose = document.getElementById('mobile-menu-close');
     function openMobileSidebar() {
         if (!sidebar) return;
+        if (window.CCHist) CCHist.pushOverlay();
         sidebar.classList.remove('hidden');
         sidebar.classList.add('mobile-open');
         document.body.classList.add('drawer-open');
@@ -319,6 +321,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     window.addEventListener('resize', () => {
         if (window.innerWidth >= 768) closeMobileSidebar();
+    });
+    if (window.CCHist) CCHist.registerCloser(() => {
+        if (sidebar && sidebar.classList.contains('mobile-open')) { closeMobileSidebar(); return true; }
+        return false;
     });
     // Close the drawer after picking a section on phones
     document.querySelectorAll('#sidebar [data-navigate]').forEach(elem => {
@@ -460,6 +466,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <i data-lucide="file-text" class="w-8 h-8 mb-2 text-cyan-600"></i>
                 <p class="text-xs">${T('fm.preview')}</p>
             </div>`;
+        if (window.CCHist) CCHist.pushOverlay();
         fileModal.classList.remove('hidden');
         fileModal.classList.add('flex');
         refreshIcons();
@@ -472,6 +479,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.close-file-modal').forEach(b => b.addEventListener('click', closeFileModal));
     if (fileModal) fileModal.addEventListener('click', (e) => { if (e.target === fileModal) closeFileModal(); });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeFileModal(); });
+    if (window.CCHist) CCHist.registerCloser(() => {
+        if (fileModal && !fileModal.classList.contains('hidden')) { closeFileModal(); return true; }
+        return false;
+    });
 
     document.addEventListener('click', (e) => {
         const viewBtn = e.target.closest('.view-record-btn');
@@ -1054,7 +1065,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeShareModal = document.getElementById('closeShareModal');
     let pendingShare = null;
 
-    function openShareModal() { if (shareModal) { shareModal.classList.remove('hidden'); shareModal.classList.add('flex'); refreshIcons(); } }
+    function openShareModal() { if (shareModal) { if (window.CCHist) CCHist.pushOverlay(); shareModal.classList.remove('hidden'); shareModal.classList.add('flex'); refreshIcons(); } }
+    if (window.CCHist) CCHist.registerCloser(() => {
+        if (shareModal && !shareModal.classList.contains('hidden')) { hideShareModal(); return true; }
+        return false;
+    });
     function hideShareModal() { if (shareModal) { shareModal.classList.add('hidden'); shareModal.classList.remove('flex'); } pendingShare = null; }
     if (closeShareModal) closeShareModal.addEventListener('click', hideShareModal);
     if (shareModal) shareModal.addEventListener('click', (e) => { if (e.target === shareModal) hideShareModal(); });
