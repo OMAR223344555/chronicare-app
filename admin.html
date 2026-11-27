@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chronicare - Administration</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+
+<body class="bg-slate-100 min-h-screen font-[Inter] antialiased">
+
+    <div id="portal-view" class="flex min-h-screen">
+
+        <!-- SIDEBAR -->
+        <aside id="sidebar" class="w-64 bg-white border-r border-slate-200 p-5 hidden md:flex md:flex-col shrink-0">
+            <div class="flex items-center gap-3 mb-8">
+                <div class="relative flex items-center justify-center text-cyan-500">
+                    <i data-lucide="heart-pulse" class="w-10 h-10"></i>
+                    <i data-lucide="plus" class="w-4 h-4 absolute"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-extrabold text-[#0c2340]">Chronicare</h1>
+                    <p class="text-[11px] text-cyan-600 italic">Administration</p>
+                </div>
+            </div>
+
+            <p class="text-xs font-bold text-slate-400 tracking-wider mb-2">MANAGEMENT</p>
+            <div class="space-y-1 text-slate-600">
+                <button type="button" class="portal-nav-btn w-full flex items-center gap-3 p-3 rounded-xl transition text-sm font-semibold bg-cyan-50 text-[#0c2340]" data-target="users" data-navigate="users">
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                    <span>Manage Users</span>
+                </button>
+                <button type="button" class="portal-nav-btn w-full flex items-center gap-3 p-3 rounded-xl transition text-sm font-semibold hover:bg-slate-50" data-target="reference" data-navigate="reference">
+                    <i data-lucide="list-checks" class="w-5 h-5"></i>
+                    <span>Categories & Ranges</span>
+                </button>
+                <button type="button" class="portal-nav-btn w-full flex items-center gap-3 p-3 rounded-xl transition text-sm font-semibold hover:bg-slate-50" data-target="audit" data-navigate="audit">
+                    <i data-lucide="scroll-text" class="w-5 h-5"></i>
+                    <span>Audit Log</span>
+                </button>
+            </div>
+
+            <div class="mt-auto pt-6 border-t border-slate-200">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-sm">AD</div>
+                    <div>
+                        <p class="text-sm font-bold text-[#0c2340]">Administrator</p>
+                        <p class="text-xs text-slate-500">System manager</p>
+                    </div>
+                </div>
+                <a href="./index.html" class="w-full flex items-center gap-3 p-3 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
+                    <span>Sign out</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- MAIN -->
+        <main class="flex-1 p-6 md:p-8 max-w-6xl w-full mx-auto">
+
+            <!-- SUBVIEW: MANAGE USERS -->
+            <section id="view-users" class="portal-subview">
+                <div class="page-heading">
+                    <div>
+                        <span class="eyebrow">ACCOUNTS</span>
+                        <h1>Manage Users</h1>
+                        <p>Verify doctor accounts and manage patient and doctor access.</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden mb-6">
+                    <div class="p-5 border-b border-slate-100 flex justify-between items-center">
+                        <div>
+                            <h3 class="font-bold text-[#0c2340]">Pending doctor verification</h3>
+                            <p class="text-xs text-slate-500">Approve only after checking the license number</p>
+                        </div>
+                        <span id="pendingCount" class="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full">0 pending</span>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="records-table w-full">
+                            <thead>
+                                <tr>
+                                    <th>DOCTOR</th>
+                                    <th>SPECIALTY</th>
+                                    <th>LICENSE NO.</th>
+                                    <th>APPLIED</th>
+                                    <th>ACTION</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pendingDoctorsTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                    <div class="p-5 border-b border-slate-100">
+                        <h3 class="font-bold text-[#0c2340]">Active accounts</h3>
+                        <p class="text-xs text-slate-500">Approved doctors and registered patients</p>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="records-table w-full">
+                            <thead>
+                                <tr>
+                                    <th>NAME</th>
+                                    <th>ROLE</th>
+                                    <th>DETAIL</th>
+                                    <th>STATUS</th>
+                                    <th>ACTION</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SUBVIEW: CATEGORIES & REFERENCE RANGES -->
+            <section id="view-reference" class="portal-subview hidden">
+                <div class="page-heading">
+                    <div>
+                        <span class="eyebrow">CLASSIFICATION</span>
+                        <h1>Categories & Reference Ranges</h1>
+                        <p>Keep file classification and lab reference ranges consistent for all users.</p>
+                    </div>
+                </div>
+
+                <div class="grid lg:grid-cols-2 gap-6 items-start mb-6">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                        <h3 class="font-bold text-[#0c2340] mb-4">File categories</h3>
+                        <ul id="categoriesList" class="space-y-2 mb-4"></ul>
+                        <form id="addCategoryForm" class="flex gap-2">
+                            <input type="text" id="newCategoryName" required placeholder="New category name"
+                                class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm outline-none focus:border-cyan-500 transition">
+                            <button type="submit" class="bg-[#0c2340] hover:bg-blue-950 text-white font-semibold px-4 rounded-xl text-sm transition">Add</button>
+                        </form>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                        <h3 class="font-bold text-[#0c2340] mb-4">Chronic conditions</h3>
+                        <ul id="conditionsList" class="space-y-2 mb-4"></ul>
+                        <form id="addConditionForm" class="flex gap-2">
+                            <input type="text" id="newConditionName" required placeholder="New condition name"
+                                class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm outline-none focus:border-cyan-500 transition">
+                            <button type="submit" class="bg-[#0c2340] hover:bg-blue-950 text-white font-semibold px-4 rounded-xl text-sm transition">Add</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                    <div class="p-5 border-b border-slate-100">
+                        <h3 class="font-bold text-[#0c2340]">Lab test reference ranges</h3>
+                        <p class="text-xs text-slate-500">Out-of-range highlighting uses these limits</p>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="records-table w-full">
+                            <thead>
+                                <tr>
+                                    <th>TEST</th>
+                                    <th>UNIT</th>
+                                    <th>MIN</th>
+                                    <th>MAX</th>
+                                    <th>ACTION</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rangesTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SUBVIEW: AUDIT LOG -->
+            <section id="view-audit" class="portal-subview hidden">
+                <div class="page-heading">
+                    <div>
+                        <span class="eyebrow">ACCOUNTABILITY</span>
+                        <h1>Audit Log</h1>
+                        <p>Every file view, share, revoke and download is recorded here.</p>
+                    </div>
+                    <select id="auditFilter" class="bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-cyan-500 transition">
+                        <option value="all">All actions</option>
+                        <option value="view">Views</option>
+                        <option value="download">Downloads</option>
+                        <option value="share">Shares</option>
+                        <option value="revoke">Revokes</option>
+                        <option value="approve">Approvals</option>
+                    </select>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                    <div class="table-wrapper">
+                        <table class="records-table w-full">
+                            <thead>
+                                <tr>
+                                    <th>TIME</th>
+                                    <th>USER</th>
+                                    <th>ACTION</th>
+                                    <th>DETAILS</th>
+                                </tr>
+                            </thead>
+                            <tbody id="auditTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <p class="text-right text-[10px] text-slate-400 mt-8">CHRONICARE HEALTH SYSTEMS</p>
+        </main>
+    </div>
+
+    <script src="./js/admin.js"></script>
+</body>
+
+</html>
