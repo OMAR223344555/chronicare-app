@@ -57,7 +57,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!liveFirstName) return;
         const greet = document.getElementById('heroGreeting');
         if (greet) {
-            greet.textContent = (window.CCi18n && CCi18n.isRTL ? 'صباح الخير يا ' : 'Good morning, ') + liveFirstName + ' \u2728';
+            const hr = new Date().getHours();
+            const part = hr >= 5 && hr < 12 ? 0 : (hr >= 12 && hr < 17 ? 1 : 2);
+            const rtl = window.CCi18n && CCi18n.isRTL;
+            const lead = rtl ? ['صباح الخير يا ', 'نهارك سعيد يا ', 'مساء الخير يا '][part] : ['Good morning, ', 'Good afternoon, ', 'Good evening, '][part];
+            greet.textContent = lead + liveFirstName + ' \u2728';
             greet.removeAttribute('data-i18n');
         }
     }
