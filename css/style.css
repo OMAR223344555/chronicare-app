@@ -1294,3 +1294,295 @@ html.dark header.bg-white {
 
 /* Eyebrow labels: consistent tracking/color */
 .text-xs.font-bold.tracking-widest { letter-spacing: 0.14em; }
+
+/* ==================================================================
+   PORTAL LUXE: dedicated visual redesign for Doctor & Admin portals
+   (light + dark, RTL-safe via logical properties)
+   ================================================================== */
+
+/* ---------- App canvas ---------- */
+body.portal-luxe {
+    background:
+        radial-gradient(900px 480px at 100% -10%, rgba(34, 211, 238, 0.10), transparent 60%),
+        radial-gradient(700px 420px at -10% 110%, rgba(12, 35, 64, 0.06), transparent 55%),
+        linear-gradient(180deg, #f4f8fc 0%, #eef3f9 100%);
+}
+html.dark body.portal-luxe {
+    background:
+        radial-gradient(900px 480px at 100% -10%, rgba(34, 211, 238, 0.07), transparent 60%),
+        radial-gradient(700px 420px at -10% 110%, rgba(34, 211, 238, 0.04), transparent 55%),
+        linear-gradient(180deg, #0a1522 0%, #08111d 100%);
+}
+
+/* ---------- Sidebar: deep navy gradient, glass accents ---------- */
+body.portal-luxe #sidebar {
+    background: linear-gradient(178deg, #0f2a4d 0%, #0c2340 45%, #091a30 100%);
+    border-inline-end: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 4px 0 32px rgba(9, 26, 48, 0.25);
+    position: relative;
+}
+body.portal-luxe #sidebar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(420px 200px at 20% 0%, rgba(34, 211, 238, 0.14), transparent 65%);
+}
+body.portal-luxe #sidebar > * { position: relative; }
+
+/* brand */
+body.portal-luxe #sidebar h1 { color: #ffffff; letter-spacing: -0.02em; }
+body.portal-luxe #sidebar p[data-i18n^="portal"] { color: #67e8f9; }
+body.portal-luxe #sidebar .text-cyan-500 { color: #22d3ee; filter: drop-shadow(0 0 10px rgba(34, 211, 238, 0.45)); }
+
+/* section label */
+body.portal-luxe #sidebar p.tracking-wider { color: rgba(163, 190, 214, 0.6); letter-spacing: 0.14em; }
+
+/* nav items */
+body.portal-luxe #sidebar .portal-nav-btn {
+    color: #b9cbde;
+    border-radius: 12px;
+    position: relative;
+}
+body.portal-luxe #sidebar .portal-nav-btn:hover {
+    background: rgba(255, 255, 255, 0.07);
+    color: #ffffff;
+}
+body.portal-luxe #sidebar .portal-nav-btn.bg-cyan-50,
+body.portal-luxe #sidebar .portal-nav-btn.bg-cyan-50.text-\[\#0c2340\] {
+    background: linear-gradient(90deg, rgba(34, 211, 238, 0.22), rgba(34, 211, 238, 0.10));
+    color: #ffffff;
+    box-shadow: inset 0 0 0 1px rgba(34, 211, 238, 0.28), 0 4px 14px rgba(34, 211, 238, 0.12);
+}
+body.portal-luxe #sidebar .portal-nav-btn.bg-cyan-50::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: 0;
+    top: 22%;
+    bottom: 22%;
+    width: 3px;
+    border-radius: 999px;
+    background: #22d3ee;
+    box-shadow: 0 0 8px rgba(34, 211, 238, 0.8);
+}
+
+/* profile footer */
+body.portal-luxe #sidebar .border-t { border-color: rgba(255, 255, 255, 0.10); }
+body.portal-luxe #sidebar p.text-sm.font-bold,
+body.portal-luxe #sidebar .text-\[\#0c2340\] { color: #eaf2fa; }
+body.portal-luxe #sidebar p.text-xs,
+body.portal-luxe #sidebar .text-slate-500 { color: #8ea2b8; }
+body.portal-luxe #sidebar .text-slate-600 { color: #b3c2d4; }
+body.portal-luxe #sidebar .bg-slate-800 { background: rgba(34, 211, 238, 0.18); color: #a5f3fc; }
+body.portal-luxe #sidebar .bg-cyan-200 { background: rgba(34, 211, 238, 0.20); color: #cffafe; }
+body.portal-luxe #sidebar a { color: #b9cbde; }
+body.portal-luxe #sidebar a:hover { background: rgba(255, 255, 255, 0.07); color: #ffffff; }
+html.dark body.portal-luxe #sidebar {
+    background: linear-gradient(178deg, #0e2138 0%, #0b1a2d 50%, #081422 100%);
+}
+
+/* mobile drawer matches the navy identity */
+@media (max-width: 767px) {
+    body.portal-luxe #sidebar.mobile-open {
+        background: linear-gradient(178deg, #0f2a4d 0%, #0c2340 45%, #091a30 100%);
+        box-shadow: 4px 0 32px rgba(0, 0, 0, 0.45);
+    }
+    body.portal-luxe #sidebar #mobile-menu-close { color: #8ea2b8; }
+    body.portal-luxe #sidebar #mobile-menu-close:hover { color: #ffffff; }
+}
+
+/* ---------- Top bar (mobile) + header controls ---------- */
+body.portal-luxe #main-content > .md\:hidden span { letter-spacing: -0.01em; }
+body.portal-luxe [data-palette-trigger],
+body.portal-luxe [data-notif-btn] {
+    backdrop-filter: blur(8px);
+    box-shadow: 0 2px 10px rgba(12, 35, 64, 0.06);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+body.portal-luxe [data-palette-trigger]:hover,
+body.portal-luxe [data-notif-btn]:hover {
+    border-color: #7dd3fc;
+    box-shadow: 0 6px 18px rgba(12, 35, 64, 0.10);
+    transform: translateY(-1px);
+}
+html.dark body.portal-luxe [data-palette-trigger],
+html.dark body.portal-luxe [data-notif-btn] {
+    background: #101f31;
+    border-color: #22364d;
+}
+
+/* ---------- Page headings ---------- */
+body.portal-luxe .page-heading h1 {
+    letter-spacing: -0.025em;
+    background: linear-gradient(92deg, #0c2340 30%, #0e7490 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+html.dark body.portal-luxe .page-heading h1 {
+    background: linear-gradient(92deg, #eaf2fa 30%, #67e8f9 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+body.portal-luxe .page-heading .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+}
+body.portal-luxe .page-heading .eyebrow::before {
+    content: '';
+    width: 18px;
+    height: 2.5px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #22d3ee, #0e7490);
+}
+
+/* ---------- Cards ---------- */
+body.portal-luxe .bg-white.rounded-2xl {
+    border-color: #e4edf6;
+    box-shadow: 0 1px 2px rgba(12, 35, 64, 0.04), 0 10px 28px rgba(12, 35, 64, 0.06);
+    transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+}
+body.portal-luxe .bg-white.rounded-2xl:hover {
+    box-shadow: 0 2px 4px rgba(12, 35, 64, 0.05), 0 16px 38px rgba(12, 35, 64, 0.10);
+    border-color: #cfe3f2;
+}
+html.dark body.portal-luxe .bg-white.rounded-2xl {
+    border-color: #1b2c40;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 28px rgba(0, 0, 0, 0.35);
+}
+html.dark body.portal-luxe .bg-white.rounded-2xl:hover { border-color: #2a4258; }
+
+/* gradient icon tiles get a soft glow */
+body.portal-luxe .bg-white.rounded-2xl [class*="bg-gradient-to-br"] {
+    box-shadow: 0 6px 16px rgba(12, 35, 64, 0.18);
+}
+
+/* stat numbers */
+body.portal-luxe .bg-white.rounded-2xl .text-2xl { font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+
+/* ---------- Tables ---------- */
+body.portal-luxe .records-table th {
+    background: #f3f8fc;
+    color: #61788f;
+    font-size: 10.5px;
+    letter-spacing: 0.09em;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e4edf6;
+}
+body.portal-luxe .records-table th:first-child { border-start-start-radius: 0; }
+body.portal-luxe .records-table td {
+    border-bottom: 1px solid #eef4f9;
+    padding-top: 14px;
+    padding-bottom: 14px;
+}
+body.portal-luxe .records-table tbody tr:last-child td { border-bottom: none; }
+body.portal-luxe .records-table tbody tr:hover { background: #f2f9fd; }
+html.dark body.portal-luxe .records-table th {
+    background: #0d1a2a;
+    color: #6f849c;
+    border-color: #1b2c40;
+}
+html.dark body.portal-luxe .records-table td { border-color: #16283c; }
+html.dark body.portal-luxe .records-table tbody tr:hover { background: #132439; }
+
+/* ---------- Status pills with indicator dots ---------- */
+body.portal-luxe span.rounded-full.text-xs.font-bold,
+body.portal-luxe span[class*="rounded-full"][class*="text-xs"] {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+body.portal-luxe span.rounded-full.text-xs.font-bold::before,
+body.portal-luxe span[class*="rounded-full"][class*="text-xs"]::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: currentColor;
+    opacity: 0.75;
+}
+body.portal-luxe .status.reviewed, body.portal-luxe .status.active { color: #047857; }
+body.portal-luxe .status.archived { color: #94a3b8; }
+
+/* ---------- Primary buttons: navy gradient ---------- */
+body.portal-luxe button.bg-\[\#0c2340\],
+body.portal-luxe .open-patient-btn.bg-\[\#0c2340\] {
+    background: linear-gradient(135deg, #123a63 0%, #0c2340 100%);
+    box-shadow: 0 6px 16px rgba(12, 35, 64, 0.28);
+    letter-spacing: 0.01em;
+}
+body.portal-luxe button.bg-\[\#0c2340\]:hover {
+    background: linear-gradient(135deg, #16487c 0%, #0e2a4c 100%);
+    box-shadow: 0 8px 22px rgba(12, 35, 64, 0.36);
+    transform: translateY(-1px);
+}
+
+/* filter chips / template chips */
+body.portal-luxe .patient-filter-chip,
+body.portal-luxe .note-template-chip {
+    transition: all 0.18s ease;
+}
+body.portal-luxe .patient-filter-chip:hover,
+body.portal-luxe .note-template-chip:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(12, 35, 64, 0.10);
+}
+html.dark body.portal-luxe .patient-filter-chip.bg-slate-100 {
+    background: #16283c;
+    color: #b3c2d4;
+}
+html.dark body.portal-luxe .note-template-chip {
+    background: rgba(34, 211, 238, 0.10);
+    border-color: rgba(34, 211, 238, 0.25);
+    color: #67e8f9;
+}
+
+/* approve / decline pills */
+body.portal-luxe .approve-doctor-btn,
+body.portal-luxe .decline-doctor-btn,
+body.portal-luxe .toggle-user-btn {
+    transition: all 0.18s ease;
+}
+body.portal-luxe .approve-doctor-btn:hover { box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25); transform: translateY(-1px); }
+body.portal-luxe .decline-doctor-btn:hover { box-shadow: 0 4px 12px rgba(220, 38, 38, 0.18); transform: translateY(-1px); }
+html.dark body.portal-luxe .approve-doctor-btn { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; }
+html.dark body.portal-luxe .decline-doctor-btn { background: rgba(239, 68, 68, 0.12); color: #fca5a5; }
+
+/* list items (categories / conditions) */
+body.portal-luxe ul li.bg-slate-50 {
+    border-color: #e4edf6;
+    transition: all 0.18s ease;
+}
+body.portal-luxe ul li.bg-slate-50:hover { border-color: #bae6fd; background: #f2f9fd; }
+html.dark body.portal-luxe ul li.bg-slate-50 { border-color: #1b2c40; }
+html.dark body.portal-luxe ul li.bg-slate-50:hover { background: #132439; border-color: #22364d; }
+
+/* reference-range inputs */
+body.portal-luxe input.range-min, body.portal-luxe input.range-max {
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+body.portal-luxe input.range-min:focus, body.portal-luxe input.range-max:focus {
+    border-color: #22d3ee;
+    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.15);
+    outline: none;
+}
+
+/* notes cards */
+body.portal-luxe #notesList .bg-slate-50 {
+    border-inline-start: 3px solid #22d3ee;
+    background: #f6fbfd;
+}
+html.dark body.portal-luxe #notesList .bg-slate-50 { background: #0f2233; border-inline-start-color: #0e7490; }
+
+/* out-of-range lab rows */
+body.portal-luxe tr.bg-red-50 td:first-child { border-inline-start: 3px solid #fca5a5; }
+html.dark body.portal-luxe tr.bg-red-50 { background: rgba(239, 68, 68, 0.08); }
+
+/* section sub-titles inside cards */
+body.portal-luxe .bg-white.rounded-2xl h3 { letter-spacing: -0.01em; }
+
+/* footer microcopy */
+body.portal-luxe main > p[data-i18n="app.footer"] { letter-spacing: 0.18em; }
