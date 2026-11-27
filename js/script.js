@@ -204,6 +204,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             await CCApi.hydratePatient(state, CONDITION_LABELS, CATEGORY_LABELS);
                             apiMode = true;
                             CCApi.populateShareForm(state);
+                            applyLiveOverview();
                         } catch (e2) { /* keep built-in demo data */ }
                         landForRole(role);
                         return;
@@ -244,6 +245,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         await CCApi.hydratePatient(state, CONDITION_LABELS, CATEGORY_LABELS);
                         apiMode = true;
                         CCApi.populateShareForm(state);
+                        applyLiveOverview();
                     } catch (e2) { /* land on the demo state */ }
                     landForRole('patient');
                     return;
@@ -1183,6 +1185,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             ...state.labs.map(l => ({ month: mon(l.date), type: 'lab', title: `${l.label}: ${l.value}${l.unit ? ' ' + l.unit : ''}`, text: '', date: fmtDate(l.date) })),
         ].sort((a, b) => String(b.date).localeCompare(String(a.date))).slice(0, 10);
         renderTimeline();
+        renderOverviewChart();
     }
 
     // count-up stats when overview shows
