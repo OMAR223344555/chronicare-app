@@ -2,9 +2,9 @@
 
 Creates (idempotently):
 - admin@chronicare.demo      / $DEMO_ADMIN_PASSWORD (platform admin; random if unset)
-- maya@chronicare.demo       / Patient@12345  (patient, "Maya Hassan")
-- dr.sara@chronicare.demo    / Doctor@12345   (approved doctor)
-- dr.karim@chronicare.demo   / Doctor@12345   (PENDING doctor, for the admin approval demo)
+- maya@chronicare.demo       / (random or $DEMO_PASSWORD) (patient, "Maya Hassan")
+- dr.sara@chronicare.demo    / (random or $DEMO_PASSWORD) (approved doctor)
+- dr.karim@chronicare.demo   / (random or $DEMO_PASSWORD) (PENDING doctor, for the admin approval demo)
 plus categories, conditions, lab test types with reference ranges, sample
 medical files (small generated PDFs), a lab-results series, an active share
 from Maya to Dr. Sara, and a doctor note.
@@ -48,6 +48,9 @@ def make_user(email, password, role, status, full_name, **extra):
     return user
 
 
+DEMO_PASSWORD = os.environ.get("DEMO_PASSWORD") or secrets.token_urlsafe(14)
+
+
 class Command(BaseCommand):
     help = "Seed demo accounts and data (idempotent)."
 
@@ -61,16 +64,16 @@ class Command(BaseCommand):
         admin.save()
 
         maya = make_user(
-            "maya@chronicare.demo", "Patient@12345",
+            "maya@chronicare.demo", DEMO_PASSWORD,
             User.Role.PATIENT, User.Status.ACTIVE, "Maya Hassan",
         )
         sara = make_user(
-            "dr.sara@chronicare.demo", "Doctor@12345",
+            "dr.sara@chronicare.demo", DEMO_PASSWORD,
             User.Role.DOCTOR, User.Status.ACTIVE, "Dr. Sara Adel",
             specialty="Endocrinology", license_number="EG-ENDO-10482",
         )
         make_user(
-            "dr.karim@chronicare.demo", "Doctor@12345",
+            "dr.karim@chronicare.demo", DEMO_PASSWORD,
             User.Role.DOCTOR, User.Status.PENDING, "Dr. Karim Nabil",
             specialty="Cardiology", license_number="EG-CARD-22771",
         )
@@ -175,7 +178,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(
             "Demo data ready:\n"
             "  admin@chronicare.demo    / (from DEMO_ADMIN_PASSWORD, else random)\n"
-            "  maya@chronicare.demo     / Patient@12345 (patient)\n"
-            "  dr.sara@chronicare.demo  / Doctor@12345  (approved doctor)\n"
-            "  dr.karim@chronicare.demo / Doctor@12345  (pending approval)"
+            "  maya@chronicare.demo     / (see DEMO_PASSWORD) (patient)\n"
+            "  dr.sara@chronicare.demo  / (see DEMO_PASSWORD) (approved doctor)\n"
+            "  dr.karim@chronicare.demo / (see DEMO_PASSWORD) (pending approval)"
         ))

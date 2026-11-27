@@ -21,7 +21,7 @@ to built-in demo data.
 
 | Role    | Email                    | Password      |
 | ------- | ------------------------ | ------------- |
-| Patient | maya@chronicare.demo     | Patient@12345 |
-| Doctor  | dr.sara@chronicare.demo  | Doctor@12345  |
-| Doctor  | dr.karim@chronicare.demo | Doctor@12345  |
+| Patient | maya@chronicare.demo     | (private)    |
+| Doctor  | dr.sara@chronicare.demo  | (private)    |
+| Doctor  | dr.karim@chronicare.demo | (private)    |
 | Admin   | admin@chronicare.demo    | (private, ask the project owner) |

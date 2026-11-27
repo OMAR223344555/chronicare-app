@@ -120,9 +120,9 @@ are demo-only and must never be real ones.
 
 | Role    | Email                    | Password      | Notes                        |
 | ------- | ------------------------ | ------------- | ---------------------------- |
-| Patient | maya@chronicare.demo     | Patient@12345 | has files, labs, one share   |
-| Doctor  | dr.sara@chronicare.demo  | Doctor@12345  | approved; sees Maya's files  |
-| Doctor  | dr.karim@chronicare.demo | Doctor@12345  | pending; login blocked until admin approves |
+| Patient | maya@chronicare.demo     | (private)       | has files, labs, one share   |
+| Doctor  | dr.sara@chronicare.demo  | (private)        | approved; sees Maya's files  |
+| Doctor  | dr.karim@chronicare.demo | (private)        | pending; login blocked until admin approves |
 | Admin   | admin@chronicare.demo    | (private)     | approves doctors, sees audit log |
 
 ## Where everything lives in this repo
@@ -147,5 +147,5 @@ python manage.py runserver 127.0.0.1:8000
 ```
 
 Then open the frontend and sign in as `maya@chronicare.demo` /
-`Patient@12345`. To prove the demo fallback, stop the server and reload the
+the demo password you were given. To prove the demo fallback, stop the server and reload the
 page: it still works with built-in sample data.
