@@ -63,8 +63,33 @@ document.addEventListener('DOMContentLoaded', () => {
         elem.addEventListener('click', (e) => {
             e.preventDefault();
             showView(elem.getAttribute('data-navigate'));
+            if (window.innerWidth < 768) closeMobileSidebar();
         });
     });
+
+    // Mobile drawer
+    const sidebar = document.getElementById('sidebar');
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenuClose = document.getElementById('mobile-menu-close');
+    function closeMobileSidebar() {
+        sidebar.classList.add('hidden');
+        sidebar.classList.remove('fixed', 'inset-0', 'z-50', 'flex');
+    }
+    if (mobileMenuBtn && sidebar) {
+        mobileMenuBtn.addEventListener('click', () => {
+            const isOpen = !sidebar.classList.contains('hidden');
+            if (isOpen) {
+                closeMobileSidebar();
+            } else {
+                sidebar.classList.remove('hidden');
+                sidebar.classList.add('fixed', 'inset-0', 'z-50', 'flex');
+                refreshIcons();
+            }
+        });
+    }
+    if (mobileMenuClose && sidebar) {
+        mobileMenuClose.addEventListener('click', closeMobileSidebar);
+    }
 
     // ---- Manage Users ----
     function renderPending() {
@@ -102,6 +127,24 @@ document.addEventListener('DOMContentLoaded', () => {
         refreshIcons();
     }
 
+    // Toast notifications
+    function showToast(message, type) {
+        let container = document.querySelector('.toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'toast-container';
+            document.body.appendChild(container);
+        }
+        const toast = document.createElement('div');
+        toast.className = 'toast' + (type ? ' toast-' + type : '');
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.classList.add('toast-leaving');
+            toast.addEventListener('animationend', () => toast.remove(), { once: true });
+        }, 2600);
+    }
+
     document.addEventListener('click', (e) => {
         const approveBtn = e.target.closest('.approve-doctor-btn');
         if (approveBtn) {
@@ -111,6 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
             users.push({ id: 100 + d.id, name: d.name, role: 'Doctor', detail: `${d.specialty} • ${d.license}`, status: 'Active' });
             auditEvents.unshift({ time: 'just now', user: 'Administrator', action: 'approve', details: `Approved doctor account ${d.name}` });
             renderPending(); renderUsers(); renderAudit();
+            showToast(`${d.name} approved and activated`);
             return;
         }
         const declineBtn = e.target.closest('.decline-doctor-btn');
@@ -120,6 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!confirm(`Decline ${d.name}'s application?`)) return;
             pendingDoctors.splice(pendingDoctors.indexOf(d), 1);
             renderPending();
+            showToast(`Declined ${d.name}'s application`, 'warn');
             return;
         }
         const toggleBtn = e.target.closest('.toggle-user-btn');
@@ -129,6 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
             u.status = u.status === 'Active' ? 'Deactivated' : 'Active';
             auditEvents.unshift({ time: 'just now', user: 'Administrator', action: u.status === 'Active' ? 'approve' : 'revoke', details: `${u.status} account ${u.name}` });
             renderUsers(); renderAudit();
+            showToast(`${u.name} ${u.status === 'Active' ? 'reactivated' : 'deactivated'}`, u.status === 'Active' ? undefined : 'warn');
         }
     });
 
@@ -159,14 +205,14 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         const input = document.getElementById('newCategoryName');
         const name = input.value.trim();
-        if (name && !categories.includes(name)) { categories.push(name); renderLists(); }
+        if (name && !categories.includes(name)) { categories.push(name); renderLists(); showToast(`Category "${name}" added`); }
         input.value = '';
     });
     document.getElementById('addConditionForm').addEventListener('submit', (e) => {
         e.preventDefault();
         const input = document.getElementById('newConditionName');
         const name = input.value.trim();
-        if (name && !conditions.includes(name)) { conditions.push(name); renderLists(); }
+        if (name && !conditions.includes(name)) { conditions.push(name); renderLists(); showToast(`Condition "${name}" added`); }
         input.value = '';
     });
 

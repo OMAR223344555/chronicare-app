@@ -52,6 +52,24 @@ document.addEventListener('DOMContentLoaded', () => {
         return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
     }
 
+    // Toast notifications
+    function showToast(message, type) {
+        let container = document.querySelector('.toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'toast-container';
+            document.body.appendChild(container);
+        }
+        const toast = document.createElement('div');
+        toast.className = 'toast' + (type ? ' toast-' + type : '');
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.classList.add('toast-leaving');
+            toast.addEventListener('animationend', () => toast.remove(), { once: true });
+        }, 2600);
+    }
+
     // ==========================================================================
     // 1. Authentication: sign in / sign up switching, roles, password toggle
     // ==========================================================================
@@ -233,21 +251,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const mobileMenuBtn = document.getElementById('mobile-menu-btn');
     const mobileMenuClose = document.getElementById('mobile-menu-close');
+    function closeMobileSidebar() {
+        sidebar.classList.add('hidden');
+        sidebar.classList.remove('fixed', 'inset-0', 'z-50', 'flex');
+    }
     if (mobileMenuBtn && sidebar) {
         mobileMenuBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('hidden');
-            sidebar.classList.toggle('fixed');
-            sidebar.classList.toggle('inset-0');
-            sidebar.classList.toggle('z-50');
-            refreshIcons();
+            const isOpen = !sidebar.classList.contains('hidden');
+            if (isOpen) {
+                closeMobileSidebar();
+            } else {
+                sidebar.classList.remove('hidden');
+                sidebar.classList.add('fixed', 'inset-0', 'z-50', 'flex');
+                refreshIcons();
+            }
         });
     }
     if (mobileMenuClose && sidebar) {
-        mobileMenuClose.addEventListener('click', () => {
-            sidebar.classList.add('hidden');
-            sidebar.classList.remove('fixed', 'inset-0', 'z-50');
-        });
+        mobileMenuClose.addEventListener('click', closeMobileSidebar);
     }
+    // Close the drawer after picking a section on phones
+    document.querySelectorAll('#sidebar [data-navigate]').forEach(elem => {
+        elem.addEventListener('click', () => {
+            if (window.innerWidth < 768) closeMobileSidebar();
+        });
+    });
 
     // ==========================================================================
     // 3. My Medical Files: render, search, filter, archive, details pop-up
@@ -276,6 +304,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const matchesCat = cat === 'all' || r.category === cat;
             return matchesSearch && matchesCond && matchesCat;
         });
+
+        visible.sort((a, b) => state.sortDir === 'asc'
+            ? a.date.localeCompare(b.date)
+            : b.date.localeCompare(a.date));
 
         recordsTable.innerHTML = visible.map(r => `
             <tr data-id="${r.id}" class="cursor-pointer hover:bg-slate-50 transition">
@@ -322,12 +354,24 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Archive / restore
+    // Sort toggle for the records table
+    state.sortDir = 'desc';
+    const sortRecordsBtn = document.getElementById('sortRecordsBtn');
+    if (sortRecordsBtn) {
+        sortRecordsBtn.addEventListener('click', () => {
+            state.sortDir = state.sortDir === 'desc' ? 'asc' : 'desc';
+            sortRecordsBtn.textContent = state.sortDir === 'desc' ? 'Newest first ⌄' : 'Oldest first ⌄';
+            renderRecords();
+        });
+    }
+
     function setArchived(id, archived) {
         const rec = state.records.find(r => r.id === id);
         if (!rec) return;
         rec.archived = archived;
         rec.status = archived ? 'Archived' : 'Review';
         renderRecords();
+        showToast(archived ? `"${rec.name}" archived` : `"${rec.name}" restored`, archived ? 'warn' : undefined);
     }
 
     const archiveList = document.getElementById('archiveList');
@@ -377,6 +421,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     document.querySelectorAll('.close-file-modal').forEach(b => b.addEventListener('click', closeFileModal));
     if (fileModal) fileModal.addEventListener('click', (e) => { if (e.target === fileModal) closeFileModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeFileModal(); });
 
     document.addEventListener('click', (e) => {
         const viewBtn = e.target.closest('.view-record-btn');
@@ -431,6 +476,7 @@ document.addEventListener('DOMContentLoaded', () => {
             uploadForm.reset();
             if (uploadFileName) uploadFileName.textContent = 'PDF, JPG or PNG, up to 10 MB';
             showView('medical-files');
+            showToast(`"${rec.name}" added to your records`);
         });
     }
 
@@ -534,6 +580,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderLabTable();
             renderTrendChart();
             labEntryForm.reset();
+            showToast(`${meta.label} result saved`);
         });
     }
 
@@ -547,9 +594,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderShares() {
         if (!sharesList) return;
         sharesList.innerHTML = state.shares.length ? state.shares.map(s => `
-            <div class="flex items-center gap-4 border border-slate-100 rounded-xl p-4 mb-3.5 hover:border-slate-200 transition">
+            <div class="flex flex-wrap sm:flex-nowrap items-center gap-3 sm:gap-4 border border-slate-100 rounded-xl p-4 mb-3.5 hover:border-slate-200 transition">
                 <div class="w-11 h-11 rounded-full ${s.color} flex items-center justify-center font-bold text-[#0c2340] text-sm shrink-0">${s.initials}</div>
-                <div class="flex-1 min-w-0">
+                <div class="flex-1 min-w-0" style="flex-basis: 45%;">
                     <p class="font-bold text-sm text-[#0c2340]">${s.doctor}</p>
                     <p class="text-xs text-slate-500">${s.specialty} • Verified doctor</p>
                     <div class="flex flex-wrap items-center gap-2 mt-2">
@@ -557,10 +604,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="text-xs text-slate-400">${s.files}</span>
                     </div>
                 </div>
-                <div class="text-right shrink-0">
+                <div class="w-full sm:w-auto sm:text-right sm:shrink-0 flex sm:block items-center justify-between gap-2">
                     <span class="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-1 rounded-full">Active</span>
-                    <p class="text-[11px] text-slate-400 mt-2">Expires ${fmtDate(s.expires)}</p>
-                    <button type="button" class="revoke-share-btn text-[11px] font-bold text-red-500 hover:underline mt-1" data-id="${s.id}">Revoke access</button>
+                    <p class="text-[11px] text-slate-400 sm:mt-2">Expires ${fmtDate(s.expires)}</p>
+                    <button type="button" class="revoke-share-btn text-[11px] font-bold text-red-500 hover:underline sm:mt-1" data-id="${s.id}">Revoke access</button>
                 </div>
             </div>`).join('')
             : `<p class="text-sm text-slate-400">No active shares. Create one on the right.</p>`;
@@ -575,6 +622,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (share && confirm(`Revoke ${share.doctor}'s access? This takes effect immediately.`)) {
             state.shares = state.shares.filter(s => s.id !== share.id);
             renderShares();
+            showToast(`Revoked ${share.doctor}'s access`, 'warn');
         }
     });
 
@@ -601,6 +649,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             renderShares();
             newShareForm.reset();
+            showToast(`Access shared with ${name} until ${fmtDate(expiryInput.value)}`);
         });
     }
 

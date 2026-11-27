@@ -17,15 +17,20 @@
 
         <!-- SIDEBAR -->
         <aside id="sidebar" class="w-64 bg-white border-r border-slate-200 p-5 hidden md:flex md:flex-col shrink-0">
-            <div class="flex items-center gap-3 mb-8">
-                <div class="relative flex items-center justify-center text-cyan-500">
-                    <i data-lucide="heart-pulse" class="w-10 h-10"></i>
-                    <i data-lucide="plus" class="w-4 h-4 absolute"></i>
+            <div class="flex items-center justify-between gap-3 mb-8">
+                <div class="flex items-center gap-3">
+                    <div class="relative flex items-center justify-center text-cyan-500">
+                        <i data-lucide="heart-pulse" class="w-10 h-10"></i>
+                        <i data-lucide="plus" class="w-4 h-4 absolute"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-extrabold text-[#0c2340]">Chronicare</h1>
+                        <p class="text-[11px] text-cyan-600 italic">Doctor Portal</p>
+                    </div>
                 </div>
-                <div>
-                    <h1 class="text-xl font-extrabold text-[#0c2340]">Chronicare</h1>
-                    <p class="text-[11px] text-cyan-600 italic">Doctor Portal</p>
-                </div>
+                <button id="mobile-menu-close" class="md:hidden text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
             </div>
 
             <p class="text-xs font-bold text-slate-400 tracking-wider mb-2">MY PRACTICE</p>
@@ -58,6 +63,14 @@
         <!-- MAIN -->
         <main class="flex-1 p-6 md:p-8 max-w-6xl w-full mx-auto">
 
+            <!-- Mobile top bar -->
+            <div class="md:hidden flex items-center justify-between mb-5">
+                <button id="mobile-menu-btn" class="text-slate-600 hover:text-[#0c2340] p-1.5 rounded-lg border border-slate-200 bg-white">
+                    <i data-lucide="menu" class="w-5 h-5"></i>
+                </button>
+                <span class="text-sm font-bold text-[#0c2340]">Doctor Portal</span>
+            </div>
+
             <!-- SUBVIEW: MY PATIENTS -->
             <section id="view-patients" class="portal-subview">
                 <div class="page-heading">
@@ -68,7 +81,7 @@
                     </div>
                 </div>
 
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden hidden sm:block">
                     <div class="table-wrapper">
                         <table class="records-table w-full">
                             <thead>
@@ -85,6 +98,9 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- Mobile: patient cards -->
+                <div id="patientsCards" class="sm:hidden space-y-3"></div>
             </section>
 
             <!-- SUBVIEW: PATIENT RECORDS -->

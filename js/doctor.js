@@ -68,11 +68,54 @@ document.addEventListener('DOMContentLoaded', () => {
         elem.addEventListener('click', (e) => {
             e.preventDefault();
             showView(elem.getAttribute('data-navigate'));
+            if (window.innerWidth < 768) closeMobileSidebar();
         });
     });
 
+    // Mobile drawer
+    const sidebar = document.getElementById('sidebar');
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenuClose = document.getElementById('mobile-menu-close');
+    function closeMobileSidebar() {
+        sidebar.classList.add('hidden');
+        sidebar.classList.remove('fixed', 'inset-0', 'z-50', 'flex');
+    }
+    if (mobileMenuBtn && sidebar) {
+        mobileMenuBtn.addEventListener('click', () => {
+            const isOpen = !sidebar.classList.contains('hidden');
+            if (isOpen) {
+                closeMobileSidebar();
+            } else {
+                sidebar.classList.remove('hidden');
+                sidebar.classList.add('fixed', 'inset-0', 'z-50', 'flex');
+                refreshIcons();
+            }
+        });
+    }
+    if (mobileMenuClose && sidebar) {
+        mobileMenuClose.addEventListener('click', closeMobileSidebar);
+    }
+
     function fmtDate(iso) {
         return new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    // Toast notifications
+    function showToast(message, type) {
+        let container = document.querySelector('.toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'toast-container';
+            document.body.appendChild(container);
+        }
+        const toast = document.createElement('div');
+        toast.className = 'toast' + (type ? ' toast-' + type : '');
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.classList.add('toast-leaving');
+            toast.addEventListener('animationend', () => toast.remove(), { once: true });
+        }, 2600);
     }
 
     function outOfRange(l) {
@@ -93,6 +136,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     : '<span class="bg-slate-100 text-slate-500 text-xs font-bold px-2.5 py-1 rounded-full">Up to date</span>'}</td>
                 <td><button type="button" class="more-btn open-patient-btn" data-id="${p.id}">Open records</button></td>
             </tr>`).join('');
+
+        // Mobile cards keep the action visible without horizontal scrolling
+        document.getElementById('patientsCards').innerHTML = patients.map(p => `
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
+                <div class="flex items-start justify-between gap-2 mb-1.5">
+                    <div>
+                        <p class="font-bold text-[#0c2340]">${p.name}</p>
+                        <p class="text-xs text-slate-500">${p.conditions}</p>
+                    </div>
+                    ${p.hasNew
+                        ? '<span class="bg-cyan-100 text-cyan-800 text-xs font-bold px-2.5 py-1 rounded-full shrink-0">New files</span>'
+                        : '<span class="bg-slate-100 text-slate-500 text-xs font-bold px-2.5 py-1 rounded-full shrink-0">Up to date</span>'}
+                </div>
+                <p class="text-xs text-slate-500 mb-3">${p.files.length} file${p.files.length > 1 ? 's' : ''} • Last shared ${fmtDate(p.lastShared)}</p>
+                <button type="button" class="open-patient-btn w-full bg-[#0c2340] hover:bg-blue-950 text-white text-sm font-semibold py-2.5 rounded-xl transition" data-id="${p.id}">Open records</button>
+            </div>`).join('');
         refreshIcons();
     }
 
@@ -146,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const viewFile = e.target.closest('.view-shared-file');
         if (viewFile) {
-            alert(`Opening "${viewFile.dataset.name}".\nThe file viewer will load the document once the backend is connected.`);
+            showToast(`Opening "${viewFile.dataset.name}". The viewer loads once the backend is connected.`, 'info');
         }
     });
 
@@ -158,6 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentPatient.notes.unshift({ date: new Date().toISOString().slice(0, 10), text });
         document.getElementById('noteText').value = '';
         renderNotes(currentPatient);
+        showToast('Note added');
     });
 
     renderPatients();

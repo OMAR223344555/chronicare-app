@@ -556,3 +556,182 @@ body {
 .dark { color:#0a2540 }
 .blue { color:#2f62c2; font-weight:bold }
 .small { font-size:11px; color:#171616 }
+
+/* ==========================================================================
+   Mobile responsive fixes (portal pages)
+   ========================================================================== */
+@media screen and (max-width: 900px) {
+    .content-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .toolbar {
+        flex-wrap: wrap;
+    }
+
+    .search-box {
+        flex: 1 1 100%;
+    }
+
+    .record-count {
+        margin-left: 0;
+    }
+
+    .page-heading {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .page-heading h1 {
+        font-size: 22px;
+    }
+}
+
+@media screen and (max-width: 640px) {
+    .records-table th,
+    .records-table td {
+        padding: 10px 8px;
+        font-size: 12px;
+    }
+}
+
+/* ==========================================================================
+   UI polish: motion, hover, toasts, modal, scrollbars
+   ========================================================================== */
+
+/* Smoother view switching */
+.portal-subview {
+    animation: viewIn 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes viewIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Cards lift slightly on hover */
+.records-card,
+.side-card {
+    transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+}
+
+.records-card:hover,
+.side-card:hover {
+    border-color: #dbe7f3;
+    box-shadow: 0 10px 30px rgba(12, 35, 64, 0.07);
+}
+
+/* Buttons feel pressable */
+.upload-btn,
+.filter-btn,
+.sort-btn,
+.more-btn,
+.portal-nav-btn {
+    transition: all 0.18s ease;
+}
+
+.upload-btn:active,
+.filter-btn:active,
+.sort-btn:active,
+.more-btn:active {
+    transform: scale(0.96);
+}
+
+/* Table rows */
+.records-table tbody tr {
+    transition: background 0.15s ease;
+}
+
+.records-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+/* Accessible focus */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: 2px solid #0ea5e9;
+    outline-offset: 2px;
+    border-radius: 6px;
+}
+
+/* Modal entrance */
+#fileModal > div {
+    animation: modalIn 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes modalIn {
+    from { opacity: 0; transform: scale(0.95) translateY(8px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Toasts */
+.toast-container {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: min(92vw, 420px);
+    pointer-events: none;
+}
+
+.toast {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #0c2340;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 12px 18px;
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(12, 35, 64, 0.28);
+    animation: toastIn 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+    max-width: 100%;
+}
+
+.toast.toast-info { background: #155e75; }
+.toast.toast-warn { background: #92400e; }
+
+.toast.toast-leaving {
+    animation: toastOut 0.25s ease forwards;
+}
+
+@keyframes toastIn {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes toastOut {
+    to { opacity: 0; transform: translateY(10px); }
+}
+
+/* Sortable table headers */
+.sort-btn.sorted-asc::after { content: " ↑"; }
+.sort-btn.sorted-desc::after { content: " ↓"; }
+
+/* Nicer scrollbars */
+.table-wrapper::-webkit-scrollbar,
+.mobile-scroll::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb,
+.mobile-scroll::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 8px;
+}
+
+.table-wrapper::-webkit-scrollbar-track,
+.mobile-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
