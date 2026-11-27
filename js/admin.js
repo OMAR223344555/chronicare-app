@@ -6,6 +6,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    const T = (k, f) => window.CCi18n ? CCi18n.t(k, f) : (f || k);
+    const Tp = (k, params, f) => {
+        let s = T(k, f);
+        Object.keys(params || {}).forEach(p => { s = s.replace('{' + p + '}', params[p]); });
+        return s;
+    };
+    const NAME_KEYS = { 'Dr. Youssef Nader': 'name.youssef', 'Dr. Hana Sherif': 'name.hana', 'Dr. Ahmed Farouk': 'name.farouk', 'Dr. Salma Nabil': 'name.salma', 'Dr. Mariam Khaled': 'name.mariam', 'Maya Hassan': 'name.maya', 'Omar Adel': 'name.omar', 'Sara Mahmoud': 'name.sara', 'Administrator': 'name.admin' };
+    const nameLabel = n => T(NAME_KEYS[n] || '', n);
+    const SPEC_KEYS = { 'Endocrinology': 'spec.endocrinology', 'Nephrology': 'spec.nephrology', 'Internal Medicine': 'spec.internal', 'Cardiology': 'spec.cardiology' };
+    const specLabel = x => T(SPEC_KEYS[x] || '', x);
+    const COND_KEYS = { 'Diabetes': 'cond.diabetes', 'Hypertension': 'cond.hypertension', 'Chronic kidney disease': 'cond.ckd' };
+    const condsLabel = str => str.split(', ').map(c => T(COND_KEYS[c] || '', c)).join(window.CCi18n && CCi18n.lang === 'ar' ? '، ' : ', ');
+    const CAT_KEYS = { 'Lab Report': 'cat.lab', 'Prescription': 'cat.prescription', 'Imaging': 'cat.imaging', 'Specialist Report': 'cat.specialist', 'Discharge Summary': 'cat.discharge' };
+    const catLabel = c => T(CAT_KEYS[c] || '', c);
+    const labName = t => T('lab.n.' + t, t);
+    const statusLabel = st => st === 'Active' ? T('st.active') : T('st.deactivated');
+
     // Demo state (client-side only, no backend yet)
     const pendingDoctors = [
         { id: 1, name: 'Dr. Youssef Nader', specialty: 'Endocrinology', license: 'MED-2026-4471', applied: '2026-11-24' },
@@ -16,9 +33,9 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 11, name: 'Dr. Ahmed Farouk', role: 'Doctor', detail: 'Internal Medicine • MED-2019-1024', status: 'Active' },
         { id: 12, name: 'Dr. Salma Nabil', role: 'Doctor', detail: 'Cardiology • MED-2018-5567', status: 'Active' },
         { id: 13, name: 'Dr. Mariam Khaled', role: 'Doctor', detail: 'Nephrology • MED-2021-3390', status: 'Active' },
-        { id: 14, name: 'Maya Hassan', role: 'Patient', detail: 'Diabetes, Hypertension', status: 'Active' },
-        { id: 15, name: 'Omar Adel', role: 'Patient', detail: 'Hypertension', status: 'Active' },
-        { id: 16, name: 'Sara Mahmoud', role: 'Patient', detail: 'Chronic kidney disease', status: 'Active' },
+        { id: 14, name: 'Maya Hassan', role: 'Patient', detail: 'Diabetes, Hypertension', detailKey: 'conds', status: 'Active' },
+        { id: 15, name: 'Omar Adel', role: 'Patient', detail: 'Hypertension', detailKey: 'conds', status: 'Active' },
+        { id: 16, name: 'Sara Mahmoud', role: 'Patient', detail: 'Chronic kidney disease', detailKey: 'conds', status: 'Active' },
     ];
 
     const categories = ['Lab Report', 'Prescription', 'Imaging', 'Specialist Report', 'Discharge Summary'];
@@ -34,14 +51,14 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
 
     const auditEvents = [
-        { time: '2026-11-26 21:14', user: 'Dr. Ahmed Farouk', action: 'view', details: 'Viewed "HbA1c Lab Report" (Maya Hassan)' },
-        { time: '2026-11-26 21:16', user: 'Dr. Ahmed Farouk', action: 'note', details: 'Added a note on "HbA1c Lab Report"' },
-        { time: '2026-11-25 18:02', user: 'Maya Hassan', action: 'share', details: 'Shared 2 files with Dr. Ahmed Farouk, expires 30 Dec 2026' },
-        { time: '2026-11-25 10:47', user: 'Dr. Salma Nabil', action: 'download', details: 'Downloaded "Cardiology Follow-up" (Maya Hassan)' },
-        { time: '2026-11-24 09:31', user: 'Administrator', action: 'approve', details: 'Approved doctor account Dr. Mariam Khaled' },
-        { time: '2026-11-23 16:55', user: 'Maya Hassan', action: 'revoke', details: 'Revoked Dr. Karim Adel\'s access to all files' },
-        { time: '2026-11-22 12:20', user: 'Sara Mahmoud', action: 'share', details: 'Shared "Kidney Function Test" with Dr. Ahmed Farouk' },
-        { time: '2026-11-21 08:40', user: 'Maya Hassan', action: 'view', details: 'Uploaded "Fasting Glucose Result"' },
+        { time: '2026-11-26 21:14', user: 'Dr. Ahmed Farouk', action: 'view', detailsKey: 'au.e1' },
+        { time: '2026-11-26 21:16', user: 'Dr. Ahmed Farouk', action: 'note', detailsKey: 'au.e2' },
+        { time: '2026-11-25 18:02', user: 'Maya Hassan', action: 'share', detailsKey: 'au.e3' },
+        { time: '2026-11-25 10:47', user: 'Dr. Salma Nabil', action: 'download', detailsKey: 'au.e4' },
+        { time: '2026-11-24 09:31', user: 'Administrator', action: 'approve', detailsKey: 'au.e5' },
+        { time: '2026-11-23 16:55', user: 'Maya Hassan', action: 'revoke', detailsKey: 'au.e6' },
+        { time: '2026-11-22 12:20', user: 'Sara Mahmoud', action: 'share', detailsKey: 'au.e7' },
+        { time: '2026-11-21 08:40', user: 'Maya Hassan', action: 'view', detailsKey: 'au.e8' },
     ];
 
     // ---- Navigation ----
@@ -113,21 +130,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // ---- Manage Users ----
     function renderPending() {
         const tbody = document.getElementById('pendingDoctorsTable');
-        document.getElementById('pendingCount').textContent = `${pendingDoctors.length} pending`;
+        document.getElementById('pendingCount').textContent = Tp('ad.pendingN', { n: pendingDoctors.length });
         tbody.innerHTML = pendingDoctors.length ? pendingDoctors.map(d => `
             <tr>
-                <td><strong>${d.name}</strong></td>
-                <td>${d.specialty}</td>
+                <td><strong>${nameLabel(d.name)}</strong></td>
+                <td>${specLabel(d.specialty)}</td>
                 <td><span class="font-mono text-xs">${d.license}</span></td>
                 <td>${d.applied}</td>
                 <td>
                     <div class="flex gap-2">
-                        <button type="button" class="approve-doctor-btn bg-green-100 text-green-700 text-xs font-bold px-3 py-1.5 rounded-full hover:bg-green-200 transition" data-id="${d.id}">Approve</button>
-                        <button type="button" class="decline-doctor-btn bg-red-50 text-red-600 text-xs font-bold px-3 py-1.5 rounded-full hover:bg-red-100 transition" data-id="${d.id}">Decline</button>
+                        <button type="button" class="approve-doctor-btn bg-green-100 text-green-700 text-xs font-bold px-3 py-1.5 rounded-full hover:bg-green-200 transition" data-id="${d.id}">${T('ad.approve')}</button>
+                        <button type="button" class="decline-doctor-btn bg-red-50 text-red-600 text-xs font-bold px-3 py-1.5 rounded-full hover:bg-red-100 transition" data-id="${d.id}">${T('ad.decline')}</button>
                     </div>
                 </td>
             </tr>`).join('')
-            : `<tr><td colspan="5" class="text-center text-slate-400 py-8">No pending applications.</td></tr>`;
+            : `<tr><td colspan="5" class="text-center text-slate-400 py-8">${T('ad.noPending')}</td></tr>`;
         refreshIcons();
     }
 
@@ -135,13 +152,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const tbody = document.getElementById('usersTable');
         tbody.innerHTML = users.map(u => `
             <tr>
-                <td><strong>${u.name}</strong></td>
-                <td>${u.role}</td>
-                <td class="text-slate-500">${u.detail}</td>
+                <td><strong>${nameLabel(u.name)}</strong></td>
+                <td>${T(u.role === 'Doctor' ? 'role.doctor' : 'role.patient')}</td>
+                <td class="text-slate-500">${u.detailKey === 'conds' ? condsLabel(u.detail) : (SPEC_KEYS[u.detail.split(' • ')[0]] ? specLabel(u.detail.split(' • ')[0]) + ' • ' + u.detail.split(' • ')[1] : u.detail)}</td>
                 <td>${u.status === 'Active'
-                    ? '<span class="status reviewed">Active</span>'
-                    : '<span class="status archived">Deactivated</span>'}</td>
-                <td><button type="button" class="toggle-user-btn more-btn" data-id="${u.id}">${u.status === 'Active' ? 'Deactivate' : 'Activate'}</button></td>
+                    ? `<span class="status reviewed">${T('st.active')}</span>`
+                    : `<span class="status archived">${T('st.deactivated')}</span>`}</td>
+                <td><button type="button" class="toggle-user-btn more-btn" data-id="${u.id}">${u.status === 'Active' ? T('ad.deactivate') : T('ad.activate')}</button></td>
             </tr>`).join('');
         refreshIcons();
     }
@@ -173,19 +190,19 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!d) return;
             pendingDoctors.splice(pendingDoctors.indexOf(d), 1);
             users.push({ id: 100 + d.id, name: d.name, role: 'Doctor', detail: `${d.specialty} • ${d.license}`, status: 'Active' });
-            auditEvents.unshift({ time: 'just now', user: 'Administrator', action: 'approve', details: `Approved doctor account ${d.name}` });
+            auditEvents.unshift({ time: 'just now', user: 'Administrator', action: 'approve', details: Tp('au.dynApprove', { n: nameLabel(d.name) }) });
             renderPending(); renderUsers(); renderAudit();
-            showToast(`${d.name} approved and activated`);
+            showToast(Tp('toast.approved', { name: nameLabel(d.name) }));
             return;
         }
         const declineBtn = e.target.closest('.decline-doctor-btn');
         if (declineBtn) {
             const d = pendingDoctors.find(x => x.id === Number(declineBtn.dataset.id));
             if (!d) return;
-            if (!confirm(`Decline ${d.name}'s application?`)) return;
+            if (!confirm(Tp('ad.declineConfirm', { name: nameLabel(d.name) }))) return;
             pendingDoctors.splice(pendingDoctors.indexOf(d), 1);
             renderPending();
-            showToast(`Declined ${d.name}'s application`, 'warn');
+            showToast(Tp('toast.declined', { name: nameLabel(d.name) }), 'warn');
             return;
         }
         const toggleBtn = e.target.closest('.toggle-user-btn');
@@ -193,9 +210,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const u = users.find(x => x.id === Number(toggleBtn.dataset.id));
             if (!u) return;
             u.status = u.status === 'Active' ? 'Deactivated' : 'Active';
-            auditEvents.unshift({ time: 'just now', user: 'Administrator', action: u.status === 'Active' ? 'approve' : 'revoke', details: `${u.status} account ${u.name}` });
+            auditEvents.unshift({ time: 'just now', user: 'Administrator', action: u.status === 'Active' ? 'approve' : 'revoke', details: Tp('au.dynStatus', { s: statusLabel(u.status), n: nameLabel(u.name) }) });
             renderUsers(); renderAudit();
-            showToast(`${u.name} ${u.status === 'Active' ? 'reactivated' : 'deactivated'}`, u.status === 'Active' ? undefined : 'warn');
+            showToast(Tp(u.status === 'Active' ? 'toast.reactivated' : 'toast.deactivated', { name: nameLabel(u.name) }), u.status === 'Active' ? undefined : 'warn');
         }
     });
 
@@ -203,18 +220,18 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderLists() {
         document.getElementById('categoriesList').innerHTML = categories.map(c => `
             <li class="flex justify-between items-center bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm">
-                <span class="font-semibold text-[#0c2340]">${c}</span>
+                <span class="font-semibold text-[#0c2340]">${catLabel(c)}</span>
             </li>`).join('');
         document.getElementById('conditionsList').innerHTML = conditions.map(c => `
             <li class="flex justify-between items-center bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm">
-                <span class="font-semibold text-[#0c2340]">${c}</span>
+                <span class="font-semibold text-[#0c2340]">${T(COND_KEYS[c] || '', c)}</span>
             </li>`).join('');
     }
 
     function renderRanges() {
         document.getElementById('rangesTable').innerHTML = ranges.map(r => `
             <tr>
-                <td><strong>${r.test}</strong></td>
+                <td><strong>${labName(r.test)}</strong></td>
                 <td>${r.unit}</td>
                 <td><input type="number" step="0.01" class="range-min w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-sm" data-id="${r.id}" value="${r.min != null ? r.min : ''}" placeholder="none"></td>
                 <td><input type="number" step="0.01" class="range-max w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-sm" data-id="${r.id}" value="${r.max != null ? r.max : ''}" placeholder="none"></td>
@@ -226,14 +243,14 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         const input = document.getElementById('newCategoryName');
         const name = input.value.trim();
-        if (name && !categories.includes(name)) { categories.push(name); renderLists(); showToast(`Category "${name}" added`); }
+        if (name && !categories.includes(name)) { categories.push(name); renderLists(); showToast(Tp('toast.catAdded', { n: name })); }
         input.value = '';
     });
     document.getElementById('addConditionForm').addEventListener('submit', (e) => {
         e.preventDefault();
         const input = document.getElementById('newConditionName');
         const name = input.value.trim();
-        if (name && !conditions.includes(name)) { conditions.push(name); renderLists(); showToast(`Condition "${name}" added`); }
+        if (name && !conditions.includes(name)) { conditions.push(name); renderLists(); showToast(Tp('toast.condAdded', { n: name })); }
         input.value = '';
     });
 
@@ -245,7 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const value = input.value === '' ? null : Number(input.value);
         if (input.classList.contains('range-min')) r.min = value; else r.max = value;
         const tag = document.querySelector(`.range-saved[data-id="${r.id}"]`);
-        if (tag) tag.textContent = 'Saved ✓';
+        if (tag) tag.textContent = T('rf.saved');
     });
 
     // ---- Audit log ----
@@ -259,11 +276,11 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         document.getElementById('auditTable').innerHTML = rows.map(a => `
             <tr>
-                <td class="text-slate-500 whitespace-nowrap">${a.time}</td>
-                <td><strong>${a.user}</strong></td>
-                <td><span class="text-xs font-bold px-2.5 py-1 rounded-full ${ACTION_STYLES[a.action] || 'bg-slate-100 text-slate-600'}">${a.action}</span></td>
-                <td class="text-slate-600">${a.details}</td>
-            </tr>`).join('') || `<tr><td colspan="4" class="text-center text-slate-400 py-8">No events match this filter.</td></tr>`;
+                <td class="text-slate-500 whitespace-nowrap">${a.time === 'just now' ? T('tm.justNow') : a.time}</td>
+                <td><strong>${nameLabel(a.user)}</strong></td>
+                <td><span class="text-xs font-bold px-2.5 py-1 rounded-full ${ACTION_STYLES[a.action] || 'bg-slate-100 text-slate-600'}">${T('au.act.' + a.action, a.action)}</span></td>
+                <td class="text-slate-600">${a.detailsKey ? T(a.detailsKey) : a.details}</td>
+            </tr>`).join('') || `<tr><td colspan="4" class="text-center text-slate-400 py-8">${T('au.empty')}</td></tr>`;
     }
     document.getElementById('auditFilter').addEventListener('change', renderAudit);
 
@@ -273,6 +290,14 @@ document.addEventListener('DOMContentLoaded', () => {
     renderRanges();
     renderAudit();
     refreshIcons();
+    document.addEventListener('cc:lang', () => {
+        renderPending();
+        renderUsers();
+        renderLists();
+        renderRanges();
+        renderAudit();
+        refreshIcons();
+    });
 
     // Deep links: #users, #reference, #audit
     function handleHashRoute() {
@@ -284,11 +309,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ---- Stage 2: notifications + palette (admin) ----
     const adminNotifs = [
-        { icon: 'user-plus', kind: 'warn', text: '2 doctors are waiting for verification', time: '1 hour ago', unread: true },
-        { icon: 'user-check', kind: 'success', text: 'New patient registered: Sara Mahmoud', time: 'Yesterday', unread: true },
-        { icon: 'shield-alert', kind: 'info', text: 'Weekly audit summary is ready to review', time: '2 days ago', unread: false },
+        { icon: 'user-plus', kind: 'warn', textKey: 'na.1', timeKey: 'tm.1h', unread: true },
+        { icon: 'user-check', kind: 'success', textKey: 'na.2', timeKey: 'tm.yest', unread: true },
+        { icon: 'shield-alert', kind: 'info', textKey: 'na.3', timeKey: 'tm.2d', unread: false },
     ];
-    window.CC_NOTIFS = () => adminNotifs;
+    window.CC_NOTIFS = () => adminNotifs.map(n => ({ ...n, text: T(n.textKey), time: T(n.timeKey) }));
+    window.CC_NOTIFS_MARK_READ = () => adminNotifs.forEach(n => { n.unread = false; });
     window.CC_SOURCES = () => {
         const t = (k, f) => window.CCi18n ? CCi18n.t(k, f) : f;
         const pages = [
@@ -299,13 +325,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const pend = pendingDoctors.map(d => ({
             icon: 'user-plus',
             title: d.name,
-            subtitle: d.specialty + ' • pending verification',
+            subtitle: specLabel(d.specialty) + ' • ' + t('ad.pendingN', '{n} pending').replace('{n}', ''),
             keywords: 'doctor pending approve ' + d.specialty,
             run: () => showView('users'),
         }));
         const actions = [
-            { icon: 'moon', title: 'Toggle dark mode', keywords: 'theme', run: () => CCUI.toggleTheme() },
-            { icon: 'languages', title: 'Switch language / تغيير اللغة', keywords: 'arabic english', run: () => CCi18n.setLang(CCi18n.lang === 'ar' ? 'en' : 'ar') },
+            { icon: 'moon', title: t('pal.theme', 'Toggle dark mode'), keywords: 'theme', run: () => CCUI.toggleTheme() },
+            { icon: 'languages', title: t('pal.lang', 'Switch language'), keywords: 'arabic english', run: () => CCi18n.setLang(CCi18n.lang === 'ar' ? 'en' : 'ar') },
         ];
         return [...pages, ...pend, ...actions];
     };

@@ -213,7 +213,7 @@
         notifPanel = document.createElement('div');
         notifPanel.className = 'notif-panel hidden';
         notifPanel.setAttribute('role', 'dialog');
-        notifPanel.setAttribute('aria-label', 'Notifications');
+        notifPanel.setAttribute('aria-label', window.CCi18n ? CCi18n.t('notif.title') : 'Notifications');
         document.body.appendChild(notifPanel);
         document.addEventListener('click', (e) => {
             if (!notifPanel.classList.contains('hidden')
@@ -241,7 +241,7 @@
               : '<div class="notif-empty" data-i18n="notif.empty">You are all caught up</div>');
         const clearBtn = notifPanel.querySelector('.notif-clear');
         if (clearBtn) clearBtn.addEventListener('click', () => {
-            items.forEach(n => n.unread = false);
+            if (window.CC_NOTIFS_MARK_READ) window.CC_NOTIFS_MARK_READ(); else items.forEach(n => n.unread = false);
             updateNotifDot();
             renderNotifs();
             if (window.lucide) window.lucide.createIcons();
@@ -249,6 +249,13 @@
         if (window.lucide) window.lucide.createIcons();
         if (window.CCi18n) CCi18n.applyToDom(notifPanel);
     }
+    document.addEventListener('cc:lang', () => {
+        if (notifPanel) {
+            notifPanel.setAttribute('aria-label', window.CCi18n ? CCi18n.t('notif.title') : 'Notifications');
+            renderNotifs();
+        }
+        if (paletteEl && !paletteEl.classList.contains('hidden')) renderPaletteItems();
+    });
     function updateNotifDot() {
         const has = notifItems().some(n => n.unread);
         document.querySelectorAll('[data-notif-dot]').forEach(d => d.classList.toggle('hidden', !has));

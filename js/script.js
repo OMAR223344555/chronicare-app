@@ -25,24 +25,24 @@ document.addEventListener('DOMContentLoaded', () => {
             { test: 'EGFR', label: 'eGFR', unit: 'mL/min', min: 90, max: null, value: 92, date: '2026-06-20' },
         ],
         shares: [
-            { id: 1, doctor: 'Dr. Ahmed Farouk', specialty: 'Internal Medicine', initials: 'AF', color: 'bg-cyan-200', files: 'HbA1c • Prescription', count: 2, expires: '2026-12-30' },
-            { id: 2, doctor: 'Dr. Salma Nabil', specialty: 'Cardiology', initials: 'SN', color: 'bg-violet-200', files: 'Cardiology follow-up', count: 1, expires: '2026-12-25' },
-            { id: 3, doctor: 'Dr. Mariam Khaled', specialty: 'Nephrology', initials: 'MK', color: 'bg-orange-100', files: 'Kidney function test', count: 1, expires: '2027-01-12' },
+            { id: 1, doctorKey: 'name.farouk', specKey: 'spec.internal', initials: 'AF', color: 'bg-cyan-200', filesKey: 'sh.f1', count: 2, expires: '2026-12-30' },
+            { id: 2, doctorKey: 'name.salma', specKey: 'spec.cardiology', initials: 'SN', color: 'bg-violet-200', filesKey: 'sh.f2', count: 1, expires: '2026-12-25' },
+            { id: 3, doctorKey: 'name.mariam', specKey: 'spec.nephrology', initials: 'MK', color: 'bg-orange-100', filesKey: 'sh.f3', count: 1, expires: '2027-01-12' },
         ],
         nextShareId: 4,
         timeline: [
-            { month: 'Nov', type: 'lab', title: 'HbA1c Lab Test Complete', date: '18 Nov 2026', text: 'Report reviewed with Dr. Ahmed Farouk. Glucose control steady.' },
-            { month: 'Nov', type: 'visit', title: 'Cardiology Follow-up Consultation', date: '12 Nov 2026', text: 'Dr. Salma Nabil reviewed blood pressure trends. Medication dosage maintained.' },
-            { month: 'Feb', type: 'visit', title: 'Annual Cardiovascular Assessment', date: '25 Feb 2026', text: 'ECG and stress test completed with normal readings.' },
-            { month: 'Feb', type: 'prescription', title: 'Metformin Prescription Renewed', date: '10 Feb 2026', text: 'Dr. Ahmed Farouk renewed Metformin 500mg, twice daily.' },
+            { month: 'Nov', type: 'lab', titleKey: 'tl.e1t', textKey: 'tl.e1x', date: '18 Nov 2026' },
+            { month: 'Nov', type: 'visit', titleKey: 'tl.e2t', textKey: 'tl.e2x', date: '12 Nov 2026' },
+            { month: 'Feb', type: 'visit', titleKey: 'tl.e3t', textKey: 'tl.e3x', date: '25 Feb 2026' },
+            { month: 'Feb', type: 'prescription', titleKey: 'tl.e4t', textKey: 'tl.e4x', date: '10 Feb 2026' },
         ],
         meds: [
-            { id: 1, name: 'Metformin 500mg', dose: '1 tablet, twice daily', time: '09:00', taken: false },
-            { id: 2, name: 'Metformin 500mg', dose: '1 tablet, twice daily', time: '21:00', taken: false },
-            { id: 3, name: 'Lisinopril 10mg', dose: '1 tablet, once daily', time: '09:00', taken: true },
+            { id: 1, nameKey: 'med.metformin', doseKey: 'med.twice', time: '09:00', taken: false },
+            { id: 2, nameKey: 'med.metformin', doseKey: 'med.twice', time: '21:00', taken: false },
+            { id: 3, nameKey: 'med.lisinopril', doseKey: 'med.once', time: '09:00', taken: true },
         ],
         appointments: [
-            { id: 1, doctor: 'Dr. Salma Nabil', specialty: 'Cardiology', date: '2026-11-30', time: '11:30 AM', place: 'Heart Care Clinic' },
+            { id: 1, doctorKey: 'name.salma', specKey: 'spec.cardiology', date: '2026-11-30', time: '11:30 AM', placeKey: 'cp.place' },
         ],
     };
 
@@ -56,10 +56,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     refreshIcons();
 
+    const T = (k, f) => window.CCi18n ? CCi18n.t(k, f) : (f || k);
+    const Tp = (k, params, f) => {
+        let s = T(k, f);
+        Object.keys(params || {}).forEach(p => { s = s.replace('{' + p + '}', params[p]); });
+        return s;
+    };
     function fmtDate(iso) {
+        if (window.CCi18n && CCi18n.fmtDate) return CCi18n.fmtDate(iso);
         const d = new Date(iso + (iso.length === 10 ? 'T00:00:00' : ''));
         return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
     }
+    const condLabel = c => T('cond.' + c, CONDITION_LABELS[c] || c);
+    const catLabel = c => T('cat.' + c, CATEGORY_LABELS[c] || c);
+    const statusLabel = s => T('st.' + String(s).toLowerCase(), s);
+    const labLabel = l => T('lab.short.' + l.test, l.label);
 
     // Toast notifications
     function showToast(message, type) {
@@ -178,12 +189,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const sidebar = document.getElementById('sidebar');
 
     const viewTitles = {
-        'overview': 'Patient Portal',
-        'medical-files': 'My Medical Files',
-        'upload-file': 'Upload Record',
-        'sharing-access': 'Sharing & Access',
-        'lab-trends': 'Lab Trends',
-        'timeline-archive': 'Timeline & Archive'
+        'overview': ['portal.patient', 'Patient Portal'],
+        'medical-files': ['nav.medicalFiles', 'My Medical Files'],
+        'upload-file': ['nav.upload', 'Upload Record'],
+        'sharing-access': ['sh.title', 'Sharing & Access'],
+        'lab-trends': ['nav.labTrends', 'Lab Trends'],
+        'timeline-archive': ['nav.timeline', 'Timeline & Archive']
     };
 
     function showView(viewName, updateHash = true) {
@@ -232,7 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (breadcrumbCurrent && viewTitles[viewName]) {
-                breadcrumbCurrent.textContent = viewTitles[viewName];
+                breadcrumbCurrent.textContent = T(viewTitles[viewName][0], viewTitles[viewName][1]);
             }
             if (updateHash) history.replaceState(null, null, `#${viewName}`);
             if (sidebar && !sidebar.classList.contains('hidden') && window.innerWidth < 768) {
@@ -351,22 +362,22 @@ document.addEventListener('DOMContentLoaded', () => {
         recordsTable.innerHTML = visible.map(r => `
             <tr data-id="${r.id}" class="cursor-pointer hover:bg-slate-50 transition">
                 <td><span class="file-icon">PDF</span><strong>${r.name}</strong></td>
-                <td>${CONDITION_LABELS[r.condition] || r.condition}</td>
-                <td>${CATEGORY_LABELS[r.category] || r.category}</td>
+                <td>${condLabel(r.condition)}</td>
+                <td>${catLabel(r.category)}</td>
                 <td>${fmtDate(r.date)}</td>
-                <td><span class="status ${r.status === 'Reviewed' ? 'reviewed' : 'review'}">${r.status}</span></td>
+                <td><span class="status ${r.status === 'Reviewed' ? 'reviewed' : 'review'}">${statusLabel(r.status)}</span></td>
                 <td>
                     <div class="flex items-center gap-2">
                         <button type="button" class="more-btn view-record-btn" data-id="${r.id}" title="View details"><i data-lucide="eye" class="w-4 h-4"></i></button>
                         <button type="button" class="more-btn archive-record-btn" data-id="${r.id}" title="Archive"><i data-lucide="archive" class="w-4 h-4"></i></button>
                     </div>
                 </td>
-            </tr>`).join('') || `<tr><td colspan="6" class="text-center text-slate-400 py-8">No records match your filters.</td></tr>`;
+            </tr>`).join('') || `<tr><td colspan="6" class="text-center text-slate-400 py-8">${T('mf.empty')}</td></tr>`;
 
-        if (recordCount) recordCount.textContent = `${visible.length} Records`;
-        if (tableFooter) tableFooter.textContent = `Showing ${visible.length} of ${active.length} records`;
+        if (recordCount) recordCount.textContent = `${visible.length} ${T('mf.records')}`;
+        if (tableFooter) tableFooter.textContent = Tp('mf.showing', { a: visible.length, b: active.length });
         const archived = state.records.filter(r => r.archived).length;
-        if (archiveCount) archiveCount.textContent = `${archived} Files`;
+        if (archiveCount) archiveCount.textContent = `${archived} ${T('mf.files')}`;
         renderArchiveList();
         refreshIcons();
     }
@@ -399,7 +410,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (sortRecordsBtn) {
         sortRecordsBtn.addEventListener('click', () => {
             state.sortDir = state.sortDir === 'desc' ? 'asc' : 'desc';
-            sortRecordsBtn.textContent = state.sortDir === 'desc' ? 'Newest first ⌄' : 'Oldest first ⌄';
+            sortRecordsBtn.textContent = state.sortDir === 'desc' ? T('mf.newest') : T('mf.oldest');
             renderRecords();
         });
     }
@@ -410,7 +421,7 @@ document.addEventListener('DOMContentLoaded', () => {
         rec.archived = archived;
         rec.status = archived ? 'Archived' : 'Review';
         renderRecords();
-        showToast(archived ? `"${rec.name}" archived` : `"${rec.name}" restored`, archived ? 'warn' : undefined);
+        showToast(archived ? Tp('toast.archived', { n: rec.name }) : Tp('toast.restored', { n: rec.name }), archived ? 'warn' : undefined);
     }
 
     const archiveList = document.getElementById('archiveList');
@@ -421,11 +432,11 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="flex items-center justify-between bg-slate-50 border border-slate-100 rounded-xl p-4">
                 <div>
                     <p class="font-bold text-[#0c2340] text-sm">${r.name}</p>
-                    <p class="text-xs text-slate-500 mt-0.5">${CATEGORY_LABELS[r.category]} • ${fmtDate(r.date)} • ${r.facility}</p>
+                    <p class="text-xs text-slate-500 mt-0.5">${catLabel(r.category)} • ${fmtDate(r.date)} • ${r.facility}</p>
                 </div>
-                <button type="button" class="restore-record-btn text-xs font-bold text-cyan-700 hover:underline shrink-0" data-id="${r.id}">Restore</button>
+                <button type="button" class="restore-record-btn text-xs font-bold text-cyan-700 hover:underline shrink-0" data-id="${r.id}">${T('mf.restore')}</button>
             </div>`).join('')
-            : `<p class="text-sm text-slate-400">No archived files. Archiving keeps old records safe without deleting them.</p>`;
+            : `<p class="text-sm text-slate-400">${T('mf.noArchived')}</p>`;
         refreshIcons();
     }
 
@@ -437,17 +448,17 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('modalFileName').textContent = r.name;
         document.getElementById('modalFileBody').innerHTML = `
             <div class="grid grid-cols-2 gap-4 text-sm">
-                <div><p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Condition</p><p class="font-semibold text-[#0c2340] mt-1">${CONDITION_LABELS[r.condition]}</p></div>
-                <div><p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Category</p><p class="font-semibold text-[#0c2340] mt-1">${CATEGORY_LABELS[r.category]}</p></div>
-                <div><p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Record date</p><p class="font-semibold text-[#0c2340] mt-1">${fmtDate(r.date)}</p></div>
-                <div><p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Status</p><p class="font-semibold text-[#0c2340] mt-1">${r.status}</p></div>
-                <div><p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Issuing facility</p><p class="font-semibold text-[#0c2340] mt-1">${r.facility || '-'}</p></div>
-                <div><p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Issuing doctor</p><p class="font-semibold text-[#0c2340] mt-1">${r.doctor || '-'}</p></div>
-                <div><p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Specialty</p><p class="font-semibold text-[#0c2340] mt-1">${r.specialty || '-'}</p></div>
+                <div><p class="text-xs text-slate-400 font-bold uppercase tracking-wider">${T('fm.condition')}</p><p class="font-semibold text-[#0c2340] mt-1">${condLabel(r.condition)}</p></div>
+                <div><p class="text-xs text-slate-400 font-bold uppercase tracking-wider">${T('fm.category')}</p><p class="font-semibold text-[#0c2340] mt-1">${catLabel(r.category)}</p></div>
+                <div><p class="text-xs text-slate-400 font-bold uppercase tracking-wider">${T('fm.date')}</p><p class="font-semibold text-[#0c2340] mt-1">${fmtDate(r.date)}</p></div>
+                <div><p class="text-xs text-slate-400 font-bold uppercase tracking-wider">${T('fm.status')}</p><p class="font-semibold text-[#0c2340] mt-1">${statusLabel(r.status)}</p></div>
+                <div><p class="text-xs text-slate-400 font-bold uppercase tracking-wider">${T('fm.ifac')}</p><p class="font-semibold text-[#0c2340] mt-1">${r.facility || '-'}</p></div>
+                <div><p class="text-xs text-slate-400 font-bold uppercase tracking-wider">${T('fm.idoc')}</p><p class="font-semibold text-[#0c2340] mt-1">${r.doctor || '-'}</p></div>
+                <div><p class="text-xs text-slate-400 font-bold uppercase tracking-wider">${T('fm.specialty')}</p><p class="font-semibold text-[#0c2340] mt-1">${r.specialty || '-'}</p></div>
             </div>
             <div class="mt-5 h-40 border border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400">
                 <i data-lucide="file-text" class="w-8 h-8 mb-2 text-cyan-600"></i>
-                <p class="text-xs">Document preview appears here once the backend is connected.</p>
+                <p class="text-xs">${T('fm.preview')}</p>
             </div>`;
         fileModal.classList.remove('hidden');
         fileModal.classList.add('flex');
@@ -517,7 +528,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 uploadFileInput.value = '';
                 uploadPreview.classList.add('hidden');
                 uploadPreview.innerHTML = '';
-                if (uploadFileName) uploadFileName.textContent = 'Drag & drop your file here, or click to browse (PDF, JPG, PNG up to 10 MB)';
+                if (uploadFileName) uploadFileName.textContent = T('upload.drop');
             });
         }
     }
@@ -582,17 +593,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 state.timeline.unshift({
                     month: new Date(rec.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short' }),
                     type: 'upload',
-                    title: `Uploaded: ${rec.name}`,
+                    title: Tp('tl.uploaded', { n: rec.name }),
                     date: fmtDate(rec.date),
-                    text: `${CATEGORY_LABELS[rec.category]} for ${CONDITION_LABELS[rec.condition]}, issued by ${rec.doctor || rec.facility || 'unknown'}.`,
+                    text: Tp('tl.uploadedText', { cat: catLabel(rec.category), cond: condLabel(rec.condition), who: rec.doctor || rec.facility || '-' }),
                 });
                 renderRecords();
                 renderTimeline();
                 uploadForm.reset();
-                if (uploadFileName) uploadFileName.textContent = 'Drag & drop your file here, or click to browse (PDF, JPG, PNG up to 10 MB)';
+                if (uploadFileName) uploadFileName.textContent = T('upload.drop');
                 if (uploadPreview) { uploadPreview.classList.add('hidden'); uploadPreview.innerHTML = ''; }
                 showView('medical-files');
-                showToast(`"${rec.name}" added to your records`);
+                showToast(Tp('toast.uploaded', { n: rec.name }));
             });
         });
     }
@@ -605,15 +616,15 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderTimeline() {
         if (!timelineList) return;
         const items = state.timeline.filter(t => timelineFilter === 'all' || t.type === timelineFilter);
-        timelineList.innerHTML = (items.length ? items : [{ month: '-', title: 'No events in this category yet.', date: '', text: '' }]).map(t => `
+        timelineList.innerHTML = (items.length ? items : [{ month: '-', titleKey: 'tl.noEvents', date: '', text: '' }]).map(t => `
             <div class="relative flex items-start gap-4">
                 <div class="w-8 h-8 rounded-full bg-cyan-100 text-cyan-700 flex items-center justify-center shrink-0 z-10 font-bold text-xs">${t.month}</div>
                 <div class="bg-slate-50 p-4 rounded-xl flex-1 border border-slate-100">
                     <div class="flex justify-between items-start">
-                        <p class="font-bold text-[#0c2340] text-sm">${t.title}</p>
+                        <p class="font-bold text-[#0c2340] text-sm">${t.titleKey ? T(t.titleKey) : t.title}</p>
                         <span class="text-xs text-slate-400">${t.date}</span>
                     </div>
-                    <p class="text-xs text-slate-600 mt-1">${t.text}</p>
+                    <p class="text-xs text-slate-600 mt-1">${t.textKey ? T(t.textKey) : t.text}</p>
                 </div>
             </div>`).join('');
         refreshIcons();
@@ -642,14 +653,14 @@ document.addEventListener('DOMContentLoaded', () => {
             .sort((a, b) => b.date.localeCompare(a.date));
         labResultsTable.innerHTML = rows.map(l => `
             <tr class="${outOfRange(l) ? 'bg-red-50' : ''}">
-                <td class="py-2.5">${l.label}</td>
+                <td class="py-2.5">${labLabel(l)}</td>
                 <td class="font-bold ${outOfRange(l) ? 'text-red-600' : 'text-[#0c2340]'}">${l.value} <span class="text-xs font-semibold text-slate-400">${l.unit}</span></td>
                 <td class="text-slate-500">${l.min != null ? l.min : ''}${l.max != null ? ' - ' + l.max : (l.min != null ? '+' : '')} ${l.unit}</td>
                 <td class="text-slate-500">${fmtDate(l.date)}</td>
                 <td>${outOfRange(l)
-                    ? '<span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded-full">Out of range</span>'
-                    : '<span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded-full">In range</span>'}</td>
-            </tr>`).join('') || `<tr><td colspan="5" class="text-center text-slate-400 py-6">No results yet.</td></tr>`;
+                    ? `<span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded-full">${T('st.outRange')}</span>`
+                    : `<span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded-full">${T('st.inRange')}</span>`}</td>
+            </tr>`).join('') || `<tr><td colspan="5" class="text-center text-slate-400 py-6">${T('lt.noResults')}</td></tr>`;
     }
 
     const labDateFrom = document.getElementById('labDateFrom');
@@ -701,7 +712,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <text x="${x(i)}" y="${y(p.value) - 10}" text-anchor="middle" font-size="10" fill="#0c2340" font-weight="bold">${p.value}</text>
                         <text x="${x(i)}" y="${H - PAD + 16}" text-anchor="middle" font-size="9" fill="#94a3b8">${p.date.slice(5)}</text>`).join('')}
                 </svg>
-                <p class="text-xs text-slate-400 mt-2">${meta.label} over time (${meta.unit}). Green band = reference range; red points are outside it.</p>`;
+                <p class="text-xs text-slate-400 mt-2">${Tp('lt.chartNote', { label: labLabel(meta), unit: meta.unit })}</p>`;
             return;
         }
         // multi-metric: each series normalized to its own min/max for overlay comparison
@@ -723,7 +734,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="flex flex-wrap gap-3 mt-2">
                 ${series.map(({ meta }) => `<span class="flex items-center gap-1.5 text-xs font-semibold text-slate-500"><span class="w-2.5 h-2.5 rounded-full" style="background:${METRIC_COLORS[meta.test]}"></span>${meta.label} (${meta.unit})</span>`).join('')}
             </div>
-            <p class="text-xs text-slate-400 mt-1">Each line is scaled to its own range so trends can be compared. Hover a point for the exact value.</p>`;
+            <p class="text-xs text-slate-400 mt-1">${T('lt.overlayNote')}</p>`;
     }
 
     if (labTestSelect) labTestSelect.addEventListener('change', () => { renderLabTable(); renderTrendChart(); });
@@ -741,7 +752,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderLabTable();
             renderTrendChart();
             labEntryForm.reset();
-            showToast(`${meta.label} result saved`);
+            showToast(Tp('toast.labSaved', { label: labLabel(meta) }));
         });
     }
 
@@ -758,21 +769,21 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="flex flex-wrap sm:flex-nowrap items-center gap-3 sm:gap-4 border border-slate-100 rounded-xl p-4 mb-3.5 hover:border-slate-200 transition">
                 <div class="w-11 h-11 rounded-full ${s.color} flex items-center justify-center font-bold text-[#0c2340] text-sm shrink-0">${s.initials}</div>
                 <div class="flex-1 min-w-0" style="flex-basis: 45%;">
-                    <p class="font-bold text-sm text-[#0c2340]">${s.doctor}</p>
-                    <p class="text-xs text-slate-500">${s.specialty} • Verified doctor</p>
+                    <p class="font-bold text-sm text-[#0c2340]">${s.doctorKey ? T(s.doctorKey) : s.doctor}</p>
+                    <p class="text-xs text-slate-500">${s.specKey ? T(s.specKey) : s.specialty} • ${T('sh.verified')}</p>
                     <div class="flex flex-wrap items-center gap-2 mt-2">
-                        <span class="bg-slate-100 text-slate-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">${s.count} file${s.count > 1 ? 's' : ''} shared</span>
-                        <span class="text-xs text-slate-400">${s.files}</span>
+                        <span class="bg-slate-100 text-slate-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">${Tp('sh.filesShared', { n: s.count })}</span>
+                        <span class="text-xs text-slate-400">${s.filesKey ? T(s.filesKey) : s.files}</span>
                     </div>
                 </div>
                 <div class="w-full sm:w-auto sm:text-right sm:shrink-0 flex sm:block items-center justify-between gap-2">
-                    <span class="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-1 rounded-full">Active</span>
-                    <p class="text-[11px] text-slate-400 sm:mt-2">Expires ${fmtDate(s.expires)}</p>
-                    <button type="button" class="revoke-share-btn text-[11px] font-bold text-red-500 hover:underline sm:mt-1" data-id="${s.id}">Revoke access</button>
+                    <span class="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-1 rounded-full">${T('st.active')}</span>
+                    <p class="text-[11px] text-slate-400 sm:mt-2">${Tp('sh.expires', { date: fmtDate(s.expires) })}</p>
+                    <button type="button" class="revoke-share-btn text-[11px] font-bold text-red-500 hover:underline sm:mt-1" data-id="${s.id}">${T('sh.revoke')}</button>
                 </div>
             </div>`).join('')
-            : `<p class="text-sm text-slate-400">No active shares. Create one on the right.</p>`;
-        if (shareCountBadge) shareCountBadge.textContent = `${state.shares.length} active share${state.shares.length === 1 ? '' : 's'}`;
+            : `<p class="text-sm text-slate-400">${T('sh.noShares')}</p>`;
+        if (shareCountBadge) shareCountBadge.textContent = Tp('sh.activeBadge', { n: state.shares.length });
         refreshIcons();
     }
 
@@ -780,10 +791,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const revokeBtn = e.target.closest('.revoke-share-btn');
         if (!revokeBtn) return;
         const share = state.shares.find(s => s.id === Number(revokeBtn.dataset.id));
-        if (share && confirm(`Revoke ${share.doctor}'s access? This takes effect immediately.`)) {
+        if (share && confirm(Tp('sh.revokeConfirm', { name: share.doctorKey ? T(share.doctorKey) : share.doctor }))) {
             state.shares = state.shares.filter(s => s.id !== share.id);
             renderShares();
-            showToast(`Revoked ${share.doctor}'s access`, 'warn');
+            showToast(Tp('toast.shareRevoked', { name: share.doctorKey ? T(share.doctorKey) : share.doctor }), 'warn');
         }
     });
 
@@ -826,7 +837,7 @@ document.addEventListener('DOMContentLoaded', () => {
             data: {
                 labels: rows.map(r => fmtDate(r.date)),
                 datasets: [{
-                    label: (meta.label || overviewMetric) + (meta.unit ? ' (' + meta.unit + ')' : ''),
+                    label: (meta.test ? labLabel(meta) : overviewMetric) + (meta.unit ? ' (' + meta.unit + ')' : ''),
                     data: rows.map(r => r.value),
                     borderColor: c.line,
                     backgroundColor: c.fill,
@@ -860,6 +871,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     document.addEventListener('cc:theme', renderOverviewChart);
     document.addEventListener('cc:lang', renderOverviewChart);
+    document.addEventListener('cc:lang', () => {
+        renderRecords();
+        renderTimeline();
+        renderShares();
+        renderLabTable();
+        renderTrendChart();
+        renderCarePlan();
+        const bc = document.getElementById('breadcrumb-current');
+        const curView = (window.location.hash || '').replace('#', '');
+        if (bc && viewTitles[curView]) bc.textContent = T(viewTitles[curView][0], viewTitles[curView][1]);
+        const sortBtn = document.getElementById('sortRecordsBtn');
+        if (sortBtn) sortBtn.textContent = state.sortDir === 'desc' ? T('mf.newest') : T('mf.oldest');
+        refreshIcons();
+    });
     const ovCanvas = document.getElementById('overviewChart');
     if (ovCanvas) renderOverviewChart();
 
@@ -873,13 +898,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // notifications (patient)
     const patientNotifs = [
-        { icon: 'eye', kind: 'share', text: 'Dr. Ahmed Farouk viewed your shared HbA1c Lab Report', time: '2 hours ago', unread: true },
-        { icon: 'flask-conical', kind: 'info', text: 'New lab result available: Fasting glucose 108 mg/dL', time: 'Yesterday', unread: true },
-        { icon: 'pill', kind: 'warn', text: 'Medication reminder: Metformin 500mg due at 9:00 PM', time: 'Today', unread: true },
-        { icon: 'clock', kind: 'warn', text: 'Sharing access for Dr. Salma Nabil expires on 25 Nov', time: '2 days ago', unread: false },
-        { icon: 'calendar-check', kind: 'success', text: 'Appointment confirmed: Cardiology follow-up, 30 Nov 11:30 AM', time: '3 days ago', unread: false },
+        { icon: 'eye', kind: 'share', textKey: 'np.1', timeKey: 'tm.2h', unread: true },
+        { icon: 'flask-conical', kind: 'info', textKey: 'np.2', timeKey: 'tm.yest', unread: true },
+        { icon: 'pill', kind: 'warn', textKey: 'np.3', timeKey: 'tm.today', unread: true },
+        { icon: 'clock', kind: 'warn', textKey: 'np.4', timeKey: 'tm.2d', unread: false },
+        { icon: 'calendar-check', kind: 'success', textKey: 'np.5', timeKey: 'tm.3d', unread: false },
     ];
-    window.CC_NOTIFS = () => patientNotifs;
+    window.CC_NOTIFS = () => patientNotifs.map(n => ({ ...n, text: T(n.textKey), time: T(n.timeKey) }));
+    window.CC_NOTIFS_MARK_READ = () => patientNotifs.forEach(n => { n.unread = false; });
 
     // command palette sources (patient)
     window.CC_SOURCES = () => {
@@ -896,13 +922,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const recs = state.records.map(r => ({
             icon: 'file-text',
             title: r.name,
-            subtitle: (CONDITION_LABELS[r.condition] || r.condition) + ' • ' + fmtDate(r.date),
+            subtitle: (window.CCi18n ? CCi18n.t('cond.' + r.condition, CONDITION_LABELS[r.condition] || r.condition) : (CONDITION_LABELS[r.condition] || r.condition)) + ' • ' + fmtDate(r.date),
             keywords: r.condition + ' ' + r.category + ' record file',
             run: () => { showView('medical-files'); },
         }));
         const actions = [
-            { icon: 'moon', title: 'Toggle dark mode', keywords: 'theme light', run: () => CCUI.toggleTheme() },
-            { icon: 'languages', title: 'Switch language / تغيير اللغة', keywords: 'arabic english rtl', run: () => CCi18n.setLang(CCi18n.lang === 'ar' ? 'en' : 'ar') },
+            { icon: 'moon', title: t('pal.theme', 'Toggle dark mode'), keywords: 'theme light', run: () => CCUI.toggleTheme() },
+            { icon: 'languages', title: t('pal.lang', 'Switch language'), keywords: 'arabic english rtl', run: () => CCi18n.setLang(CCi18n.lang === 'ar' ? 'en' : 'ar') },
             { icon: 'log-out', title: t('action.signOut', 'Sign out'), keywords: 'logout exit', run: () => showView('auth') },
         ];
         return [...pages, ...recs, ...actions];
@@ -918,26 +944,26 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderCarePlan() {
         if (!carePlanList) return;
         const taken = state.meds.filter(m => m.taken).length;
-        if (carePlanBadge) carePlanBadge.textContent = `${taken} of ${state.meds.length} meds taken`;
+        if (carePlanBadge) carePlanBadge.textContent = Tp('cp.badge', { t: taken, n: state.meds.length });
         const medCards = state.meds.map(m => `
             <div class="flex items-center gap-3 border ${m.taken ? 'border-green-200 bg-green-50/60' : 'border-slate-100 bg-slate-50/60'} rounded-xl p-3.5">
                 <span class="w-9 h-9 rounded-lg ${m.taken ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'} flex items-center justify-center shrink-0">
                     <i data-lucide="${m.taken ? 'check-circle-2' : 'pill'}" class="w-4.5 h-4.5"></i>
                 </span>
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-bold text-[#0c2340] ${m.taken ? 'line-through opacity-60' : ''}">${m.name}</p>
-                    <p class="text-xs text-slate-500">${m.dose} • ${m.time}</p>
+                    <p class="text-sm font-bold text-[#0c2340] ${m.taken ? 'line-through opacity-60' : ''}">${T(m.nameKey)}</p>
+                    <p class="text-xs text-slate-500">${T(m.doseKey)} • ${m.time}</p>
                 </div>
-                <button type="button" class="med-take-btn text-xs font-bold ${m.taken ? 'text-green-600' : 'text-cyan-700 hover:underline'}" data-id="${m.id}" ${m.taken ? 'disabled' : ''}>${m.taken ? 'Taken' : 'Mark taken'}</button>
+                <button type="button" class="med-take-btn text-xs font-bold ${m.taken ? 'text-green-600' : 'text-cyan-700 hover:underline'}" data-id="${m.id}" ${m.taken ? 'disabled' : ''}>${m.taken ? T('cp.taken') : T('cp.mark')}</button>
             </div>`).join('');
         const apptCards = state.appointments.map(a => `
             <div class="flex items-center gap-3 border border-cyan-100 bg-cyan-50/50 rounded-xl p-3.5">
                 <span class="w-9 h-9 rounded-lg bg-cyan-100 text-cyan-700 flex items-center justify-center shrink-0"><i data-lucide="calendar-clock" class="w-4.5 h-4.5"></i></span>
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-bold text-[#0c2340]">Appointment: ${a.doctor}</p>
-                    <p class="text-xs text-slate-500">${a.specialty} • ${fmtDate(a.date)} at ${a.time} • ${a.place}</p>
+                    <p class="text-sm font-bold text-[#0c2340]">${Tp('cp.appt', { name: T(a.doctorKey) })}</p>
+                    <p class="text-xs text-slate-500">${T(a.specKey)} • ${fmtDate(a.date)} ${a.time} • ${T(a.placeKey)}</p>
                 </div>
-                <span class="text-[10px] font-bold text-cyan-700 bg-cyan-100 px-2 py-1 rounded-full uppercase tracking-wide">Upcoming</span>
+                <span class="text-[10px] font-bold text-cyan-700 bg-cyan-100 px-2 py-1 rounded-full uppercase tracking-wide">${T('cp.upcoming')}</span>
             </div>`).join('');
         carePlanList.innerHTML = medCards + apptCards;
         refreshIcons();
@@ -949,7 +975,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (med && !med.taken) {
             med.taken = true;
             renderCarePlan();
-            showToast(`${med.name} marked as taken`);
+            showToast(Tp('toast.medTaken', { n: T(med.nameKey, '') }));
         }
     });
     renderCarePlan();
@@ -994,7 +1020,7 @@ document.addEventListener('DOMContentLoaded', () => {
             a.download = `chronicare-lab-results-${labDateFrom.value}-to-${labDateTo.value}.csv`;
             a.click();
             URL.revokeObjectURL(a.href);
-            showToast('Lab results exported as CSV');
+            showToast(T('toast.csv'));
         });
     }
     const exportPdfBtn = document.getElementById('exportPdfBtn');
@@ -1059,10 +1085,10 @@ document.addEventListener('DOMContentLoaded', () => {
             };
             if (shareSummary) {
                 shareSummary.innerHTML = `
-                    <p><span class="font-bold text-[#0c2340]">Doctor:</span> ${name}${specialty ? ` (${specialty})` : ''}</p>
-                    <p><span class="font-bold text-[#0c2340]">Files:</span> ${fileText}</p>
-                    <p><span class="font-bold text-[#0c2340]">Expires:</span> ${fmtDate(expiryInput.value)}</p>
-                    <p><span class="font-bold text-[#0c2340]">Permissions:</span></p>
+                    <p><span class="font-bold text-[#0c2340]">${T('share.modal.doctor')}</span> ${name}${specialty ? ` (${specialty})` : ''}</p>
+                    <p><span class="font-bold text-[#0c2340]">${T('share.modal.files')}</span> ${fileText}</p>
+                    <p><span class="font-bold text-[#0c2340]">${T('share.modal.expires')}</span> ${fmtDate(expiryInput.value)}</p>
+                    <p><span class="font-bold text-[#0c2340]">${T('share.modal.permissions')}</span></p>
                     <ul class="list-none space-y-1">${perms.map(p => `<li class="flex items-center gap-2 text-xs"><i data-lucide="${p.on ? 'check-circle-2' : 'x-circle'}" class="w-3.5 h-3.5 ${p.on ? 'text-green-600' : 'text-slate-400'}"></i>${p.label}</li>`).join('')}</ul>`;
             }
             if (shareLinkEl) shareLinkEl.textContent = pendingShare.link;
@@ -1090,7 +1116,7 @@ document.addEventListener('DOMContentLoaded', () => {
             state.shares.push(pendingShare);
             renderShares();
             newShareForm.reset();
-            showToast(`Access shared with ${pendingShare.doctor} until ${fmtDate(pendingShare.expires)}`);
+            showToast(Tp('toast.shared', { name: pendingShare.doctor, date: fmtDate(pendingShare.expires) }));
             hideShareModal();
         });
     }
@@ -1098,7 +1124,7 @@ document.addEventListener('DOMContentLoaded', () => {
         copyShareLink.addEventListener('click', () => {
             const link = shareLinkEl ? shareLinkEl.textContent : '';
             if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(link).then(() => showToast('Share link copied'), () => showToast('Could not copy link', 'warn'));
+                navigator.clipboard.writeText(link).then(() => showToast(T('toast.linkCopied')), () => showToast(T('toast.linkFail'), 'warn'));
             } else {
                 const ta = document.createElement('textarea');
                 ta.value = link;
@@ -1106,7 +1132,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ta.select();
                 document.execCommand('copy');
                 ta.remove();
-                showToast('Share link copied');
+                showToast(T('toast.linkCopied'));
             }
         });
     }

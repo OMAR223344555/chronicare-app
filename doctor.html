@@ -16,7 +16,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./css/style.css?v=5">
+    <link rel="stylesheet" href="./css/style.css?v=6">
 </head>
 
 <body class="bg-slate-100 min-h-screen font-[Inter] antialiased">
@@ -58,7 +58,7 @@
                 <div class="flex items-center gap-3 mb-4">
                     <div class="w-10 h-10 rounded-full bg-cyan-200 flex items-center justify-center font-bold text-[#0c2340] text-sm">AF</div>
                     <div>
-                        <p class="text-sm font-bold text-[#0c2340]">Dr. Ahmed Farouk</p>
+                        <p class="text-sm font-bold text-[#0c2340]" data-i18n="name.farouk">Dr. Ahmed Farouk</p>
                         <p class="text-xs text-slate-500" data-i18n="account.doctor">Internal Medicine</p>
                     </div>
                 </div>
@@ -109,9 +109,9 @@
             <section id="view-patients" class="portal-subview">
                 <div class="page-heading">
                     <div>
-                        <span class="eyebrow">SHARED WITH ME</span>
-                        <h1>My Patients</h1>
-                        <p>Patients who chose to share their records with you. New or updated files are marked.</p>
+                        <span class="eyebrow" data-i18n="dp.eyebrow">SHARED WITH ME</span>
+                        <h1 data-i18n="dp.title">My Patients</h1>
+                        <p data-i18n="dp.sub">Patients who chose to share their records with you. New or updated files are marked.</p>
                     </div>
                 </div>
 
@@ -120,12 +120,12 @@
                         <table class="records-table w-full">
                             <thead>
                                 <tr>
-                                    <th>PATIENT</th>
-                                    <th>CONDITIONS</th>
-                                    <th>SHARED FILES</th>
-                                    <th>LAST SHARED</th>
-                                    <th>STATUS</th>
-                                    <th>ACTION</th>
+                                    <th data-i18n="th.patient">PATIENT</th>
+                                    <th data-i18n="th.conditions">CONDITIONS</th>
+                                    <th data-i18n="th.sharedFiles">SHARED FILES</th>
+                                    <th data-i18n="th.lastShared">LAST SHARED</th>
+                                    <th data-i18n="th.status">STATUS</th>
+                                    <th data-i18n="th.action">ACTION</th>
                                 </tr>
                             </thead>
                             <tbody id="patientsTable"></tbody>
@@ -141,28 +141,28 @@
             <section id="view-patient-records" class="portal-subview hidden">
                 <div class="page-heading">
                     <div>
-                        <span class="eyebrow">SHARED RECORDS</span>
-                        <h1 id="patientRecordsTitle">Patient Records</h1>
-                        <p id="patientRecordsSubtitle">Files and lab trends this patient shared with you.</p>
+                        <span class="eyebrow" data-i18n="pr.eyebrow">SHARED RECORDS</span>
+                        <h1 id="patientRecordsTitle" data-i18n="pr.title">Patient Records</h1>
+                        <p id="patientRecordsSubtitle" data-i18n="pr.subtitle">Files and lab trends this patient shared with you.</p>
                     </div>
-                    <button type="button" class="sort-btn" data-navigate="patients">← Back to My Patients</button>
+                    <button type="button" class="sort-btn" data-navigate="patients" data-i18n="dp.back">← Back to My Patients</button>
                 </div>
 
                 <div class="grid lg:grid-cols-12 gap-6 items-start">
                     <div class="lg:col-span-7 space-y-6">
                         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                             <div class="p-5 border-b border-slate-100">
-                                <h3 class="font-bold text-[#0c2340]">Shared files</h3>
-                                <p class="text-xs text-slate-500">Only the files this patient granted you access to</p>
+                                <h3 class="font-bold text-[#0c2340]" data-i18n="pr.sharedFiles">Shared files</h3>
+                                <p class="text-xs text-slate-500" data-i18n="pr.sharedFilesSub">Only the files this patient granted you access to</p>
                             </div>
                             <div class="table-wrapper">
                                 <table class="records-table w-full">
                                     <thead>
                                         <tr>
-                                            <th>FILE NAME</th>
-                                            <th>CATEGORY</th>
-                                            <th>DATE</th>
-                                            <th>ACTION</th>
+                                            <th data-i18n="th.fileName">FILE NAME</th>
+                                            <th data-i18n="th.category">CATEGORY</th>
+                                            <th data-i18n="th.date">DATE</th>
+                                            <th data-i18n="th.action">ACTION</th>
                                         </tr>
                                     </thead>
                                     <tbody id="patientFilesTable"></tbody>
@@ -172,17 +172,17 @@
 
                         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                             <div class="p-5 border-b border-slate-100">
-                                <h3 class="font-bold text-[#0c2340]">Lab trends</h3>
-                                <p class="text-xs text-slate-500">Values outside the reference range are highlighted</p>
+                                <h3 class="font-bold text-[#0c2340]" data-i18n="pr.labTrends">Lab trends</h3>
+                                <p class="text-xs text-slate-500" data-i18n="pr.labSub">Values outside the reference range are highlighted</p>
                             </div>
                             <div class="table-wrapper">
                                 <table class="records-table w-full">
                                     <thead>
                                         <tr>
-                                            <th>TEST</th>
-                                            <th>VALUE</th>
-                                            <th>REFERENCE</th>
-                                            <th>DATE</th>
+                                            <th data-i18n="th.test">TEST</th>
+                                            <th data-i18n="th.value">VALUE</th>
+                                            <th data-i18n="th.reference">REFERENCE</th>
+                                            <th data-i18n="th.date">DATE</th>
                                         </tr>
                                     </thead>
                                     <tbody id="patientLabsTable"></tbody>
@@ -193,13 +193,13 @@
 
                     <!-- NOTES -->
                     <div class="lg:col-span-5 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                        <h3 class="font-bold text-[#0c2340]">Clinical notes</h3>
-                        <p class="text-xs text-slate-500 mt-0.5 mb-5">The patient can read the notes you add here.</p>
+                        <h3 class="font-bold text-[#0c2340]" data-i18n="pr.notes">Clinical notes</h3>
+                        <p class="text-xs text-slate-500 mt-0.5 mb-5" data-i18n="pr.notesSub">The patient can read the notes you add here.</p>
                         <div id="notesList" class="space-y-3 mb-5"></div>
                         <form id="noteForm" class="space-y-3">
-                            <textarea id="noteText" rows="4" required placeholder="Add your interpretation or recommendation..."
+                            <textarea id="noteText" rows="4" required placeholder="Add your interpretation or recommendation..." data-i18n-ph="pr.notePh"
                                 class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-cyan-500 transition"></textarea>
-                            <button type="submit" class="w-full bg-[#0c2340] hover:bg-blue-950 text-white font-semibold py-3 rounded-xl text-sm transition">
+                            <button type="submit" class="w-full bg-[#0c2340] hover:bg-blue-950 text-white font-semibold py-3 rounded-xl text-sm transition" data-i18n="pr.addNote">
                                 Add note →
                             </button>
                         </form>
@@ -207,13 +207,13 @@
                 </div>
             </section>
 
-            <p class="text-right text-[10px] text-slate-400 mt-8">CHRONICARE HEALTH SYSTEMS</p>
+            <p class="text-right text-[10px] text-slate-400 mt-8" data-i18n="app.footer">CHRONICARE HEALTH SYSTEMS</p>
         </main>
     </div>
 
-    <script src="./js/shared.js?v=5"></script>
-    <script src="./js/i18n.js?v=5"></script>
-    <script src="./js/doctor.js?v=5"></script>
+    <script src="./js/shared.js?v=6"></script>
+    <script src="./js/i18n.js?v=6"></script>
+    <script src="./js/doctor.js?v=6"></script>
 
     <!-- Floating theme + language controls -->
     <div class="fab-stack">

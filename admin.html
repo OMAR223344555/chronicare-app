@@ -16,7 +16,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./css/style.css?v=5">
+    <link rel="stylesheet" href="./css/style.css?v=6">
 </head>
 
 <body class="bg-slate-100 min-h-screen font-[Inter] antialiased">
@@ -62,7 +62,7 @@
                 <div class="flex items-center gap-3 mb-4">
                     <div class="w-10 h-10 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-sm">AD</div>
                     <div>
-                        <p class="text-sm font-bold text-[#0c2340]">Administrator</p>
+                        <p class="text-sm font-bold text-[#0c2340]" data-i18n="name.admin">Administrator</p>
                         <p class="text-xs text-slate-500" data-i18n="account.admin">System manager</p>
                     </div>
                 </div>
@@ -113,17 +113,17 @@
             <section id="view-users" class="portal-subview">
                 <div class="page-heading">
                     <div>
-                        <span class="eyebrow">ACCOUNTS</span>
-                        <h1>Manage Users</h1>
-                        <p>Verify doctor accounts and manage patient and doctor access.</p>
+                        <span class="eyebrow" data-i18n="ad.eyebrow">ACCOUNTS</span>
+                        <h1 data-i18n="ad.title">Manage Users</h1>
+                        <p data-i18n="ad.sub">Verify doctor accounts and manage patient and doctor access.</p>
                     </div>
                 </div>
 
                 <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden mb-6">
                     <div class="p-5 border-b border-slate-100 flex justify-between items-center">
                         <div>
-                            <h3 class="font-bold text-[#0c2340]">Pending doctor verification</h3>
-                            <p class="text-xs text-slate-500">Approve only after checking the license number</p>
+                            <h3 class="font-bold text-[#0c2340]" data-i18n="ad.pending">Pending doctor verification</h3>
+                            <p class="text-xs text-slate-500" data-i18n="ad.pendingSub">Approve only after checking the license number</p>
                         </div>
                         <span id="pendingCount" class="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full">0 pending</span>
                     </div>
@@ -131,11 +131,11 @@
                         <table class="records-table w-full">
                             <thead>
                                 <tr>
-                                    <th>DOCTOR</th>
-                                    <th>SPECIALTY</th>
-                                    <th>LICENSE NO.</th>
-                                    <th>APPLIED</th>
-                                    <th>ACTION</th>
+                                    <th data-i18n="th.doctor">DOCTOR</th>
+                                    <th data-i18n="th.specialty">SPECIALTY</th>
+                                    <th data-i18n="th.license">LICENSE NO.</th>
+                                    <th data-i18n="th.applied">APPLIED</th>
+                                    <th data-i18n="th.action">ACTION</th>
                                 </tr>
                             </thead>
                             <tbody id="pendingDoctorsTable"></tbody>
@@ -145,18 +145,18 @@
 
                 <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                     <div class="p-5 border-b border-slate-100">
-                        <h3 class="font-bold text-[#0c2340]">Active accounts</h3>
-                        <p class="text-xs text-slate-500">Approved doctors and registered patients</p>
+                        <h3 class="font-bold text-[#0c2340]" data-i18n="ad.activeAccounts">Active accounts</h3>
+                        <p class="text-xs text-slate-500" data-i18n="ad.activeSub">Approved doctors and registered patients</p>
                     </div>
                     <div class="table-wrapper">
                         <table class="records-table w-full">
                             <thead>
                                 <tr>
-                                    <th>NAME</th>
-                                    <th>ROLE</th>
-                                    <th>DETAIL</th>
-                                    <th>STATUS</th>
-                                    <th>ACTION</th>
+                                    <th data-i18n="th.name">NAME</th>
+                                    <th data-i18n="th.role">ROLE</th>
+                                    <th data-i18n="th.detail">DETAIL</th>
+                                    <th data-i18n="th.status">STATUS</th>
+                                    <th data-i18n="th.action">ACTION</th>
                                 </tr>
                             </thead>
                             <tbody id="usersTable"></tbody>
@@ -169,48 +169,48 @@
             <section id="view-reference" class="portal-subview hidden">
                 <div class="page-heading">
                     <div>
-                        <span class="eyebrow">CLASSIFICATION</span>
-                        <h1>Categories & Reference Ranges</h1>
-                        <p>Keep file classification and lab reference ranges consistent for all users.</p>
+                        <span class="eyebrow" data-i18n="rf.eyebrow">CLASSIFICATION</span>
+                        <h1 data-i18n="rf.title">Categories & Reference Ranges</h1>
+                        <p data-i18n="rf.sub">Keep file classification and lab reference ranges consistent for all users.</p>
                     </div>
                 </div>
 
                 <div class="grid lg:grid-cols-2 gap-6 items-start mb-6">
                     <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                        <h3 class="font-bold text-[#0c2340] mb-4">File categories</h3>
+                        <h3 class="font-bold text-[#0c2340] mb-4" data-i18n="rf.fileCats">File categories</h3>
                         <ul id="categoriesList" class="space-y-2 mb-4"></ul>
                         <form id="addCategoryForm" class="flex gap-2">
-                            <input type="text" id="newCategoryName" required placeholder="New category name"
+                            <input type="text" id="newCategoryName" required placeholder="New category name" data-i18n-ph="rf.newCat"
                                 class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm outline-none focus:border-cyan-500 transition">
-                            <button type="submit" class="bg-[#0c2340] hover:bg-blue-950 text-white font-semibold px-4 rounded-xl text-sm transition">Add</button>
+                            <button type="submit" class="bg-[#0c2340] hover:bg-blue-950 text-white font-semibold px-4 rounded-xl text-sm transition" data-i18n="action.add">Add</button>
                         </form>
                     </div>
 
                     <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                        <h3 class="font-bold text-[#0c2340] mb-4">Chronic conditions</h3>
+                        <h3 class="font-bold text-[#0c2340] mb-4" data-i18n="rf.conditions">Chronic conditions</h3>
                         <ul id="conditionsList" class="space-y-2 mb-4"></ul>
                         <form id="addConditionForm" class="flex gap-2">
-                            <input type="text" id="newConditionName" required placeholder="New condition name"
+                            <input type="text" id="newConditionName" required placeholder="New condition name" data-i18n-ph="rf.newCond"
                                 class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm outline-none focus:border-cyan-500 transition">
-                            <button type="submit" class="bg-[#0c2340] hover:bg-blue-950 text-white font-semibold px-4 rounded-xl text-sm transition">Add</button>
+                            <button type="submit" class="bg-[#0c2340] hover:bg-blue-950 text-white font-semibold px-4 rounded-xl text-sm transition" data-i18n="action.add">Add</button>
                         </form>
                     </div>
                 </div>
 
                 <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                     <div class="p-5 border-b border-slate-100">
-                        <h3 class="font-bold text-[#0c2340]">Lab test reference ranges</h3>
-                        <p class="text-xs text-slate-500">Out-of-range highlighting uses these limits</p>
+                        <h3 class="font-bold text-[#0c2340]" data-i18n="rf.ranges">Lab test reference ranges</h3>
+                        <p class="text-xs text-slate-500" data-i18n="rf.rangesSub">Out-of-range highlighting uses these limits</p>
                     </div>
                     <div class="table-wrapper">
                         <table class="records-table w-full">
                             <thead>
                                 <tr>
-                                    <th>TEST</th>
-                                    <th>UNIT</th>
-                                    <th>MIN</th>
-                                    <th>MAX</th>
-                                    <th>ACTION</th>
+                                    <th data-i18n="th.test">TEST</th>
+                                    <th data-i18n="th.unit">UNIT</th>
+                                    <th data-i18n="th.min">MIN</th>
+                                    <th data-i18n="th.max">MAX</th>
+                                    <th data-i18n="th.action">ACTION</th>
                                 </tr>
                             </thead>
                             <tbody id="rangesTable"></tbody>
@@ -223,17 +223,17 @@
             <section id="view-audit" class="portal-subview hidden">
                 <div class="page-heading">
                     <div>
-                        <span class="eyebrow">ACCOUNTABILITY</span>
-                        <h1>Audit Log</h1>
-                        <p>Every file view, share, revoke and download is recorded here.</p>
+                        <span class="eyebrow" data-i18n="au.eyebrow">ACCOUNTABILITY</span>
+                        <h1 data-i18n="au.title">Audit Log</h1>
+                        <p data-i18n="au.sub">Every file view, share, revoke and download is recorded here.</p>
                     </div>
                     <select id="auditFilter" class="bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-cyan-500 transition">
-                        <option value="all">All actions</option>
-                        <option value="view">Views</option>
-                        <option value="download">Downloads</option>
-                        <option value="share">Shares</option>
-                        <option value="revoke">Revokes</option>
-                        <option value="approve">Approvals</option>
+                        <option value="all" data-i18n="au.all">All actions</option>
+                        <option value="view" data-i18n="au.views">Views</option>
+                        <option value="download" data-i18n="au.downloads">Downloads</option>
+                        <option value="share" data-i18n="au.shares">Shares</option>
+                        <option value="revoke" data-i18n="au.revokes">Revokes</option>
+                        <option value="approve" data-i18n="au.approvals">Approvals</option>
                     </select>
                 </div>
 
@@ -242,10 +242,10 @@
                         <table class="records-table w-full">
                             <thead>
                                 <tr>
-                                    <th>TIME</th>
-                                    <th>USER</th>
-                                    <th>ACTION</th>
-                                    <th>DETAILS</th>
+                                    <th data-i18n="th.time">TIME</th>
+                                    <th data-i18n="th.user">USER</th>
+                                    <th data-i18n="th.action">ACTION</th>
+                                    <th data-i18n="th.details">DETAILS</th>
                                 </tr>
                             </thead>
                             <tbody id="auditTable"></tbody>
@@ -254,13 +254,13 @@
                 </div>
             </section>
 
-            <p class="text-right text-[10px] text-slate-400 mt-8">CHRONICARE HEALTH SYSTEMS</p>
+            <p class="text-right text-[10px] text-slate-400 mt-8" data-i18n="app.footer">CHRONICARE HEALTH SYSTEMS</p>
         </main>
     </div>
 
-    <script src="./js/shared.js?v=5"></script>
-    <script src="./js/i18n.js?v=5"></script>
-    <script src="./js/admin.js?v=5"></script>
+    <script src="./js/shared.js?v=6"></script>
+    <script src="./js/i18n.js?v=6"></script>
+    <script src="./js/admin.js?v=6"></script>
 
     <!-- Floating theme + language controls -->
     <div class="fab-stack">

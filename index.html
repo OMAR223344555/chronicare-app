@@ -24,7 +24,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Stylesheet -->
-    <link rel="stylesheet" href="./css/style.css?v=5">
+    <link rel="stylesheet" href="./css/style.css?v=6">
 </head>
 
 <body class="bg-slate-100 min-h-screen font-[Inter] antialiased">
@@ -60,7 +60,7 @@
                                 Chronicare
                             </h1>
 
-                            <p class="text-cyan-100 text-sm mt-2 italic">
+                            <p class="text-cyan-100 text-sm mt-2 italic" data-i18n="app.tagline">
                                 Care Today .. Healthier Tomorrow
                             </p>
                         </div>
@@ -108,9 +108,9 @@
                     <div id="hero-signup-content" class="hidden">
 
                         <h2 class="text-3xl md:text-4xl font-bold leading-tight mb-10">
-                            Take Control
+                            <span data-i18n="auth.heroTitle1">Take Control</span>
                             <br>
-                            <span class="text-cyan-300">of Your Health</span>
+                            <span class="text-cyan-300" data-i18n="auth.heroTitle2">of Your Health</span>
                         </h2>
 
                         <ul class="space-y-6 text-base text-white">
@@ -119,21 +119,21 @@
                                 <div class="p-3 bg-cyan-300/20 rounded-full">
                                     <i data-lucide="folder-heart" class="w-6 h-6 text-cyan-300"></i>
                                 </div>
-                                <span>Store Your Medical History</span>
+                                <span data-i18n="auth.feat1">Store Your Medical History</span>
                             </li>
 
                             <li class="flex items-center gap-4">
                                 <div class="p-3 bg-cyan-300/20 rounded-full">
                                     <i data-lucide="bell" class="w-6 h-6 text-cyan-300"></i>
                                 </div>
-                                <span>Get Reminders for Medications</span>
+                                <span data-i18n="auth.feat2">Get Reminders for Medications</span>
                             </li>
 
                             <li class="flex items-center gap-4">
                                 <div class="p-3 bg-cyan-300/20 rounded-full">
                                     <i data-lucide="user-plus" class="w-6 h-6 text-cyan-300"></i>
                                 </div>
-                                <span>Consult with Doctors</span>
+                                <span data-i18n="auth.feat3">Consult with Doctors</span>
                             </li>
 
                         </ul>
@@ -145,7 +145,7 @@
                 <!-- FOOTER -->
                 <div class="relative z-10 mt-12 pt-5 border-t border-white/20 flex items-center justify-between text-sm text-cyan-100">
 
-                    <span>© Chronicare Health Systems</span>
+                    <span data-i18n="app.copyright">© Chronicare Health Systems</span>
 
                     <i data-lucide="activity" class="w-6 h-6 text-cyan-300"></i>
 
@@ -281,11 +281,11 @@
                         <img src="./img/logo.jpeg"
                              alt="signup image"
                              class="signin-image">
-                        <h2 class="text-4xl font-extrabold text-[#0c2340]">
+                        <h2 class="text-4xl font-extrabold text-[#0c2340]" data-i18n="auth.signUp">
                             Sign Up
                         </h2>
 
-                        <p class="text-sm text-slate-600 mt-3">
+                        <p class="text-sm text-slate-600 mt-3" data-i18n="auth.createSub">
                             Create your account to get started
                         </p>
                     </div>
@@ -297,7 +297,7 @@
                         <div class="relative">
                             <i data-lucide="user" class="w-5 h-5 absolute left-4 top-4 text-[#0c2340]"></i>
 
-                            <input type="text" placeholder="Full Name"
+                            <input type="text" placeholder="Full Name" data-i18n-ph="auth.fullName"
                                 class="auth-input w-full pl-12 pr-4 py-3.5 text-sm bg-slate-50 border border-slate-200 rounded-2xl"
                                 required>
                         </div>
@@ -307,7 +307,7 @@
                         <div class="relative">
                             <i data-lucide="mail" class="w-5 h-5 absolute left-4 top-4 text-[#0c2340]"></i>
 
-                            <input type="email" placeholder="Email Address"
+                            <input type="email" placeholder="Email Address" data-i18n-ph="auth.email"
                                 class="auth-input w-full pl-12 pr-4 py-3.5 text-sm bg-slate-50 border border-slate-200 rounded-2xl"
                                 required>
                         </div>
@@ -317,7 +317,7 @@
                         <div class="relative">
                             <i data-lucide="lock" class="w-5 h-5 absolute left-4 top-4 text-[#0c2340]"></i>
 
-                            <input type="password" id="signup-password" placeholder="Password"
+                            <input type="password" id="signup-password" placeholder="Password" data-i18n-ph="auth.password"
                                 class="auth-input w-full pl-12 pr-12 py-3.5 text-sm bg-slate-50 border border-slate-200 rounded-2xl"
                                 required>
 
@@ -332,7 +332,7 @@
                         <div class="relative">
                             <i data-lucide="lock" class="w-5 h-5 absolute left-4 top-4 text-[#0c2340]"></i>
 
-                            <input type="password" id="confirm-password" placeholder="Confirm Password"
+                            <input type="password" id="confirm-password" placeholder="Confirm Password" data-i18n-ph="auth.confirmPassword"
                                 class="auth-input w-full pl-12 pr-12 py-3.5 text-sm bg-slate-50 border border-slate-200 rounded-2xl"
                                 required>
 
@@ -348,8 +348,8 @@
                             <i data-lucide="user-check" class="w-5 h-5 absolute left-4 top-4 text-[#0c2340]"></i>
 
                             <select id="signup-role" class="auth-input w-full pl-12 pr-8 py-3.5 text-sm bg-slate-50 border border-slate-200 rounded-2xl appearance-none">
-                                <option value="patient">Patient</option>
-                                <option value="doctor">Doctor</option>
+                                <option value="patient" data-i18n="auth.rolePatient">Patient</option>
+                                <option value="doctor" data-i18n="auth.roleDoctor">Doctor</option>
                             </select>
 
                             <i data-lucide="chevron-down" class="w-4 h-4 absolute right-4 top-4 pointer-events-none"></i>
@@ -360,16 +360,16 @@
                         <div id="doctor-fields" class="hidden space-y-3">
                             <div class="relative">
                                 <i data-lucide="stethoscope" class="w-5 h-5 absolute left-4 top-4 text-[#0c2340]"></i>
-                                <input type="text" id="signup-specialty" placeholder="Specialty (e.g. Cardiology)"
+                                <input type="text" id="signup-specialty" placeholder="Specialty (e.g. Cardiology)" data-i18n-ph="auth.specialtyPh"
                                     class="auth-input w-full pl-12 pr-4 py-3.5 text-sm bg-slate-50 border border-slate-200 rounded-2xl">
                             </div>
                             <div class="relative">
                                 <i data-lucide="badge-check" class="w-5 h-5 absolute left-4 top-4 text-[#0c2340]"></i>
-                                <input type="text" id="signup-license" placeholder="Medical license number"
+                                <input type="text" id="signup-license" placeholder="Medical license number" data-i18n-ph="auth.licensePh"
                                     class="auth-input w-full pl-12 pr-4 py-3.5 text-sm bg-slate-50 border border-slate-200 rounded-2xl">
                             </div>
-                            <p id="doctor-pending-note" class="hidden text-xs bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-3">
-                                Doctor accounts stay <strong>pending</strong> until an administrator verifies your license. You will be able to sign in after approval.
+                            <p id="doctor-pending-note" class="hidden text-xs bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-3" data-i18n="auth.pendingNote">
+                                Doctor accounts stay pending until an administrator verifies your license. You will be able to sign in after approval.
                             </p>
                         </div>
 
@@ -379,10 +379,10 @@
                             <input type="checkbox" id="terms" class="mt-0.5" required>
 
                             <label for="terms">
-                                I agree to the
-                                <a href="#" class="text-blue-700 font-semibold">Terms & Conditions</a>
-                                and
-                                <a href="#" class="text-blue-700 font-semibold">Privacy Policy</a>
+                                <span data-i18n="auth.termsAgree">I agree to the</span>
+                                <a href="#" class="text-blue-700 font-semibold" data-i18n="auth.terms">Terms & Conditions</a>
+                                <span data-i18n="auth.and">and</span>
+                                <a href="#" class="text-blue-700 font-semibold" data-i18n="auth.privacy">Privacy Policy</a>
                             </label>
                         </div>
 
@@ -391,7 +391,7 @@
                         <button type="submit"
                             class="w-full bg-[#0c2340] hover:bg-blue-900 text-white font-semibold py-3.5 rounded-full flex items-center justify-center gap-3">
 
-                            Create Account
+                            <span data-i18n="auth.createAccount">Create Account</span>
 
                             <i data-lucide="arrow-right" class="w-5 h-5"></i>
                         </button>
@@ -400,10 +400,10 @@
 
 
                     <p class="text-center text-sm text-slate-600 pt-2">
-                        Already have an account?
+                        <span data-i18n="auth.haveAccount">Already have an account?</span>
 
                         <button type="button" id="to-signin-btn"
-                            class="text-blue-700 font-bold hover:underline">
+                            class="text-blue-700 font-bold hover:underline" data-i18n="auth.signIn">
                             Sign In
                         </button>
                     </p>
@@ -432,7 +432,7 @@
                         </div>
                         <div>
                             <h1 class="text-xl font-extrabold text-[#0c2340]">Chronicare</h1>
-                            <p class="text-[11px] text-cyan-600 italic">Care Today .. Healthier Tomorrow</p>
+                            <p class="text-[11px] text-cyan-600 italic" data-i18n="app.tagline">Care Today .. Healthier Tomorrow</p>
                         </div>
                     </div>
                     <!-- Close button for mobile drawer -->
@@ -487,7 +487,7 @@
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-full bg-cyan-200 flex items-center justify-center font-bold text-[#0c2340] text-sm">MH</div>
                         <div>
-                            <p class="font-bold text-sm text-[#0c2340]">Maya Hassan</p>
+                            <p class="font-bold text-sm text-[#0c2340]" data-i18n="name.maya">Maya Hassan</p>
                             <p class="text-xs text-slate-500" data-i18n="account.patient">Patient account</p>
                         </div>
                     </div>
@@ -538,8 +538,8 @@
                     <div class="flex items-center gap-2.5 pl-2 border-l border-slate-200">
                         <div class="w-9 h-9 rounded-full bg-cyan-200 flex items-center justify-center font-bold text-[#0c2340] text-sm">MH</div>
                         <div class="hidden lg:block text-left">
-                            <p class="font-bold text-xs text-[#0c2340] leading-tight">Maya Hassan</p>
-                            <p class="text-[10px] text-slate-400">Patient</p>
+                            <p class="font-bold text-xs text-[#0c2340] leading-tight" data-i18n="name.maya">Maya Hassan</p>
+                            <p class="text-[10px] text-slate-400" data-i18n="role.patient">Patient</p>
                         </div>
                     </div>
                 </div>
@@ -556,23 +556,23 @@
                      ---------------------------------------------------------- -->
                 <section id="view-overview" class="portal-subview">
                     <div class="mb-6">
-                        <p class="text-xs font-bold tracking-widest text-cyan-700">HEALTH OVERVIEW</p>
-                        <h2 class="text-3xl font-extrabold text-[#0c2340] mt-1">Your health at a glance</h2>
-                        <p class="text-sm text-slate-500 mt-1">A clear view of your records, trends, and sharing activity.</p>
+                        <p class="text-xs font-bold tracking-widest text-cyan-700" data-i18n="ov.eyebrow">HEALTH OVERVIEW</p>
+                        <h2 class="text-3xl font-extrabold text-[#0c2340] mt-1" data-i18n="ov.title">Your health at a glance</h2>
+                        <p class="text-sm text-slate-500 mt-1" data-i18n="ov.sub">A clear view of your records, trends, and sharing activity.</p>
                     </div>
 
                     <!-- HERO BANNER -->
                     <div class="hero-banner bg-[#0c2340] text-white rounded-2xl p-6 md:p-8 flex items-center justify-between overflow-hidden relative shadow-md mb-6">
                         <div class="relative z-10 max-w-2xl">
-                            <p class="text-[11px] tracking-widest text-cyan-300 font-semibold uppercase">Saturday, 21 November 2026</p>
-                            <h3 class="text-2xl md:text-3xl font-bold mt-2">Good morning, Maya ✨</h3>
-                            <p class="text-sm text-cyan-100 mt-1.5 leading-relaxed">Your health journey, clearly organized. You have 3 new record updates and 1 lab trend to review.</p>
+                            <p class="text-[11px] tracking-widest text-cyan-300 font-semibold uppercase" data-i18n="hero.date">Saturday, 21 November 2026</p>
+                            <h3 class="text-2xl md:text-3xl font-bold mt-2" data-i18n="hero.greeting">Good morning, Maya ✨</h3>
+                            <p class="text-sm text-cyan-100 mt-1.5 leading-relaxed" data-i18n="hero.sub">Your health journey, clearly organized. You have 3 new record updates and 1 lab trend to review.</p>
                             <div class="flex flex-wrap gap-3 mt-5">
                                 <button type="button" class="trigger-upload-btn bg-cyan-400 hover:bg-cyan-300 text-[#0c2340] font-bold text-sm px-4 py-2.5 rounded-xl transition flex items-center gap-2">
                                     <i data-lucide="plus" class="w-4 h-4"></i>
-                                    <span>Upload a record</span>
+                                    <span data-i18n="hero.upload">Upload a record</span>
                                 </button>
-                                <button type="button" data-navigate="medical-files" class="bg-white/10 hover:bg-white/20 border border-white/20 font-semibold text-sm px-4 py-2.5 rounded-xl transition">
+                                <button type="button" data-navigate="medical-files" class="bg-white/10 hover:bg-white/20 border border-white/20 font-semibold text-sm px-4 py-2.5 rounded-xl transition" data-i18n="hero.records">
                                     View my records
                                 </button>
                             </div>
@@ -584,46 +584,46 @@
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 stagger-in">
                         <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm cursor-pointer hover:border-cyan-200 transition" data-navigate="medical-files">
                             <div class="flex justify-between items-center">
-                                <p class="text-[11px] font-bold text-slate-500 uppercase">Total Medical Files</p>
+                                <p class="text-[11px] font-bold text-slate-500 uppercase" data-i18n="stat.files">Total Medical Files</p>
                                 <div class="w-8 h-8 rounded-lg bg-cyan-50 flex items-center justify-center text-cyan-600">
                                     <i data-lucide="file-text" class="w-4 h-4"></i>
                                 </div>
                             </div>
                             <p class="text-3xl font-extrabold text-[#0c2340] mt-3 stat-num" data-count="42">42</p>
-                            <p class="text-xs text-green-600 font-semibold mt-1">+4 added this month</p>
+                            <p class="text-xs text-green-600 font-semibold mt-1" data-i18n="stat.filesSub">+4 added this month</p>
                         </div>
 
                         <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm cursor-pointer hover:border-cyan-200 transition" data-navigate="lab-trends">
                             <div class="flex justify-between items-center">
-                                <p class="text-[11px] font-bold text-slate-500 uppercase">Lab Results Tracked</p>
+                                <p class="text-[11px] font-bold text-slate-500 uppercase" data-i18n="stat.labs">Lab Results Tracked</p>
                                 <div class="w-8 h-8 rounded-lg bg-cyan-50 flex items-center justify-center text-cyan-600">
                                     <i data-lucide="trending-up" class="w-4 h-4"></i>
                                 </div>
                             </div>
                             <p class="text-3xl font-extrabold text-[#0c2340] mt-3 stat-num" data-count="18">18</p>
-                            <p class="text-xs text-slate-500 mt-1">Across 4 test types</p>
+                            <p class="text-xs text-slate-500 mt-1" data-i18n="stat.labsSub">Across 4 test types</p>
                         </div>
 
                         <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm cursor-pointer hover:border-cyan-200 transition" data-navigate="sharing-access">
                             <div class="flex justify-between items-center">
-                                <p class="text-[11px] font-bold text-slate-500 uppercase">Active Shares</p>
+                                <p class="text-[11px] font-bold text-slate-500 uppercase" data-i18n="stat.shares">Active Shares</p>
                                 <div class="w-8 h-8 rounded-lg bg-cyan-50 flex items-center justify-center text-cyan-600">
                                     <i data-lucide="share-2" class="w-4 h-4"></i>
                                 </div>
                             </div>
                             <p class="text-3xl font-extrabold text-[#0c2340] mt-3 stat-num" data-count="3">3</p>
-                            <p class="text-xs text-slate-500 mt-1">2 doctors • 1 specialist</p>
+                            <p class="text-xs text-slate-500 mt-1" data-i18n="stat.sharesSub">2 doctors • 1 specialist</p>
                         </div>
 
                         <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
                             <div class="flex justify-between items-center">
-                                <p class="text-[11px] font-bold text-slate-500 uppercase">Storage Used</p>
+                                <p class="text-[11px] font-bold text-slate-500 uppercase" data-i18n="stat.storage">Storage Used</p>
                                 <div class="w-8 h-8 rounded-lg bg-cyan-50 flex items-center justify-center text-cyan-600">
                                     <i data-lucide="hard-drive" class="w-4 h-4"></i>
                                 </div>
                             </div>
                             <p class="text-3xl font-extrabold text-[#0c2340] mt-3"><span class="stat-num" data-count="1.8" data-decimals="1">1.8</span> <span class="text-base font-normal text-slate-400">GB</span></p>
-                            <p class="text-xs text-slate-500 mt-1">of 5 GB available</p>
+                            <p class="text-xs text-slate-500 mt-1" data-i18n="stat.storageSub">of 5 GB available</p>
                         </div>
                     </div>
 
@@ -635,9 +635,9 @@
                                 <p class="text-xs text-slate-500" data-i18n="chart.subtitle">Track how your key results change over time</p>
                             </div>
                             <div class="flex gap-2" id="overviewChartChips">
-                                <button type="button" class="chart-chip active" data-metric="HBA1C">HbA1c</button>
-                                <button type="button" class="chart-chip" data-metric="FBG">Fasting glucose</button>
-                                <button type="button" class="chart-chip" data-metric="SBP">Systolic BP</button>
+                                <button type="button" class="chart-chip active" data-metric="HBA1C" data-i18n="lab.short.HBA1C">HbA1c</button>
+                                <button type="button" class="chart-chip" data-metric="FBG" data-i18n="lab.short.FBG">Fasting glucose</button>
+                                <button type="button" class="chart-chip" data-metric="SBP" data-i18n="lab.short.SBP">Systolic BP</button>
                             </div>
                         </div>
                         <div style="position:relative;height:240px"><canvas id="overviewChart" aria-label="Health trends chart" role="img"></canvas></div>
@@ -660,11 +660,11 @@
                         <div class="lg:col-span-7 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
                             <div class="flex justify-between items-center mb-4">
                                 <div>
-                                    <h3 class="font-bold text-[#0c2340] text-base">Recent medical records</h3>
-                                    <p class="text-xs text-slate-500">Your latest uploads and updates</p>
+                                    <h3 class="font-bold text-[#0c2340] text-base" data-i18n="recent.title">Recent medical records</h3>
+                                    <p class="text-xs text-slate-500" data-i18n="recent.sub">Your latest uploads and updates</p>
                                 </div>
                                 <button type="button" data-navigate="medical-files" class="text-xs font-bold text-cyan-700 hover:text-cyan-800 flex items-center gap-1">
-                                    <span>View all</span>
+                                    <span data-i18n="action.viewAll">View all</span>
                                     <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
                                 </button>
                             </div>
@@ -673,39 +673,39 @@
                                 <table class="w-full text-sm">
                                     <thead>
                                         <tr class="text-left text-[11px] text-slate-500 bg-slate-50">
-                                            <th class="p-3 rounded-l-lg font-bold">DOCUMENT</th>
-                                            <th class="p-3 font-bold">CONDITION</th>
-                                            <th class="p-3 font-bold">DATE</th>
-                                            <th class="p-3 rounded-r-lg font-bold">STATUS</th>
+                                            <th class="p-3 rounded-l-lg font-bold" data-i18n="th.document">DOCUMENT</th>
+                                            <th class="p-3 font-bold" data-i18n="th.condition">CONDITION</th>
+                                            <th class="p-3 font-bold" data-i18n="th.date">DATE</th>
+                                            <th class="p-3 rounded-r-lg font-bold" data-i18n="th.status">STATUS</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-slate-100">
                                         <tr class="hover:bg-slate-50 transition">
                                             <td class="p-3 font-bold text-[#0c2340]">
                                                 HbA1c Lab Report<br>
-                                                <span class="text-xs font-normal text-slate-500">Laboratory report</span>
+                                                <span class="text-xs font-normal text-slate-500" data-i18n="recent.lab">Laboratory report</span>
                                             </td>
-                                            <td class="p-3 text-slate-600">Diabetes</td>
+                                            <td class="p-3 text-slate-600" data-i18n="cond.diabetes">Diabetes</td>
                                             <td class="p-3 text-slate-600">18 Nov 2026</td>
-                                            <td class="p-3"><span class="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full">Shared</span></td>
+                                            <td class="p-3"><span class="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full" data-i18n="st.shared">Shared</span></td>
                                         </tr>
                                         <tr class="hover:bg-slate-50 transition">
                                             <td class="p-3 font-bold text-[#0c2340]">
                                                 Cardiology Follow-up<br>
-                                                <span class="text-xs font-normal text-slate-500">Specialist report</span>
+                                                <span class="text-xs font-normal text-slate-500" data-i18n="recent.specialist">Specialist report</span>
                                             </td>
-                                            <td class="p-3 text-slate-600">Hypertension</td>
+                                            <td class="p-3 text-slate-600" data-i18n="cond.hypertension">Hypertension</td>
                                             <td class="p-3 text-slate-600">12 Nov 2026</td>
-                                            <td class="p-3"><span class="bg-cyan-100 text-cyan-700 text-xs font-bold px-3 py-1 rounded-full">Private</span></td>
+                                            <td class="p-3"><span class="bg-cyan-100 text-cyan-700 text-xs font-bold px-3 py-1 rounded-full" data-i18n="st.private">Private</span></td>
                                         </tr>
                                         <tr class="hover:bg-slate-50 transition">
                                             <td class="p-3 font-bold text-[#0c2340]">
                                                 Kidney Function Test<br>
-                                                <span class="text-xs font-normal text-slate-500">Laboratory report</span>
+                                                <span class="text-xs font-normal text-slate-500" data-i18n="recent.lab">Laboratory report</span>
                                             </td>
-                                            <td class="p-3 text-slate-600">CKD</td>
+                                            <td class="p-3 text-slate-600" data-i18n="cond.ckdShort">CKD</td>
                                             <td class="p-3 text-slate-600">04 Nov 2026</td>
-                                            <td class="p-3"><span class="bg-cyan-100 text-cyan-700 text-xs font-bold px-3 py-1 rounded-full">Private</span></td>
+                                            <td class="p-3"><span class="bg-cyan-100 text-cyan-700 text-xs font-bold px-3 py-1 rounded-full" data-i18n="st.private">Private</span></td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -715,33 +715,33 @@
                         <div class="lg:col-span-5 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
                             <div>
                                 <div class="flex justify-between items-center mb-1">
-                                    <h3 class="font-bold text-[#0c2340] text-base">Recent activity</h3>
-                                    <a href="#" class="text-xs font-bold text-cyan-700 hover:underline">Activity log</a>
+                                    <h3 class="font-bold text-[#0c2340] text-base" data-i18n="act.title">Recent activity</h3>
+                                    <a href="#" class="text-xs font-bold text-cyan-700 hover:underline" data-i18n="act.log">Activity log</a>
                                 </div>
-                                <p class="text-xs text-slate-500 mb-4">Updates across your records</p>
+                                <p class="text-xs text-slate-500 mb-4" data-i18n="act.sub">Updates across your records</p>
 
                                 <div class="space-y-4 text-sm">
                                     <div class="flex justify-between items-start gap-3">
                                         <span class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5" style="background:#f5f3ff;color:#6d28d9"><i data-lucide="eye" class="w-4 h-4"></i></span>
                                         <div class="flex-1">
-                                            <p class="font-bold text-[#0c2340]">Dr. Ahmed viewed a shared report</p>
-                                            <p class="text-xs text-slate-500 mt-0.5">HbA1c Lab Report • Shared access</p>
+                                            <p class="font-bold text-[#0c2340]" data-i18n="act.i1t">Dr. Ahmed viewed a shared report</p>
+                                            <p class="text-xs text-slate-500 mt-0.5" data-i18n="act.i1s">HbA1c Lab Report • Shared access</p>
                                         </div>
                                         <span class="text-xs text-slate-400 font-medium">2h</span>
                                     </div>
                                     <div class="flex justify-between items-start gap-3">
                                         <span class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5" style="background:#ecfdf5;color:#047857"><i data-lucide="upload" class="w-4 h-4"></i></span>
                                         <div class="flex-1">
-                                            <p class="font-bold text-[#0c2340]">New file uploaded successfully</p>
-                                            <p class="text-xs text-slate-500 mt-0.5">HbA1c Lab Report • Diabetes</p>
+                                            <p class="font-bold text-[#0c2340]" data-i18n="act.i2t">New file uploaded successfully</p>
+                                            <p class="text-xs text-slate-500 mt-0.5" data-i18n="act.i2s">HbA1c Lab Report • Diabetes</p>
                                         </div>
                                         <span class="text-xs text-slate-400 font-medium">1d</span>
                                     </div>
                                     <div class="flex justify-between items-start gap-3">
                                         <span class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5" style="background:#fffbeb;color:#b45309"><i data-lucide="clock" class="w-4 h-4"></i></span>
                                         <div class="flex-1">
-                                            <p class="font-bold text-[#0c2340]">Access expires soon</p>
-                                            <p class="text-xs text-slate-500 mt-0.5">Dr. Salma Nabil • 25 Nov 2026</p>
+                                            <p class="font-bold text-[#0c2340]" data-i18n="act.i3t">Access expires soon</p>
+                                            <p class="text-xs text-slate-500 mt-0.5" data-i18n="act.i3s">Dr. Salma Nabil • 25 Nov 2026</p>
                                         </div>
                                         <span class="text-xs text-slate-400 font-medium">2d</span>
                                     </div>
@@ -750,14 +750,14 @@
 
                             <div class="border-t border-slate-100 mt-5 pt-4">
                                 <div class="flex justify-between items-center">
-                                    <p class="font-bold text-[#0c2340] text-sm">Your health profile</p>
-                                    <span class="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-0.5 rounded-full">Up to date</span>
+                                    <p class="font-bold text-[#0c2340] text-sm" data-i18n="profile.title">Your health profile</p>
+                                    <span class="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-0.5 rounded-full" data-i18n="st.upToDate">Up to date</span>
                                 </div>
-                                <p class="text-xs text-slate-500 mt-1">3 conditions are being actively tracked</p>
+                                <p class="text-xs text-slate-500 mt-1" data-i18n="profile.sub">3 conditions are being actively tracked</p>
                                 <div class="flex flex-wrap gap-2 mt-3">
-                                    <span class="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-xs font-semibold">Diabetes</span>
-                                    <span class="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-xs font-semibold">Hypertension</span>
-                                    <span class="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-xs font-semibold">CKD</span>
+                                    <span class="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-xs font-semibold" data-i18n="cond.diabetes">Diabetes</span>
+                                    <span class="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-xs font-semibold" data-i18n="cond.hypertension">Hypertension</span>
+                                    <span class="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-xs font-semibold" data-i18n="cond.ckdShort">CKD</span>
                                 </div>
                             </div>
                         </div>
@@ -771,40 +771,40 @@
                 <section id="view-medical-files" class="portal-subview hidden">
                     <div class="page-heading">
                         <div>
-                            <span class="eyebrow">RECORD LIBRARY</span>
-                            <h1>My Medical Files</h1>
-                            <p>All your reports, prescriptions, and documents are organized in one secure archive.</p>
+                            <span class="eyebrow" data-i18n="mf.eyebrow">RECORD LIBRARY</span>
+                            <h1 data-i18n="mf.title">My Medical Files</h1>
+                            <p data-i18n="mf.sub">All your reports, prescriptions, and documents are organized in one secure archive.</p>
                         </div>
                         <button type="button" class="upload-btn" id="uploadBtn" data-navigate="upload-file">
                             <i data-lucide="plus"></i>
-                            <span>Upload Record</span>
+                            <span data-i18n="nav.upload">Upload Record</span>
                         </button>
                     </div>
 
                     <div class="toolbar">
                         <div class="search-box">
                             <i data-lucide="search"></i>
-                            <input id="searchInput" placeholder="Search files by name...">
+                            <input id="searchInput" placeholder="Search files by name..." data-i18n-ph="mf.search">
                         </div>
 
                         <select id="conditionFilter">
-                            <option value="all">All conditions</option>
-                            <option value="diabetes">Diabetes</option>
-                            <option value="hypertension">Hypertension</option>
-                            <option value="cardiac">Cardiac</option>
-                            <option value="ckd">Chronic kidney disease</option>
+                            <option value="all" data-i18n="mf.allConditions">All conditions</option>
+                            <option value="diabetes" data-i18n="cond.diabetes">Diabetes</option>
+                            <option value="hypertension" data-i18n="cond.hypertension">Hypertension</option>
+                            <option value="cardiac" data-i18n="cond.cardiac">Cardiac</option>
+                            <option value="ckd" data-i18n="cond.ckd">Chronic kidney disease</option>
                         </select>
 
                         <select id="categoryFilter">
-                            <option value="all">All categories</option>
-                            <option value="lab">Lab Report</option>
-                            <option value="prescription">Prescription</option>
-                            <option value="imaging">Imaging</option>
-                            <option value="specialist">Specialist Report</option>
-                            <option value="discharge">Discharge Summary</option>
+                            <option value="all" data-i18n="mf.allCategories">All categories</option>
+                            <option value="lab" data-i18n="cat.lab">Lab Report</option>
+                            <option value="prescription" data-i18n="cat.prescription">Prescription</option>
+                            <option value="imaging" data-i18n="cat.imaging">Imaging</option>
+                            <option value="specialist" data-i18n="cat.specialist">Specialist Report</option>
+                            <option value="discharge" data-i18n="cat.discharge">Discharge Summary</option>
                         </select>
 
-                        <button type="button" class="filter-btn" id="resetBtn">Reset filters</button>
+                        <button type="button" class="filter-btn" id="resetBtn" data-i18n="mf.reset">Reset filters</button>
                         <span class="record-count" id="recordCount">6 Records</span>
                     </div>
 
@@ -812,22 +812,22 @@
                         <div class="records-card">
                             <div class="card-heading">
                                 <div>
-                                    <h2>All medical records</h2>
-                                    <p>Securely stored medical documents</p>
+                                    <h2 data-i18n="mf.allRecords">All medical records</h2>
+                                    <p data-i18n="mf.allRecordsSub">Securely stored medical documents</p>
                                 </div>
-                                <button type="button" class="sort-btn" id="sortRecordsBtn">Newest first ⌄</button>
+                                <button type="button" class="sort-btn" id="sortRecordsBtn" data-i18n="mf.newest">Newest first</button>
                             </div>
 
                             <div class="table-wrapper">
                                 <table class="records-table">
                                     <thead>
                                         <tr>
-                                            <th>FILE NAME</th>
-                                            <th>CATEGORY</th>
-                                            <th>TYPE</th>
-                                            <th>UPLOADED</th>
-                                            <th>STATUS</th>
-                                            <th>ACTION</th>
+                                            <th data-i18n="th.fileName">FILE NAME</th>
+                                            <th data-i18n="th.category">CATEGORY</th>
+                                            <th data-i18n="th.type">TYPE</th>
+                                            <th data-i18n="th.uploaded">UPLOADED</th>
+                                            <th data-i18n="th.status">STATUS</th>
+                                            <th data-i18n="th.action">ACTION</th>
                                         </tr>
                                     </thead>
                                     <tbody id="recordsTable">
@@ -843,21 +843,21 @@
 
                         <div class="right-column">
                             <div class="side-card">
-                                <h3>Filter by condition</h3>
-                                <div class="condition-row">All conditions <span>42</span></div>
-                                <div class="condition-row">Diabetes <span>18</span></div>
-                                <div class="condition-row">Hypertension <span>12</span></div>
-                                <div class="condition-row">Chronic kidney disease <span>6</span></div>
+                                <h3 data-i18n="mf.filterCond">Filter by condition</h3>
+                                <div class="condition-row"><span data-i18n="mf.allConditions">All conditions</span> <span>42</span></div>
+                                <div class="condition-row"><span data-i18n="cond.diabetes">Diabetes</span> <span>18</span></div>
+                                <div class="condition-row"><span data-i18n="cond.hypertension">Hypertension</span> <span>12</span></div>
+                                <div class="condition-row"><span data-i18n="cond.ckd">Chronic kidney disease</span> <span>6</span></div>
                             </div>
 
                             <div class="side-card archive-card">
-                                <h3>Archive</h3>
-                                <p>Keep older records organized and accessible whenever you need them.</p>
+                                <h3 data-i18n="mf.archive">Archive</h3>
+                                <p data-i18n="mf.archiveSub">Keep older records organized and accessible whenever you need them.</p>
                                 <div class="archive-info">
                                     <i data-lucide="archive"></i>
                                     <strong id="archiveCount">0 Files</strong>
                                 </div>
-                                <button type="button" class="archive-btn" data-navigate="timeline-archive">Open archive →</button>
+                                <button type="button" class="archive-btn" data-navigate="timeline-archive" data-i18n="mf.openArchive">Open archive →</button>
                             </div>
                         </div>
                     </div>
@@ -870,71 +870,71 @@
                 <section id="view-upload-file" class="portal-subview hidden">
                     <div class="page-heading">
                         <div>
-                            <span class="eyebrow">NEW RECORD</span>
-                            <h1>Upload a medical file</h1>
-                            <p>Add a report, prescription or scan with its details so it stays easy to find.</p>
+                            <span class="eyebrow" data-i18n="up.eyebrow">NEW RECORD</span>
+                            <h1 data-i18n="up.title">Upload a medical file</h1>
+                            <p data-i18n="up.sub">Add a report, prescription or scan with its details so it stays easy to find.</p>
                         </div>
                     </div>
 
                     <div class="bg-white p-6 md:p-8 rounded-2xl border border-slate-100 shadow-sm max-w-3xl">
                         <form id="uploadForm" class="space-y-5">
                             <div>
-                                <label class="text-xs font-bold text-[#0c2340] block mb-1.5">File title *</label>
-                                <input type="text" name="title" required placeholder="e.g. HbA1c Lab Report"
+                                <label class="text-xs font-bold text-[#0c2340] block mb-1.5" data-i18n="up.fileTitle">File title *</label>
+                                <input type="text" name="title" required placeholder="e.g. HbA1c Lab Report" data-i18n-ph="up.fileTitlePh"
                                     class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-cyan-500 transition">
                             </div>
 
                             <div class="grid md:grid-cols-2 gap-5">
                                 <div>
-                                    <label class="text-xs font-bold text-[#0c2340] block mb-1.5">Category *</label>
+                                    <label class="text-xs font-bold text-[#0c2340] block mb-1.5" data-i18n="up.category">Category *</label>
                                     <select name="category" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-cyan-500 transition">
-                                        <option value="lab">Lab Report</option>
-                                        <option value="prescription">Prescription</option>
-                                        <option value="imaging">Imaging</option>
-                                        <option value="specialist">Specialist Report</option>
-                                        <option value="discharge">Discharge Summary</option>
+                                        <option value="lab" data-i18n="cat.lab">Lab Report</option>
+                                        <option value="prescription" data-i18n="cat.prescription">Prescription</option>
+                                        <option value="imaging" data-i18n="cat.imaging">Imaging</option>
+                                        <option value="specialist" data-i18n="cat.specialist">Specialist Report</option>
+                                        <option value="discharge" data-i18n="cat.discharge">Discharge Summary</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="text-xs font-bold text-[#0c2340] block mb-1.5">Chronic condition *</label>
+                                    <label class="text-xs font-bold text-[#0c2340] block mb-1.5" data-i18n="up.condition">Chronic condition *</label>
                                     <select name="condition" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-cyan-500 transition">
-                                        <option value="diabetes">Diabetes</option>
-                                        <option value="hypertension">Hypertension</option>
-                                        <option value="cardiac">Cardiac</option>
-                                        <option value="ckd">Chronic kidney disease</option>
+                                        <option value="diabetes" data-i18n="cond.diabetes">Diabetes</option>
+                                        <option value="hypertension" data-i18n="cond.hypertension">Hypertension</option>
+                                        <option value="cardiac" data-i18n="cond.cardiac">Cardiac</option>
+                                        <option value="ckd" data-i18n="cond.ckd">Chronic kidney disease</option>
                                     </select>
                                 </div>
                             </div>
 
                             <div class="grid md:grid-cols-2 gap-5">
                                 <div>
-                                    <label class="text-xs font-bold text-[#0c2340] block mb-1.5">Record date *</label>
+                                    <label class="text-xs font-bold text-[#0c2340] block mb-1.5" data-i18n="up.date">Record date *</label>
                                     <input type="date" name="record_date" required value="2026-11-27"
                                         class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-cyan-500 transition">
                                 </div>
                                 <div>
-                                    <label class="text-xs font-bold text-[#0c2340] block mb-1.5">Specialty</label>
-                                    <input type="text" name="specialty" placeholder="e.g. Cardiology"
+                                    <label class="text-xs font-bold text-[#0c2340] block mb-1.5" data-i18n="up.specialty">Specialty</label>
+                                    <input type="text" name="specialty" placeholder="e.g. Cardiology" data-i18n-ph="up.specialtyPh"
                                         class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-cyan-500 transition">
                                 </div>
                             </div>
 
                             <div class="grid md:grid-cols-2 gap-5">
                                 <div>
-                                    <label class="text-xs font-bold text-[#0c2340] block mb-1.5">Issuing doctor</label>
-                                    <input type="text" name="doctor" placeholder="e.g. Dr. Ahmed Farouk"
+                                    <label class="text-xs font-bold text-[#0c2340] block mb-1.5" data-i18n="up.doctor">Issuing doctor</label>
+                                    <input type="text" name="doctor" placeholder="e.g. Dr. Ahmed Farouk" data-i18n-ph="up.doctorPh"
                                         class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-cyan-500 transition">
                                 </div>
                                 <div>
-                                    <label class="text-xs font-bold text-[#0c2340] block mb-1.5">Issuing facility</label>
-                                    <input type="text" name="facility" placeholder="e.g. Cairo Lab"
+                                    <label class="text-xs font-bold text-[#0c2340] block mb-1.5" data-i18n="up.facility">Issuing facility</label>
+                                    <input type="text" name="facility" placeholder="e.g. Cairo Lab" data-i18n-ph="up.facilityPh"
                                         class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-cyan-500 transition">
                                 </div>
                             </div>
 
                             <div>
-                                <label class="text-xs font-bold text-[#0c2340] block mb-1.5">File *</label>
-                                <div id="dropzone" class="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-slate-200 rounded-2xl p-8 cursor-pointer hover:border-cyan-400 hover:bg-cyan-50/40 transition text-center" role="button" tabindex="0" aria-label="Drop a file or click to browse">
+                                <label class="text-xs font-bold text-[#0c2340] block mb-1.5" data-i18n="up.file">File *</label>
+                                <div id="dropzone" class="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-slate-200 rounded-2xl p-8 cursor-pointer hover:border-cyan-400 hover:bg-cyan-50/40 transition text-center" role="button" tabindex="0" aria-label="Drop a file or click to browse" data-i18n-aria="upload.drop">
                                     <i data-lucide="cloud-upload" class="w-8 h-8 text-cyan-600"></i>
                                     <span id="uploadFileName" class="text-sm text-slate-500" data-i18n="upload.drop">Drag & drop your file here, or click to browse (PDF, JPG, PNG up to 10 MB)</span>
                                     <input type="file" id="uploadFileInput" name="file" accept=".pdf,.jpg,.jpeg,.png" required class="hidden">
@@ -950,7 +950,7 @@
                                 </div>
                             </div>
 
-                            <button type="submit" class="w-full bg-[#0c2340] hover:bg-blue-950 text-white font-semibold py-3.5 rounded-xl text-sm transition">
+                            <button type="submit" class="w-full bg-[#0c2340] hover:bg-blue-950 text-white font-semibold py-3.5 rounded-xl text-sm transition" data-i18n="up.save">
                                 Save record →
                             </button>
                         </form>
@@ -963,17 +963,17 @@
                      ---------------------------------------------------------- -->
                 <section id="view-sharing-access" class="portal-subview hidden">
                     <div class="mb-6">
-                        <p class="text-xs font-bold tracking-widest text-cyan-700">PRIVACY CONTROLS</p>
-                        <h2 class="text-3xl font-extrabold text-[#0c2340] mt-1">Sharing & access</h2>
-                        <p class="text-sm text-slate-500 mt-1">Manage doctor permissions, expiry dates, and the records you choose to share.</p>
+                        <p class="text-xs font-bold tracking-widest text-cyan-700" data-i18n="sh.eyebrow">PRIVACY CONTROLS</p>
+                        <h2 class="text-3xl font-extrabold text-[#0c2340] mt-1" data-i18n="sh.title">Sharing & access</h2>
+                        <p class="text-sm text-slate-500 mt-1" data-i18n="sh.sub">Manage doctor permissions, expiry dates, and the records you choose to share.</p>
                     </div>
 
                     <div class="grid lg:grid-cols-12 gap-6 items-start">
                         <div class="lg:col-span-7 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
                             <div class="flex justify-between items-start mb-5">
                                 <div>
-                                    <h3 class="font-bold text-[#0c2340] text-base">Active sharing permissions</h3>
-                                    <p class="text-xs text-slate-500 mt-0.5">You decide which doctor sees each selected record</p>
+                                    <h3 class="font-bold text-[#0c2340] text-base" data-i18n="sh.active">Active sharing permissions</h3>
+                                    <p class="text-xs text-slate-500 mt-0.5" data-i18n="sh.activeSub">You decide which doctor sees each selected record</p>
                                 </div>
                                 <span id="shareCountBadge" class="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full">3 active shares</span>
                             </div>
@@ -983,8 +983,8 @@
                             </div>
 
                             <div class="flex justify-between items-center mt-5 pt-4 border-t border-slate-100">
-                                <p class="text-xs text-slate-400">Access can be revoked at any time.</p>
-                                <a href="#" class="text-xs font-bold text-cyan-700 hover:underline">View sharing history</a>
+                                <p class="text-xs text-slate-400" data-i18n="sh.revokeNote">Access can be revoked at any time.</p>
+                                <a href="#" class="text-xs font-bold text-cyan-700 hover:underline" data-i18n="sh.history">View sharing history</a>
                             </div>
                         </div>
 
@@ -992,8 +992,8 @@
                         <div class="lg:col-span-5 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
                             <div class="flex justify-between items-start">
                                 <div>
-                                    <h3 class="font-bold text-[#0c2340] text-base">Create a new share</h3>
-                                    <p class="text-xs text-slate-500 mt-0.5">Grant access to selected records securely</p>
+                                    <h3 class="font-bold text-[#0c2340] text-base" data-i18n="sh.new">Create a new share</h3>
+                                    <p class="text-xs text-slate-500 mt-0.5" data-i18n="sh.newSub">Grant access to selected records securely</p>
                                 </div>
                                 <div class="w-9 h-9 bg-cyan-50 rounded-lg flex items-center justify-center text-cyan-700">
                                     <i data-lucide="share-2" class="w-4 h-4"></i>
@@ -1002,18 +1002,18 @@
 
                             <form id="newShareForm" class="mt-5 space-y-4">
                                 <div>
-                                    <label class="text-xs font-bold text-[#0c2340] block mb-1.5">Select a verified doctor</label>
+                                    <label class="text-xs font-bold text-[#0c2340] block mb-1.5" data-i18n="sh.doctor">Select a verified doctor</label>
                                     <select id="shareDoctor" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-cyan-500 transition">
-                                        <option>Dr. Ahmed Farouk (Internal Medicine)</option>
-                                        <option>Dr. Salma Nabil (Cardiology)</option>
-                                        <option>Dr. Mariam Khaled (Nephrology)</option>
+                                        <option data-i18n="sh.doc1">Dr. Ahmed Farouk (Internal Medicine)</option>
+                                        <option data-i18n="sh.doc2">Dr. Salma Nabil (Cardiology)</option>
+                                        <option data-i18n="sh.doc3">Dr. Mariam Khaled (Nephrology)</option>
                                     </select>
                                 </div>
 
                                 <div>
-                                    <label class="text-xs font-bold text-[#0c2340] block mb-1.5">Choose files to share</label>
+                                    <label class="text-xs font-bold text-[#0c2340] block mb-1.5" data-i18n="sh.files">Choose files to share</label>
                                     <select id="shareFiles" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-cyan-500 transition">
-                                        <option>All Current Medical Files</option>
+                                        <option data-i18n="sh.allFiles">All Current Medical Files</option>
                                         <option>HbA1c Lab Report</option>
                                         <option>Cardiology Follow-up</option>
                                         <option>Kidney Function Test</option>
@@ -1022,30 +1022,30 @@
                                 </div>
 
                                 <div>
-                                    <label class="text-xs font-bold text-[#0c2340] block mb-1.5">Access expires on</label>
+                                    <label class="text-xs font-bold text-[#0c2340] block mb-1.5" data-i18n="sh.expiry">Access expires on</label>
                                     <input type="date" id="shareExpiry" value="2026-12-30" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-cyan-500 transition">
                                 </div>
 
                                 <div class="pt-2">
-                                    <p class="text-[11px] font-bold tracking-widest text-slate-400 mb-2 uppercase">Permission Settings</p>
+                                    <p class="text-[11px] font-bold tracking-widest text-slate-400 mb-2 uppercase" data-i18n="sh.perms">Permission Settings</p>
                                     <label class="flex justify-between items-center border-b border-slate-100 py-2.5 text-sm text-slate-700 cursor-pointer">
-                                        <span>View selected files</span>
+                                        <span data-i18n="sh.perm1">View selected files</span>
                                         <input type="checkbox" checked class="w-4 h-4 accent-[#0c2340]">
                                     </label>
                                     <label class="flex justify-between items-center border-b border-slate-100 py-2.5 text-sm text-slate-700 cursor-pointer">
-                                        <span>Download shared files</span>
+                                        <span data-i18n="sh.perm2">Download shared files</span>
                                         <input type="checkbox" checked class="w-4 h-4 accent-[#0c2340]">
                                     </label>
                                     <label class="flex justify-between items-center py-2.5 text-sm text-slate-700 cursor-pointer">
-                                        <span>View lab trends</span>
+                                        <span data-i18n="sh.perm3">View lab trends</span>
                                         <input type="checkbox" checked class="w-4 h-4 accent-[#0c2340]">
                                     </label>
                                 </div>
 
-                                <button type="submit" class="w-full bg-[#0c2340] hover:bg-blue-950 text-white font-semibold py-3.5 rounded-xl text-sm transition">
+                                <button type="submit" class="w-full bg-[#0c2340] hover:bg-blue-950 text-white font-semibold py-3.5 rounded-xl text-sm transition" data-i18n="sh.review">
                                     Review & share securely →
                                 </button>
-                                <p class="text-[11px] text-center text-slate-400">The doctor will only be granted access to the files you select.</p>
+                                <p class="text-[11px] text-center text-slate-400" data-i18n="sh.note">The doctor will only be granted access to the files you select.</p>
                             </form>
                         </div>
                     </div>
@@ -1057,52 +1057,52 @@
                      ---------------------------------------------------------- -->
                 <section id="view-lab-trends" class="portal-subview hidden">
                     <div class="mb-6">
-                        <p class="text-xs font-bold tracking-widest text-cyan-700">CLINICAL METRICS</p>
-                        <h2 class="text-3xl font-extrabold text-[#0c2340] mt-1">Lab Trends & Biomarkers</h2>
-                        <p class="text-sm text-slate-500 mt-1">Track chronic indicators over time with automatic lab result parsing.</p>
+                        <p class="text-xs font-bold tracking-widest text-cyan-700" data-i18n="lt.eyebrow">CLINICAL METRICS</p>
+                        <h2 class="text-3xl font-extrabold text-[#0c2340] mt-1" data-i18n="lt.title">Lab Trends & Biomarkers</h2>
+                        <p class="text-sm text-slate-500 mt-1" data-i18n="lt.sub">Track chronic indicators over time with automatic lab result parsing.</p>
                     </div>
 
                     <div class="grid md:grid-cols-3 gap-5 mb-6">
                         <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
                             <div class="flex justify-between items-start">
                                 <div>
-                                    <p class="text-xs font-bold text-slate-500">HbA1c (Glycated Hemoglobin)</p>
+                                    <p class="text-xs font-bold text-slate-500" data-i18n="lt.hba1c">HbA1c (Glycated Hemoglobin)</p>
                                     <p class="text-2xl font-black text-[#0c2340] mt-1">6.4 <span class="text-xs font-semibold text-slate-400">%</span></p>
                                 </div>
-                                <span class="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-0.5 rounded-full">Target &lt; 7.0</span>
+                                <span class="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-0.5 rounded-full" data-i18n="lt.target">Target &lt; 7.0</span>
                             </div>
                             <div class="w-full bg-slate-100 h-2 rounded-full mt-4 overflow-hidden">
                                 <div class="bg-green-500 h-full rounded-full" style="width: 64%"></div>
                             </div>
-                            <p class="text-xs text-slate-400 mt-2">Latest test: 18 Nov 2026 (Down 0.3%)</p>
+                            <p class="text-xs text-slate-400 mt-2" data-i18n="lt.latestHba1c">Latest test: 18 Nov 2026 (Down 0.3%)</p>
                         </div>
 
                         <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
                             <div class="flex justify-between items-start">
                                 <div>
-                                    <p class="text-xs font-bold text-slate-500">Blood Pressure</p>
+                                    <p class="text-xs font-bold text-slate-500" data-i18n="lt.bp">Blood Pressure</p>
                                     <p class="text-2xl font-black text-[#0c2340] mt-1">128/82 <span class="text-xs font-semibold text-slate-400">mmHg</span></p>
                                 </div>
-                                <span class="bg-yellow-100 text-yellow-800 text-xs font-bold px-2.5 py-0.5 rounded-full">Stage 1 Pre</span>
+                                <span class="bg-yellow-100 text-yellow-800 text-xs font-bold px-2.5 py-0.5 rounded-full" data-i18n="lt.stage1">Stage 1 Pre</span>
                             </div>
                             <div class="w-full bg-slate-100 h-2 rounded-full mt-4 overflow-hidden">
                                 <div class="bg-yellow-500 h-full rounded-full" style="width: 72%"></div>
                             </div>
-                            <p class="text-xs text-slate-400 mt-2">Latest reading: 12 Nov 2026</p>
+                            <p class="text-xs text-slate-400 mt-2" data-i18n="lt.latestBp">Latest reading: 12 Nov 2026</p>
                         </div>
 
                         <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
                             <div class="flex justify-between items-start">
                                 <div>
-                                    <p class="text-xs font-bold text-slate-500">eGFR (Kidney Function)</p>
+                                    <p class="text-xs font-bold text-slate-500" data-i18n="lt.egfr">eGFR (Kidney Function)</p>
                                     <p class="text-2xl font-black text-[#0c2340] mt-1">88 <span class="text-xs font-semibold text-slate-400">mL/min</span></p>
                                 </div>
-                                <span class="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-0.5 rounded-full">Normal Range</span>
+                                <span class="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-0.5 rounded-full" data-i18n="lt.normal">Normal Range</span>
                             </div>
                             <div class="w-full bg-slate-100 h-2 rounded-full mt-4 overflow-hidden">
                                 <div class="bg-green-500 h-full rounded-full" style="width: 88%"></div>
                             </div>
-                            <p class="text-xs text-slate-400 mt-2">Latest test: 04 Nov 2026</p>
+                            <p class="text-xs text-slate-400 mt-2" data-i18n="lt.latestEgfr">Latest test: 04 Nov 2026</p>
                         </div>
                     </div>
 
@@ -1111,8 +1111,8 @@
                         <div class="lg:col-span-7 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
                             <div class="flex justify-between items-center mb-4 flex-wrap gap-3">
                                 <div>
-                                    <h3 class="font-bold text-[#0c2340]">Results & trend chart</h3>
-                                    <p class="text-xs text-slate-500">Values outside the reference range are highlighted</p>
+                                    <h3 class="font-bold text-[#0c2340]" data-i18n="lt.results">Results & trend chart</h3>
+                                    <p class="text-xs text-slate-500" data-i18n="lt.resultsSub">Values outside the reference range are highlighted</p>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <button type="button" id="exportCsvBtn" class="flex items-center gap-1.5 text-xs font-bold text-cyan-700 border border-cyan-200 bg-cyan-50 hover:bg-cyan-100 px-3 py-2 rounded-xl transition">
@@ -1124,21 +1124,21 @@
                                 </div>
                             </div>
                             <div class="flex flex-wrap items-center gap-2 mb-4">
-                                <button type="button" class="chart-chip active" data-labmetric="HBA1C">HbA1c</button>
+                                <button type="button" class="chart-chip active" data-labmetric="HBA1C" data-i18n="lab.short.HBA1C">HbA1c</button>
                                 <button type="button" class="chart-chip" data-labmetric="FBG" data-i18n="chart.fbg">Fasting glucose</button>
                                 <button type="button" class="chart-chip" data-labmetric="SBP" data-i18n="chart.sbp">Systolic BP</button>
-                                <button type="button" class="chart-chip" data-labmetric="EGFR">eGFR</button>
+                                <button type="button" class="chart-chip" data-labmetric="EGFR" data-i18n="lab.short.EGFR">eGFR</button>
                                 <span class="mx-1"></span>
                                 <label class="text-xs font-semibold text-slate-500" data-i18n="lab.from">From</label>
                                 <input type="date" id="labDateFrom" value="2026-01-01" class="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs outline-none focus:border-cyan-500 transition">
                                 <label class="text-xs font-semibold text-slate-500" data-i18n="lab.to">To</label>
                                 <input type="date" id="labDateTo" value="2026-12-31" class="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs outline-none focus:border-cyan-500 transition">
                                 <select id="labTestSelect" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-cyan-500 transition">
-                                    <option value="all">All tests</option>
-                                    <option value="HBA1C">HbA1c</option>
-                                    <option value="FBG">Fasting glucose</option>
-                                    <option value="SBP">Systolic BP</option>
-                                    <option value="EGFR">eGFR</option>
+                                    <option value="all" data-i18n="lt.allTests">All tests</option>
+                                    <option value="HBA1C" data-i18n="lab.short.HBA1C">HbA1c</option>
+                                    <option value="FBG" data-i18n="lab.short.FBG">Fasting glucose</option>
+                                    <option value="SBP" data-i18n="lab.short.SBP">Systolic BP</option>
+                                    <option value="EGFR" data-i18n="lab.short.EGFR">eGFR</option>
                                 </select>
                             </div>
 
@@ -1149,11 +1149,11 @@
                                 <table class="w-full text-sm">
                                     <thead>
                                         <tr class="text-left text-xs text-slate-400 uppercase tracking-wider border-b border-slate-100">
-                                            <th class="py-2">Test</th>
-                                            <th>Value</th>
-                                            <th>Reference</th>
-                                            <th>Date</th>
-                                            <th>Flag</th>
+                                            <th class="py-2" data-i18n="th.test">Test</th>
+                                            <th data-i18n="th.value">Value</th>
+                                            <th data-i18n="th.reference">Reference</th>
+                                            <th data-i18n="th.date">Date</th>
+                                            <th data-i18n="th.flag">Flag</th>
                                         </tr>
                                     </thead>
                                     <tbody id="labResultsTable" class="divide-y divide-slate-50"></tbody>
@@ -1163,29 +1163,29 @@
 
                         <!-- ADD RESULT -->
                         <div class="lg:col-span-5 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                            <h3 class="font-bold text-[#0c2340]">Add a lab result</h3>
-                            <p class="text-xs text-slate-500 mt-0.5">Enter the value exactly as printed on your report</p>
+                            <h3 class="font-bold text-[#0c2340]" data-i18n="lt.add">Add a lab result</h3>
+                            <p class="text-xs text-slate-500 mt-0.5" data-i18n="lt.addSub">Enter the value exactly as printed on your report</p>
                             <form id="labEntryForm" class="mt-5 space-y-4">
                                 <div>
-                                    <label class="text-xs font-bold text-[#0c2340] block mb-1.5">Test *</label>
+                                    <label class="text-xs font-bold text-[#0c2340] block mb-1.5" data-i18n="lt.test">Test *</label>
                                     <select name="test" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-cyan-500 transition">
-                                        <option value="HBA1C">HbA1c (%)</option>
-                                        <option value="FBG">Fasting glucose (mg/dL)</option>
-                                        <option value="SBP">Systolic blood pressure (mmHg)</option>
-                                        <option value="EGFR">eGFR (mL/min)</option>
+                                        <option value="HBA1C" data-i18n="lt.opt.hba1c">HbA1c (%)</option>
+                                        <option value="FBG" data-i18n="lt.opt.fbg">Fasting glucose (mg/dL)</option>
+                                        <option value="SBP" data-i18n="lt.opt.sbp">Systolic blood pressure (mmHg)</option>
+                                        <option value="EGFR" data-i18n="lt.opt.egfr">eGFR (mL/min)</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="text-xs font-bold text-[#0c2340] block mb-1.5">Value *</label>
-                                    <input type="number" name="value" step="0.01" min="0" required placeholder="e.g. 6.4"
+                                    <label class="text-xs font-bold text-[#0c2340] block mb-1.5" data-i18n="lt.value">Value *</label>
+                                    <input type="number" name="value" step="0.01" min="0" required placeholder="e.g. 6.4" data-i18n-ph="lt.valuePh"
                                         class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-cyan-500 transition">
                                 </div>
                                 <div>
-                                    <label class="text-xs font-bold text-[#0c2340] block mb-1.5">Test date *</label>
+                                    <label class="text-xs font-bold text-[#0c2340] block mb-1.5" data-i18n="lt.date">Test date *</label>
                                     <input type="date" name="measured_at" required value="2026-11-27"
                                         class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-cyan-500 transition">
                                 </div>
-                                <button type="submit" class="w-full bg-[#0c2340] hover:bg-blue-950 text-white font-semibold py-3 rounded-xl text-sm transition">
+                                <button type="submit" class="w-full bg-[#0c2340] hover:bg-blue-950 text-white font-semibold py-3 rounded-xl text-sm transition" data-i18n="lt.addBtn">
                                     Add result →
                                 </button>
                             </form>
@@ -1199,9 +1199,9 @@
                      ---------------------------------------------------------- -->
                 <section id="view-timeline-archive" class="portal-subview hidden">
                     <div class="mb-6">
-                        <p class="text-xs font-bold tracking-widest text-cyan-700">CHRONOLOGICAL HISTORY</p>
-                        <h2 class="text-3xl font-extrabold text-[#0c2340] mt-1">Timeline & Archive</h2>
-                        <p class="text-sm text-slate-500 mt-1">Comprehensive historical record of visits, prescriptions, and lab tests.</p>
+                        <p class="text-xs font-bold tracking-widest text-cyan-700" data-i18n="tl.eyebrow">CHRONOLOGICAL HISTORY</p>
+                        <h2 class="text-3xl font-extrabold text-[#0c2340] mt-1" data-i18n="tl.title">Timeline & Archive</h2>
+                        <p class="text-sm text-slate-500 mt-1" data-i18n="tl.sub">Comprehensive historical record of visits, prescriptions, and lab tests.</p>
                     </div>
 
                     <div class="flex flex-wrap gap-2 mb-5" id="timelineFilters">
@@ -1221,8 +1221,8 @@
                         </div>
 
                         <div class="lg:col-span-5 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                            <h3 class="font-bold text-[#0c2340]">Archived files</h3>
-                            <p class="text-xs text-slate-500 mt-0.5 mb-5">Archived records are kept safe and can be restored at any time.</p>
+                            <h3 class="font-bold text-[#0c2340]" data-i18n="tl.archived">Archived files</h3>
+                            <p class="text-xs text-slate-500 mt-0.5 mb-5" data-i18n="tl.archivedSub">Archived records are kept safe and can be restored at any time.</p>
                             <div id="archiveList" class="space-y-3">
                                 <!-- Rendered by js/script.js from demo state -->
                             </div>
@@ -1230,7 +1230,7 @@
                     </div>
                 </section>
 
-                <p class="text-right text-[10px] text-slate-400 mt-8">CHRONICARE HEALTH SYSTEMS</p>
+                <p class="text-right text-[10px] text-slate-400 mt-8" data-i18n="app.footer">CHRONICARE HEALTH SYSTEMS</p>
             </main>
         </div>
     </div>
@@ -1264,19 +1264,19 @@
             <button type="button" class="close-file-modal absolute top-4 right-4 text-slate-400 hover:text-slate-600">
                 <i data-lucide="x" class="w-5 h-5"></i>
             </button>
-            <p class="text-xs font-bold tracking-widest text-cyan-700">MEDICAL RECORD</p>
+            <p class="text-xs font-bold tracking-widest text-cyan-700" data-i18n="fm.eyebrow">MEDICAL RECORD</p>
             <h3 id="modalFileName" class="text-xl font-extrabold text-[#0c2340] mt-1 mb-5"></h3>
             <div id="modalFileBody"></div>
-            <button type="button" class="close-file-modal w-full mt-6 bg-slate-100 hover:bg-slate-200 text-[#0c2340] font-semibold py-3 rounded-xl text-sm transition">Close</button>
+            <button type="button" class="close-file-modal w-full mt-6 bg-slate-100 hover:bg-slate-200 text-[#0c2340] font-semibold py-3 rounded-xl text-sm transition" data-i18n="action.close">Close</button>
         </div>
     </div>
 
     <!-- Application Script -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
-    <script src="./js/shared.js?v=5"></script>
-    <script src="./js/i18n.js?v=5"></script>
-    <script src="./js/script.js?v=5"></script>
+    <script src="./js/shared.js?v=6"></script>
+    <script src="./js/i18n.js?v=6"></script>
+    <script src="./js/script.js?v=6"></script>
 
     <!-- Floating theme + language controls -->
     <div class="fab-stack">
