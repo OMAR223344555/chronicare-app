@@ -16,7 +16,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./css/style.css?v=6">
+    <link rel="stylesheet" href="./css/style.css?v=7">
 </head>
 
 <body class="bg-slate-100 min-h-screen font-[Inter] antialiased">
@@ -44,7 +44,11 @@
 
             <p class="text-xs font-bold text-slate-400 tracking-wider mb-2" data-i18n="nav.section.management">MANAGEMENT</p>
             <div class="space-y-1 text-slate-600">
-                <button type="button" class="portal-nav-btn w-full flex items-center gap-3 p-3 rounded-xl transition text-sm font-semibold bg-cyan-50 text-[#0c2340]" data-target="users" data-navigate="users">
+                <button type="button" class="portal-nav-btn w-full flex items-center gap-3 p-3 rounded-xl transition text-sm font-semibold bg-cyan-50 text-[#0c2340]" data-target="analytics" data-navigate="analytics">
+                    <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+                    <span data-i18n="nav.analytics">Analytics</span>
+                </button>
+                <button type="button" class="portal-nav-btn w-full flex items-center gap-3 p-3 rounded-xl transition text-sm font-semibold hover:bg-slate-50" data-target="users" data-navigate="users">
                     <i data-lucide="users" class="w-5 h-5"></i>
                     <span data-i18n="nav.users">Manage Users</span>
                 </button>
@@ -109,8 +113,60 @@
                 </div>
             </div>
 
+            <!-- SUBVIEW: ANALYTICS -->
+            <section id="view-analytics" class="portal-subview">
+                <div class="page-heading">
+                    <div>
+                        <span class="eyebrow" data-i18n="an.eyebrow">PLATFORM INSIGHTS</span>
+                        <h1 data-i18n="an.title">Analytics</h1>
+                        <p data-i18n="an.sub">Activity across patients, doctors and shared records.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-cyan-600 text-white flex items-center justify-center mb-3"><i data-lucide="users" class="w-5 h-5"></i></div>
+                        <p class="text-2xl font-extrabold text-[#0c2340]" id="statTotalUsers">0</p>
+                        <p class="text-xs text-slate-500 font-semibold" data-i18n="an.totalUsers">Total users</p>
+                    </div>
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-[#0c2340] text-white flex items-center justify-center mb-3"><i data-lucide="stethoscope" class="w-5 h-5"></i></div>
+                        <p class="text-2xl font-extrabold text-[#0c2340]" id="statDoctors">0</p>
+                        <p class="text-xs text-slate-500 font-semibold" data-i18n="an.doctors">Doctors</p>
+                    </div>
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-400 to-violet-600 text-white flex items-center justify-center mb-3"><i data-lucide="heart-pulse" class="w-5 h-5"></i></div>
+                        <p class="text-2xl font-extrabold text-[#0c2340]" id="statPatients">0</p>
+                        <p class="text-xs text-slate-500 font-semibold" data-i18n="an.patients">Patients</p>
+                    </div>
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white flex items-center justify-center mb-3"><i data-lucide="user-plus" class="w-5 h-5"></i></div>
+                        <p class="text-2xl font-extrabold text-[#0c2340]" id="statPending">0</p>
+                        <p class="text-xs text-slate-500 font-semibold" data-i18n="an.pending">Pending approvals</p>
+                    </div>
+                </div>
+
+                <div class="grid lg:grid-cols-12 gap-6 items-start">
+                    <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+                        <h3 class="font-bold text-[#0c2340]" data-i18n="an.weekly">Weekly activity</h3>
+                        <p class="text-xs text-slate-500 mb-4" data-i18n="an.weeklySub">Views, shares and uploads over the last 7 days</p>
+                        <div class="relative h-64"><canvas id="chartActivity"></canvas></div>
+                    </div>
+                    <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+                        <h3 class="font-bold text-[#0c2340]" data-i18n="an.byCategory">Files by category</h3>
+                        <p class="text-xs text-slate-500 mb-4" data-i18n="an.byCategorySub">Distribution of uploaded medical files</p>
+                        <div class="relative h-64 flex items-center justify-center"><canvas id="chartCategories"></canvas></div>
+                    </div>
+                    <div class="lg:col-span-12 bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+                        <h3 class="font-bold text-[#0c2340]" data-i18n="an.byAction">Audit events by action</h3>
+                        <p class="text-xs text-slate-500 mb-4" data-i18n="an.byActionSub">All recorded security events</p>
+                        <div class="relative h-56"><canvas id="chartActions"></canvas></div>
+                    </div>
+                </div>
+            </section>
+
             <!-- SUBVIEW: MANAGE USERS -->
-            <section id="view-users" class="portal-subview">
+            <section id="view-users" class="portal-subview hidden">
                 <div class="page-heading">
                     <div>
                         <span class="eyebrow" data-i18n="ad.eyebrow">ACCOUNTS</span>
@@ -258,9 +314,10 @@
         </main>
     </div>
 
-    <script src="./js/shared.js?v=6"></script>
-    <script src="./js/i18n.js?v=6"></script>
-    <script src="./js/admin.js?v=6"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="./js/shared.js?v=7"></script>
+    <script src="./js/i18n.js?v=7"></script>
+    <script src="./js/admin.js?v=7"></script>
 
     <!-- Floating theme + language controls -->
     <div class="fab-stack">

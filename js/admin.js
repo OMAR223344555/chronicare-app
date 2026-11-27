@@ -191,7 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
             pendingDoctors.splice(pendingDoctors.indexOf(d), 1);
             users.push({ id: 100 + d.id, name: d.name, role: 'Doctor', detail: `${d.specialty} • ${d.license}`, status: 'Active' });
             auditEvents.unshift({ time: 'just now', user: 'Administrator', action: 'approve', details: Tp('au.dynApprove', { n: nameLabel(d.name) }) });
-            renderPending(); renderUsers(); renderAudit();
+            renderPending(); renderUsers(); renderAudit(); renderAnalytics();
             showToast(Tp('toast.approved', { name: nameLabel(d.name) }));
             return;
         }
@@ -201,7 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!d) return;
             if (!confirm(Tp('ad.declineConfirm', { name: nameLabel(d.name) }))) return;
             pendingDoctors.splice(pendingDoctors.indexOf(d), 1);
-            renderPending();
+            renderPending(); renderAnalytics();
             showToast(Tp('toast.declined', { name: nameLabel(d.name) }), 'warn');
             return;
         }
@@ -265,6 +265,88 @@ document.addEventListener('DOMContentLoaded', () => {
         if (tag) tag.textContent = T('rf.saved');
     });
 
+    // ---- Analytics ----
+    const activityDemo = {
+        views: [12, 18, 9, 22, 17, 25, 20],
+        shares: [3, 5, 2, 6, 4, 7, 5],
+        uploads: [2, 4, 1, 5, 3, 6, 4],
+    };
+    const categoryDemo = { 'Lab Report': 9, 'Prescription': 6, 'Imaging': 4, 'Specialist Report': 3, 'Discharge Summary': 2 };
+    let chartRefs = [];
+    function last7DayLabels() {
+        const out = [];
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date(Date.now() - i * 86400000);
+            out.push(d.toLocaleDateString(window.CCi18n && CCi18n.lang === 'ar' ? 'ar-EG' : 'en-GB', { weekday: 'short' }));
+        }
+        return out;
+    }
+    function renderAnalytics() {
+        const totalEl = document.getElementById('statTotalUsers');
+        if (!totalEl) return;
+        totalEl.textContent = users.length;
+        document.getElementById('statDoctors').textContent = users.filter(u => u.role === 'Doctor').length;
+        document.getElementById('statPatients').textContent = users.filter(u => u.role === 'Patient').length;
+        document.getElementById('statPending').textContent = pendingDoctors.length;
+        if (!window.Chart) return;
+        chartRefs.forEach(c => c.destroy());
+        chartRefs = [];
+        const gridColor = 'rgba(148, 163, 184, 0.15)';
+        const tickColor = '#94a3b8';
+        const act = document.getElementById('chartActivity');
+        if (act) {
+            chartRefs.push(new Chart(act, {
+                type: 'line',
+                data: {
+                    labels: last7DayLabels(),
+                    datasets: [
+                        { label: T('au.views'), data: activityDemo.views, borderColor: '#0c2340', backgroundColor: 'rgba(12,35,64,0.08)', fill: true, tension: 0.4, pointRadius: 3 },
+                        { label: T('au.shares'), data: activityDemo.shares, borderColor: '#06b6d4', backgroundColor: 'rgba(6,182,212,0.08)', fill: true, tension: 0.4, pointRadius: 3 },
+                        { label: T('an.uploads'), data: activityDemo.uploads, borderColor: '#8b5cf6', backgroundColor: 'rgba(139,92,246,0.08)', fill: true, tension: 0.4, pointRadius: 3 },
+                    ],
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } } },
+                    scales: { x: { grid: { color: gridColor }, ticks: { color: tickColor } }, y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: tickColor, precision: 0 } } },
+                },
+            }));
+        }
+        const cat = document.getElementById('chartCategories');
+        if (cat) {
+            const keys = Object.keys(categoryDemo);
+            chartRefs.push(new Chart(cat, {
+                type: 'doughnut',
+                data: {
+                    labels: keys.map(k => catLabel(k)),
+                    datasets: [{ data: keys.map(k => categoryDemo[k]), backgroundColor: ['#06b6d4', '#0c2340', '#8b5cf6', '#f59e0b', '#10b981'], borderWidth: 2, borderColor: '#ffffff' }],
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, cutout: '62%',
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } } },
+                },
+            }));
+        }
+        const actBar = document.getElementById('chartActions');
+        if (actBar) {
+            const counts = {};
+            auditEvents.forEach(a => { counts[a.action] = (counts[a.action] || 0) + 1; });
+            const keys = Object.keys(counts);
+            chartRefs.push(new Chart(actBar, {
+                type: 'bar',
+                data: {
+                    labels: keys.map(k => T('au.act.' + k, k)),
+                    datasets: [{ data: keys.map(k => counts[k]), backgroundColor: ['#0c2340', '#06b6d4', '#8b5cf6', '#f59e0b', '#10b981', '#ef4444'].slice(0, keys.length), borderRadius: 8 }],
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { x: { grid: { display: false }, ticks: { color: tickColor } }, y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: tickColor, precision: 0 } } },
+                },
+            }));
+        }
+    }
+
     // ---- Audit log ----
     function renderAudit() {
         const filter = document.getElementById('auditFilter').value;
@@ -289,6 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderLists();
     renderRanges();
     renderAudit();
+    renderAnalytics();
     refreshIcons();
     document.addEventListener('cc:lang', () => {
         renderPending();
@@ -296,13 +379,14 @@ document.addEventListener('DOMContentLoaded', () => {
         renderLists();
         renderRanges();
         renderAudit();
+        renderAnalytics();
         refreshIcons();
     });
 
     // Deep links: #users, #reference, #audit
     function handleHashRoute() {
         const hash = window.location.hash.replace('#', '').trim();
-        if (['users', 'reference', 'audit'].includes(hash)) showView(hash);
+        if (['analytics', 'users', 'reference', 'audit'].includes(hash)) showView(hash);
     }
     window.addEventListener('hashchange', handleHashRoute);
     handleHashRoute();
@@ -318,6 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.CC_SOURCES = () => {
         const t = (k, f) => window.CCi18n ? CCi18n.t(k, f) : f;
         const pages = [
+            { icon: 'bar-chart-3', title: t('nav.analytics', 'Analytics'), keywords: 'stats charts insights', run: () => showView('analytics') },
             { icon: 'users', title: t('nav.users', 'Manage Users'), keywords: 'accounts doctors patients', run: () => showView('users') },
             { icon: 'list-checks', title: t('nav.reference', 'Categories & Ranges'), keywords: 'lab reference', run: () => showView('reference') },
             { icon: 'scroll-text', title: t('nav.audit', 'Audit Log'), keywords: 'history events', run: () => showView('audit') },

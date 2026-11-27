@@ -163,8 +163,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ---- My Patients list ----
     const patientsTable = document.getElementById('patientsTable');
+    let patientQuery = '';
+    let patientStatusFilter = 'all';
+    let patientCondFilter = 'all';
+    function filteredPatients() {
+        const q = patientQuery.trim().toLowerCase();
+        return patients.filter(p => {
+            if (patientStatusFilter === 'new' && !p.hasNew) return false;
+            if (patientStatusFilter === 'uptodate' && p.hasNew) return false;
+            if (patientCondFilter !== 'all' && !p.conditions.split(', ').includes(patientCondFilter)) return false;
+            if (q && !(p.name.toLowerCase().includes(q) || nameLabel(p.name).toLowerCase().includes(q) ||
+                p.conditions.toLowerCase().includes(q) || condsLabel(p.conditions).toLowerCase().includes(q))) return false;
+            return true;
+        });
+    }
     function renderPatients() {
-        patientsTable.innerHTML = patients.map(p => `
+        const list = filteredPatients();
+        patientsTable.innerHTML = (list.map(p => `
             <tr>
                 <td><strong>${nameLabel(p.name)}</strong></td>
                 <td>${condsLabel(p.conditions)}</td>
@@ -174,10 +189,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     ? `<span class="bg-cyan-100 text-cyan-800 text-xs font-bold px-2.5 py-1 rounded-full">${T('st.newFiles')}</span>`
                     : `<span class="bg-slate-100 text-slate-500 text-xs font-bold px-2.5 py-1 rounded-full">${T('st.upToDate')}</span>`}</td>
                 <td><button type="button" class="more-btn open-patient-btn" data-id="${p.id}">${T('dp.openRecords')}</button></td>
-            </tr>`).join('');
+            </tr>`).join(''))
+            || `<tr><td colspan="6" class="text-center text-slate-400 py-8">${T('dp.noMatch')}</td></tr>`;
 
         // Mobile cards keep the action visible without horizontal scrolling
-        document.getElementById('patientsCards').innerHTML = patients.map(p => `
+        document.getElementById('patientsCards').innerHTML = (list.map(p => `
             <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
                 <div class="flex items-start justify-between gap-2 mb-1.5">
                     <div>
@@ -190,9 +206,56 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <p class="text-xs text-slate-500 mb-3">${Tp('dp.filesN', { n: p.files.length })} • ${Tp('dp.lastShared', { d: fmtDate(p.lastShared) })}</p>
                 <button type="button" class="open-patient-btn w-full bg-[#0c2340] hover:bg-blue-950 text-white text-sm font-semibold py-2.5 rounded-xl transition" data-id="${p.id}">${T('dp.openRecords')}</button>
-            </div>`).join('');
+            </div>`).join(''))
+            || `<p class="text-center text-slate-400 text-sm py-6">${T('dp.noMatch')}</p>`;
         refreshIcons();
     }
+
+    // Search + filter wiring
+    const patientSearch = document.getElementById('patientSearch');
+    if (patientSearch) {
+        patientSearch.addEventListener('input', () => { patientQuery = patientSearch.value; renderPatients(); });
+    }
+    document.querySelectorAll('.patient-filter-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            patientStatusFilter = chip.dataset.filter;
+            document.querySelectorAll('.patient-filter-chip').forEach(c => {
+                const active = c === chip;
+                c.classList.toggle('bg-[#0c2340]', active);
+                c.classList.toggle('text-white', active);
+                c.classList.toggle('bg-slate-100', !active);
+                c.classList.toggle('text-slate-600', !active);
+            });
+            renderPatients();
+        });
+    });
+    const patientCondFilterEl = document.getElementById('patientCondFilter');
+    if (patientCondFilterEl) {
+        patientCondFilterEl.addEventListener('change', () => { patientCondFilter = patientCondFilterEl.value; renderPatients(); });
+    }
+
+    // ---- Note templates ----
+    const NOTE_TEMPLATES = [
+        { labelKey: 'tpl.followup', bodyKey: 'tpl.followupBody' },
+        { labelKey: 'tpl.medAdjust', bodyKey: 'tpl.medAdjustBody' },
+        { labelKey: 'tpl.labReview', bodyKey: 'tpl.labReviewBody' },
+        { labelKey: 'tpl.lifestyle', bodyKey: 'tpl.lifestyleBody' },
+    ];
+    function renderNoteTemplates() {
+        const box = document.getElementById('noteTemplates');
+        if (!box) return;
+        box.innerHTML = NOTE_TEMPLATES.map(t => `
+            <button type="button" class="note-template-chip bg-cyan-50 hover:bg-cyan-100 text-cyan-800 text-[11px] font-bold px-3 py-1.5 rounded-full border border-cyan-100 transition" data-body="${t.bodyKey}">${T(t.labelKey)}</button>`).join('');
+    }
+    document.addEventListener('click', (e) => {
+        const chip = e.target.closest('.note-template-chip');
+        if (!chip) return;
+        const ta = document.getElementById('noteText');
+        if (!ta) return;
+        const add = T(chip.dataset.body);
+        ta.value = ta.value.trim() ? ta.value.trim() + '\n' + add : add;
+        ta.focus();
+    });
 
     // ---- Patient Records ----
     function renderPatientRecords(p) {
@@ -260,9 +323,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     renderPatients();
+    renderNoteTemplates();
     refreshIcons();
     document.addEventListener('cc:lang', () => {
         renderPatients();
+        renderNoteTemplates();
         if (currentPatient) renderPatientRecords(currentPatient);
         refreshIcons();
     });
