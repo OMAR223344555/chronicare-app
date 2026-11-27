@@ -277,6 +277,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             const isDoctor = signupRole.value === 'doctor';
             doctorFields.classList.toggle('hidden', !isDoctor);
             doctorFields.querySelectorAll('input').forEach(i => { i.required = isDoctor; });
+            const note = document.getElementById('doctor-pending-note');
+            if (note) note.classList.toggle('hidden', !isDoctor);
             refreshIcons();
         });
     }
@@ -286,6 +288,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (role === 'doctor') { window.location.href = './doctor.html'; return; }
         if (role === 'admin') { window.location.href = './admin.html'; return; }
         showView('overview');
+    }
+
+    // Sign-in page notice (pending approval, deactivated, role mismatch)
+    const signinNotice = document.getElementById('signin-notice');
+    function showSigninNotice(en, ar) {
+        if (!signinNotice) return;
+        signinNotice.textContent = CCApi.L(en, ar);
+        signinNotice.classList.remove('hidden');
+    }
+    function hideSigninNotice() { if (signinNotice) signinNotice.classList.add('hidden'); }
+    const MSG_PENDING = ['This doctor account is pending admin approval - you can sign in once it is approved.',
+        'حساب الطبيب هذا في انتظار موافقة المسؤول - يمكنك تسجيل الدخول بعد الموافقة.'];
+    const MSG_DEACTIVATED = ['This account has been deactivated. Contact the administrator.',
+        'هذا الحساب موقوف. تواصل مع المسؤول.'];
+    const MSG_MISMATCH = ['This email is already registered with a different role - each role needs its own email. Pick the matching role above.',
+        'هذا البريد مسجل بدور مختلف - كل دور يحتاج بريده الخاص. اختر الدور الصحيح من الأعلى.'];
+    function showAuthError(err) {
+        const code = err && err.data && err.data.code;
+        if (err && err.status === 403 && code === 'account_pending') { showSigninNotice(MSG_PENDING[0], MSG_PENDING[1]); return true; }
+        if (err && err.status === 403 && code === 'account_deactivated') { showSigninNotice(MSG_DEACTIVATED[0], MSG_DEACTIVATED[1]); return true; }
+        if (err && err.status === 403 && code === 'role_mismatch') { showSigninNotice(MSG_MISMATCH[0], MSG_MISMATCH[1]); return true; }
+        return false;
     }
 
     // --- Google Sign-In (GSI) ---
@@ -311,8 +335,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                     client_id: window.CC_GOOGLE_CLIENT_ID,
                     callback: async (resp) => {
                         if (!resp || !resp.credential) return;
+                        hideSigninNotice();
+                        const roleSel = document.getElementById('signin-role');
+                        const wantedRole = roleSel ? roleSel.value : 'patient';
                         try {
-                            const user = await CCApi.googleLogin(resp.credential);
+                            const user = await CCApi.googleLogin(resp.credential, wantedRole);
                             if (user.role !== 'patient') { landForRole(user.role); return; }
                             try {
                                 await CCApi.hydratePatient(state, CONDITION_LABELS, CATEGORY_LABELS);
@@ -323,7 +350,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                             applyLiveOverview();
                             landForRole('patient');
                         } catch (err) {
-                            showToast(CCApi.L('Google sign-in failed: ', 'فشل تسجيل الدخول عبر جوجل: ') + (err.message || err), 'warn');
+                            if (!showAuthError(err)) {
+                                showToast(CCApi.L('Google sign-in failed: ', 'فشل تسجيل الدخول عبر جوجل: ') + (err.message || err), 'warn');
+                            }
                         }
                     },
                 });
@@ -341,6 +370,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (signinFormEl) {
         signinFormEl.addEventListener('submit', async (e) => {
             e.preventDefault();
+            hideSigninNotice();
             const role = signinRole ? signinRole.value : 'patient';
             if (window.CCApi) {
                 const emailEl = document.getElementById('signin-email');
@@ -364,8 +394,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                         landForRole(role);
                         return;
                     } catch (err) {
-                        if (err.status === 403) showToast(CCApi.L('Account is pending approval or deactivated', 'الحساب في انتظار الموافقة أو موقوف'), 'warn');
-                        else showToast(CCApi.L('Sign-in failed: ', 'فشل تسجيل الدخول: ') + (err.message || err), 'warn');
+                        if (!showAuthError(err)) {
+                            if (err.status === 403) showToast(CCApi.L('Account is pending approval or deactivated', 'الحساب في انتظار الموافقة أو موقوف'), 'warn');
+                            else showToast(CCApi.L('Sign-in failed: ', 'فشل تسجيل الدخول: ') + (err.message || err), 'warn');
+                        }
                         return;
                     }
                 }
@@ -380,11 +412,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         signupFormEl.addEventListener('submit', async (e) => {
             e.preventDefault();
             const role = signupRole ? signupRole.value : 'patient';
-            const showPending = () => {
-                const note = document.getElementById('doctor-pending-note');
-                if (note) note.classList.remove('hidden');
-                refreshIcons();
-            };
             if (window.CCApi && (await CCApi.ping())) {
                 const val = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
                 const payload = { email: val('signup-email'), password: val('signup-password'), full_name: val('signup-name'), role };
@@ -394,7 +421,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
                 try {
                     await CCApi.register(payload);
-                    if (role === 'doctor') { showPending(); return; }
+                    if (role === 'doctor') {
+                        // Doctors wait for admin approval: back to sign-in, no session.
+                        showAuthPanel(signInForm);
+                        const em = document.getElementById('signin-email');
+                        if (em) em.value = payload.email;
+                        showSigninNotice('Doctor account created. It is pending admin approval - you can sign in here once approved.',
+                            'تم إنشاء حساب الطبيب وهو في انتظار موافقة المسؤول - يمكنك تسجيل الدخول من هنا بعد الموافقة.');
+                        return;
+                    }
                     try {
                         await CCApi.login(payload.email, payload.password);
                         await CCApi.hydratePatient(state, CONDITION_LABELS, CATEGORY_LABELS);
@@ -416,7 +451,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     'Demo mode - no live server, so nothing is saved. In the live demo, doctor accounts wait for admin approval.',
                     'وضع تجريبي - لا يوجد خادم، لذا لن يُحفظ الحساب. في النسخة الحية تنتظر حسابات الأطباء موافقة المسؤول.'
                 ), 'info');
-                showPending(); return;
+                showAuthPanel(signInForm);
+                showSigninNotice('Doctor account created. It is pending admin approval - you can sign in here once approved.',
+                    'تم إنشاء حساب الطبيب وهو في انتظار موافقة المسؤول - يمكنك تسجيل الدخول من هنا بعد الموافقة.');
+                return;
             }
             showToast(CCApi.L(
                 'Demo mode - no live server, so nothing is saved. You are browsing the built-in sample data (patient: Maya Hassan).',
