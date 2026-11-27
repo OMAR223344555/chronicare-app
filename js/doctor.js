@@ -302,7 +302,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td><span class="file-icon">PDF</span><strong>${f.name}</strong></td>
                 <td>${catLabel(f.category)}</td>
                 <td>${fmtDate(f.date)}</td>
-                <td><button type="button" class="more-btn view-shared-file" data-name="${f.name}" title="Open"><i data-lucide="eye" class="w-4 h-4"></i></button></td>
+                <td><button type="button" class="more-btn view-shared-file" data-name="${f.name}" data-api-id="${f.apiId || ''}" title="Open"><i data-lucide="eye" class="w-4 h-4"></i></button></td>
             </tr>`).join('');
 
         document.getElementById('patientLabsTable').innerHTML = p.labs.map(l => `
@@ -341,6 +341,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
         const viewFile = e.target.closest('.view-shared-file');
+        if (viewFile && viewFile.dataset.apiId && window.CCApi) {
+            CCApi.openFile(viewFile.dataset.apiId).catch(err => showToast(String(err.message || err), 'warn'));
+            return;
+        }
         if (viewFile) {
             showToast(Tp('dp.openFile', { n: viewFile.dataset.name }), 'info');
         }

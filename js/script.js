@@ -643,6 +643,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const tableFooter = document.getElementById('tableFooterCount');
     const archiveCount = document.getElementById('archiveCount');
 
+    document.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-open-file]');
+        if (!b || !window.CCApi) return;
+        e.preventDefault();
+        b.disabled = true;
+        CCApi.openFile(b.dataset.openFile).catch(err => showToast(String(err.message || err), 'warn')).finally(() => { b.disabled = false; });
+    });
+
     function renderRecords() {
         if (!recordsTable) return;
         const search = searchInput ? searchInput.value.toLowerCase().trim() : '';
@@ -776,7 +784,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div class="mt-5 h-40 border border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400">
                 <i data-lucide="file-text" class="w-8 h-8 mb-2 text-cyan-600"></i>
                 ${r.fileUrl
-                    ? `<a href="${r.fileUrl}" target="_blank" rel="noopener" class="text-xs font-bold text-cyan-700 hover:underline">${T('fm.openFile', 'Open attached file')}</a>`
+                    ? `<button type="button" data-open-file="${r.apiId}" class="text-xs font-bold text-cyan-700 hover:underline">${T('fm.openFile', 'Open attached file')}</button>`
                     : `<p class="text-xs">${T('fm.preview')}</p>`}
             </div>`;
         if (window.CCHist) CCHist.pushOverlay();

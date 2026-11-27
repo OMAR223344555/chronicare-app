@@ -121,6 +121,27 @@ window.CCApi = (function () {
         return post('/auth/register/', payload);
     }
 
+    // Open a stored file through the authenticated download endpoint.
+    // (The public /media/ URL is not served by the host, so direct links give "Not Found".)
+    async function openFile(id) {
+        const w = window.open('', '_blank'); // opened synchronously so phone pop-up blockers allow it
+        try {
+            const res = await fetch(base() + '/files/' + id + '/download/', { headers: { 'Authorization': 'Token ' + token() } });
+            if (!res.ok) throw new Error(res.status === 404 ? L('The file is missing on the server. Please upload it again.', 'الملف غير موجود على الخادم. من فضلك ارفعه مرة أخرى.') : (res.status === 403 || res.status === 401 ? L('You do not have access to this file.', 'ليس لديك صلاحية لفتح هذا الملف.') : 'HTTP ' + res.status));
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            if (w) { w.location.href = url; }
+            else {
+                const link = document.createElement('a');
+                link.href = url; link.download = 'chronicare-file'; document.body.appendChild(link); link.click(); link.remove();
+            }
+            setTimeout(() => URL.revokeObjectURL(url), 120000);
+        } catch (err) {
+            if (w) w.close();
+            throw err;
+        }
+    }
+
     async function logout() {
         try { await post('/auth/logout/'); } catch (e) { /* offline is fine */ }
         clearSession();
@@ -375,7 +396,7 @@ window.CCApi = (function () {
         base, setBase, token, user, hasSession, clearSession, L,
         req, get, post, patch, all, ping,
         adminStats: () => refs.adminStats || null,
-        login, googleLogin, register, logout,
+        login, googleLogin, register, logout, openFile,
         hydratePatient, hydrateDoctor, hydrateAdmin,
         toRecord, toShare, uploadFile, testTypeId, allCategoryIds, populateShareForm,
         _refs: refs,
