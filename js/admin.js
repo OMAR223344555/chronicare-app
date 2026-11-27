@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
 
     function refreshIcons() {
         if (window.lucide && typeof window.lucide.createIcons === 'function') {
@@ -136,6 +136,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ---- Manage Users ----
+    // ---- Optional live API mode ----
+    let apiMode = false;
+    if (window.CCApi && CCApi.hasSession()) {
+        const sessUser = CCApi.user();
+        if (sessUser && sessUser.role === 'admin') {
+            try {
+                await CCApi.hydrateAdmin({ pendingDoctors, users, categories, conditions, ranges, auditEvents });
+                apiMode = true;
+            } catch (err) {
+                CCApi.clearSession();
+            }
+        } else if (sessUser) {
+            CCApi.clearSession();
+        }
+    }
+
     function renderPending() {
         const tbody = document.getElementById('pendingDoctorsTable');
         document.getElementById('pendingCount').textContent = Tp('ad.pendingN', { n: pendingDoctors.length });
@@ -196,8 +212,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (approveBtn) {
             const d = pendingDoctors.find(x => x.id === Number(approveBtn.dataset.id));
             if (!d) return;
+            if (apiMode && window.CCApi) CCApi.post('/admin/users/' + d.id + '/approve/').catch(() => {});
             pendingDoctors.splice(pendingDoctors.indexOf(d), 1);
-            users.push({ id: 100 + d.id, name: d.name, role: 'Doctor', detail: `${d.specialty} • ${d.license}`, status: 'Active' });
+            users.push({ id: apiMode ? d.id : 100 + d.id, name: d.name, role: 'Doctor', detail: `${d.specialty} • ${d.license}`, status: 'Active' });
             auditEvents.unshift({ time: 'just now', user: 'Administrator', action: 'approve', details: Tp('au.dynApprove', { n: nameLabel(d.name) }) });
             renderPending(); renderUsers(); renderAudit(); renderAnalytics();
             showToast(Tp('toast.approved', { name: nameLabel(d.name) }));
@@ -208,6 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const d = pendingDoctors.find(x => x.id === Number(declineBtn.dataset.id));
             if (!d) return;
             if (!confirm(Tp('ad.declineConfirm', { name: nameLabel(d.name) }))) return;
+            if (apiMode && window.CCApi) CCApi.post('/admin/users/' + d.id + '/deactivate/').catch(() => {});
             pendingDoctors.splice(pendingDoctors.indexOf(d), 1);
             renderPending(); renderAnalytics();
             showToast(Tp('toast.declined', { name: nameLabel(d.name) }), 'warn');
@@ -218,6 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const u = users.find(x => x.id === Number(toggleBtn.dataset.id));
             if (!u) return;
             u.status = u.status === 'Active' ? 'Deactivated' : 'Active';
+            if (apiMode && window.CCApi) CCApi.post('/admin/users/' + u.id + (u.status === 'Active' ? '/activate/' : '/deactivate/')).catch(() => {});
             auditEvents.unshift({ time: 'just now', user: 'Administrator', action: u.status === 'Active' ? 'approve' : 'revoke', details: Tp('au.dynStatus', { s: statusLabel(u.status), n: nameLabel(u.name) }) });
             renderUsers(); renderAudit();
             showToast(Tp(u.status === 'Active' ? 'toast.reactivated' : 'toast.deactivated', { name: nameLabel(u.name) }), u.status === 'Active' ? undefined : 'warn');
@@ -251,14 +270,14 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         const input = document.getElementById('newCategoryName');
         const name = input.value.trim();
-        if (name && !categories.includes(name)) { categories.push(name); renderLists(); showToast(Tp('toast.catAdded', { n: name })); }
+        if (name && !categories.includes(name)) { if (apiMode && window.CCApi) CCApi.post('/categories/', { name }).catch(() => {}); categories.push(name); renderLists(); showToast(Tp('toast.catAdded', { n: name })); }
         input.value = '';
     });
     document.getElementById('addConditionForm').addEventListener('submit', (e) => {
         e.preventDefault();
         const input = document.getElementById('newConditionName');
         const name = input.value.trim();
-        if (name && !conditions.includes(name)) { conditions.push(name); renderLists(); showToast(Tp('toast.condAdded', { n: name })); }
+        if (name && !conditions.includes(name)) { if (apiMode && window.CCApi) CCApi.post('/conditions/', { name }).catch(() => {}); conditions.push(name); renderLists(); showToast(Tp('toast.condAdded', { n: name })); }
         input.value = '';
     });
 
@@ -270,7 +289,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const value = input.value === '' ? null : Number(input.value);
         if (input.classList.contains('range-min')) r.min = value; else r.max = value;
         const tag = document.querySelector(`.range-saved[data-id="${r.id}"]`);
-        if (tag) tag.textContent = T('rf.saved');
+        if (apiMode && window.CCApi) {
+            CCApi.patch('/lab-test-types/' + r.id + '/', { ref_min: r.min, ref_max: r.max })
+                .then(() => { if (tag) tag.textContent = T('rf.saved'); })
+                .catch(() => { if (tag) tag.textContent = 'save failed'; });
+        } else if (tag) tag.textContent = T('rf.saved');
     });
 
     // ---- Analytics ----

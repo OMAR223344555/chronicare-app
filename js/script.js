@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
 
     // ==========================================================================
     // 0. Demo state (client-side only, no backend yet)
@@ -48,6 +48,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const CONDITION_LABELS = { diabetes: 'Diabetes', hypertension: 'Hypertension', cardiac: 'Cardiac', ckd: 'Chronic kidney disease' };
     const CATEGORY_LABELS = { lab: 'Lab Report', prescription: 'Prescription', imaging: 'Imaging', specialist: 'Specialist Report', discharge: 'Discharge Summary' };
+
+    // ---- Optional live API mode: hydrate state from the Django backend ----
+    let apiMode = false;
+    if (window.CCApi && CCApi.hasSession()) {
+        const sessUser = CCApi.user();
+        if (sessUser && sessUser.role === 'patient') {
+            try {
+                await CCApi.hydratePatient(state, CONDITION_LABELS, CATEGORY_LABELS);
+                apiMode = true;
+                CCApi.populateShareForm(state);
+            } catch (err) {
+                CCApi.clearSession();
+            }
+        } else if (sessUser) {
+            CCApi.clearSession(); // session belongs to another portal
+        }
+    }
 
     function refreshIcons() {
         if (window.lucide && typeof window.lucide.createIcons === 'function') {
@@ -157,23 +174,74 @@ document.addEventListener('DOMContentLoaded', () => {
     const signinRole = document.getElementById('signin-role');
     const signinFormEl = document.querySelector('#signin-form-box form');
     if (signinFormEl) {
-        signinFormEl.addEventListener('submit', (e) => {
+        signinFormEl.addEventListener('submit', async (e) => {
             e.preventDefault();
-            landForRole(signinRole ? signinRole.value : 'patient');
+            const role = signinRole ? signinRole.value : 'patient';
+            if (window.CCApi) {
+                const emailEl = document.getElementById('signin-email');
+                const passEl = document.getElementById('signin-password');
+                if (await CCApi.ping()) {
+                    try {
+                        const user = await CCApi.login(emailEl ? emailEl.value.trim() : '', passEl ? passEl.value : '');
+                        if (user.role !== role) {
+                            CCApi.clearSession();
+                            showToast(CCApi.L('This account is registered as a ' + user.role + ' - pick the matching role above', 'هذا الحساب مسجل بدور مختلف - اختر الدور الصحيح'), 'warn');
+                            return;
+                        }
+                        if (role !== 'patient') { landForRole(role); return; }
+                        try {
+                            await CCApi.hydratePatient(state, CONDITION_LABELS, CATEGORY_LABELS);
+                            apiMode = true;
+                            CCApi.populateShareForm(state);
+                        } catch (e2) { /* keep built-in demo data */ }
+                        landForRole(role);
+                        return;
+                    } catch (err) {
+                        if (err.status === 403) showToast(CCApi.L('Account is pending approval or deactivated', 'الحساب في انتظار الموافقة أو موقوف'), 'warn');
+                        else showToast(CCApi.L('Sign-in failed: ', 'فشل تسجيل الدخول: ') + (err.message || err), 'warn');
+                        return;
+                    }
+                }
+                showToast(CCApi.L('Live server unreachable - continuing in demo mode', 'الخادم غير متاح - وضع تجريبي'), 'info');
+            }
+            landForRole(role);
         });
     }
 
     const signupFormEl = document.querySelector('#signup-form-box form');
     if (signupFormEl) {
-        signupFormEl.addEventListener('submit', (e) => {
+        signupFormEl.addEventListener('submit', async (e) => {
             e.preventDefault();
             const role = signupRole ? signupRole.value : 'patient';
-            if (role === 'doctor') {
+            const showPending = () => {
                 const note = document.getElementById('doctor-pending-note');
                 if (note) note.classList.remove('hidden');
                 refreshIcons();
-                return; // doctors stay pending until an admin approves them
+            };
+            if (window.CCApi && (await CCApi.ping())) {
+                const val = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+                const payload = { email: val('signup-email'), password: val('signup-password'), full_name: val('signup-name'), role };
+                if (role === 'doctor') {
+                    payload.specialty = val('signup-specialty');
+                    payload.license_number = val('signup-license');
+                }
+                try {
+                    await CCApi.register(payload);
+                    if (role === 'doctor') { showPending(); return; }
+                    try {
+                        await CCApi.login(payload.email, payload.password);
+                        await CCApi.hydratePatient(state, CONDITION_LABELS, CATEGORY_LABELS);
+                        apiMode = true;
+                        CCApi.populateShareForm(state);
+                    } catch (e2) { /* land on the demo state */ }
+                    landForRole('patient');
+                    return;
+                } catch (err) {
+                    showToast(CCApi.L('Sign-up failed: ', 'فشل إنشاء الحساب: ') + (err.message || err), 'warn');
+                    return;
+                }
             }
+            if (role === 'doctor') { showPending(); return; } // demo: doctors stay pending
             landForRole('patient');
         });
     }
@@ -272,11 +340,13 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('hashchange', handleHashRoute);
     document.addEventListener('cc:popview', handleHashRoute);
     handleHashRoute();
+    if (apiMode && !location.hash) showView('overview');
 
     const signOutBtn = document.getElementById('sign-out-btn');
     if (signOutBtn) {
         signOutBtn.addEventListener('click', (e) => {
             e.preventDefault();
+            if (window.CCApi) CCApi.logout();
             showView('auth');
         });
     }
@@ -466,11 +536,23 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <div class="mt-5 h-40 border border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400">
                 <i data-lucide="file-text" class="w-8 h-8 mb-2 text-cyan-600"></i>
-                <p class="text-xs">${T('fm.preview')}</p>
+                ${r.fileUrl
+                    ? `<a href="${r.fileUrl}" target="_blank" rel="noopener" class="text-xs font-bold text-cyan-700 hover:underline">${T('fm.openFile', 'Open attached file')}</a>`
+                    : `<p class="text-xs">${T('fm.preview')}</p>`}
             </div>`;
         if (window.CCHist) CCHist.pushOverlay();
         fileModal.classList.remove('hidden');
         fileModal.classList.add('flex');
+        if (apiMode && window.CCApi && r.apiId) {
+            CCApi.get('/notes/?medical_file=' + r.apiId).then(data => {
+                const list = (data && data.results) || data || [];
+                if (!list.length) return;
+                const body = document.getElementById('modalFileBody');
+                if (!body) return;
+                body.innerHTML += `<div class="mt-5"><p class="text-[11px] font-bold tracking-widest text-slate-400 uppercase mb-2">${T('fm.doctorNotes', 'Doctor notes')}</p>` +
+                    list.map(n => `<div class="bg-cyan-50/60 border border-cyan-100 rounded-xl p-3 mb-2"><p class="text-xs text-slate-400 mb-0.5">${fmtDate(String(n.created_at || '').slice(0, 10))}${n.doctor_name ? ' • ' + n.doctor_name : ''}</p><p class="text-sm text-slate-700">${n.text}</p></div>`).join('') + `</div>`;
+            }).catch(() => {});
+        }
         if (window.CCScrollLock) CCScrollLock.lock();
         refreshIcons();
     }
@@ -591,6 +673,31 @@ document.addEventListener('DOMContentLoaded', () => {
         uploadForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const f = new FormData(uploadForm);
+            if (apiMode && window.CCApi) {
+                simulateUploadProgress(() => {
+                    CCApi.uploadFile(f).then(created => {
+                        const apiRec = CCApi.toRecord(created);
+                        apiRec.id = created.id;
+                        state.records.unshift(apiRec);
+                        state.timeline.unshift({
+                            month: new Date(apiRec.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short' }),
+                            type: 'upload',
+                            title: Tp('tl.uploaded', { n: apiRec.name }),
+                            date: fmtDate(apiRec.date),
+                            text: Tp('tl.uploadedText', { cat: catLabel(apiRec.category), cond: condLabel(apiRec.condition), who: apiRec.doctor || apiRec.facility || '-' }),
+                        });
+                        renderRecords();
+                        renderTimeline();
+                        CCApi.populateShareForm(state);
+                        uploadForm.reset();
+                        if (uploadFileName) uploadFileName.textContent = T('upload.drop');
+                        if (uploadPreview) { uploadPreview.classList.add('hidden'); uploadPreview.innerHTML = ''; }
+                        showView('medical-files');
+                        showToast(Tp('toast.uploaded', { n: apiRec.name }));
+                    }).catch(err => showToast(String(err.message || err), 'warn'));
+                });
+                return;
+            }
             const rec = {
                 id: state.nextRecordId++,
                 name: f.get('title'),
@@ -759,6 +866,24 @@ document.addEventListener('DOMContentLoaded', () => {
             const f = new FormData(labEntryForm);
             const meta = labTestTypes.find(l => l.test === f.get('test'));
             if (!meta) return;
+            if (apiMode && window.CCApi) {
+                const ttId = CCApi.testTypeId(meta.test);
+                if (!ttId) { showToast('Lab test type not found on the server', 'warn'); return; }
+                CCApi.post('/lab-results/', { test_type: ttId, value: f.get('value'), measured_at: f.get('measured_at'), note: f.get('note') || '' })
+                    .then(() => {
+                        state.labs.push({
+                            test: meta.test, label: meta.label, unit: meta.unit,
+                            min: meta.min, max: meta.max,
+                            value: Number(f.get('value')), date: f.get('measured_at'),
+                        });
+                        renderLabTable();
+                        renderTrendChart();
+                        labEntryForm.reset();
+                        showToast(Tp('toast.labSaved', { label: labLabel(meta) }));
+                    })
+                    .catch(err => showToast(String(err.message || err), 'warn'));
+                return;
+            }
             state.labs.push({
                 test: meta.test, label: meta.label, unit: meta.unit,
                 min: meta.min, max: meta.max,
@@ -787,18 +912,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p class="font-bold text-sm text-[#0c2340]">${s.doctorKey ? T(s.doctorKey) : s.doctor}</p>
                     <p class="text-xs text-slate-500">${s.specKey ? T(s.specKey) : s.specialty} • ${T('sh.verified')}</p>
                     <div class="flex flex-wrap items-center gap-2 mt-2">
-                        <span class="bg-slate-100 text-slate-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">${Tp('sh.filesShared', { n: s.count })}</span>
+                        ${s.count ? `<span class="bg-slate-100 text-slate-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">${Tp('sh.filesShared', { n: s.count })}</span>` : ''}
                         <span class="text-xs text-slate-400">${s.filesKey ? T(s.filesKey) : s.files}</span>
                     </div>
                 </div>
                 <div class="w-full sm:w-auto sm:text-right sm:shrink-0 flex sm:block items-center justify-between gap-2">
-                    <span class="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-1 rounded-full">${T('st.active')}</span>
+                    ${s.revoked
+                        ? `<span class="bg-red-100 text-red-600 text-xs font-bold px-2.5 py-1 rounded-full">${T('st.revoked', 'Revoked')}</span>`
+                        : `<span class="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-1 rounded-full">${T('st.active')}</span>`}
                     <p class="text-[11px] text-slate-400 sm:mt-2">${Tp('sh.expires', { date: fmtDate(s.expires) })}</p>
-                    <button type="button" class="revoke-share-btn text-[11px] font-bold text-red-500 hover:underline sm:mt-1" data-id="${s.id}">${T('sh.revoke')}</button>
+                    ${s.revoked ? '' : `<button type="button" class="revoke-share-btn text-[11px] font-bold text-red-500 hover:underline sm:mt-1" data-id="${s.id}">${T('sh.revoke')}</button>`}
                 </div>
             </div>`).join('')
             : `<p class="text-sm text-slate-400">${T('sh.noShares')}</p>`;
-        if (shareCountBadge) shareCountBadge.textContent = Tp('sh.activeBadge', { n: state.shares.length });
+        if (shareCountBadge) shareCountBadge.textContent = Tp('sh.activeBadge', { n: state.shares.filter(s => !s.revoked).length });
         refreshIcons();
     }
 
@@ -807,6 +934,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!revokeBtn) return;
         const share = state.shares.find(s => s.id === Number(revokeBtn.dataset.id));
         if (share && confirm(Tp('sh.revokeConfirm', { name: share.doctorKey ? T(share.doctorKey) : share.doctor }))) {
+            if (apiMode && window.CCApi && share.apiId) {
+                CCApi.post('/shares/' + share.apiId + '/revoke/').then(() => {
+                    share.revoked = true;
+                    share.active = false;
+                    renderShares();
+                    showToast(Tp('toast.shareRevoked', { name: share.doctorKey ? T(share.doctorKey) : share.doctor }), 'warn');
+                }).catch(err => showToast(String(err.message || err), 'warn'));
+                return;
+            }
             state.shares = state.shares.filter(s => s.id !== share.id);
             renderShares();
             showToast(Tp('toast.shareRevoked', { name: share.doctorKey ? T(share.doctorKey) : share.doctor }), 'warn');
@@ -1132,6 +1268,28 @@ document.addEventListener('DOMContentLoaded', () => {
     if (confirmShareBtn) {
         confirmShareBtn.addEventListener('click', () => {
             if (!pendingShare) return;
+            if (apiMode && window.CCApi) {
+                const doctorSel = document.getElementById('shareDoctor');
+                const filesSel = document.getElementById('shareFiles');
+                const payload = {
+                    doctor: Number(doctorSel.value),
+                    expires_on: pendingShare.expires,
+                    include_lab_results: true,
+                };
+                const shareAll = !filesSel.value || filesSel.value === 'all' || isNaN(Number(filesSel.value));
+                if (shareAll) payload.categories = CCApi.allCategoryIds();
+                else payload.files = [Number(filesSel.value)];
+                CCApi.post('/shares/', payload).then(s => {
+                    const sh = CCApi.toShare(s, shareAll ? state.records.filter(r => !r.archived).length : 1);
+                    sh.id = s.id;
+                    state.shares.push(sh);
+                    renderShares();
+                    newShareForm.reset();
+                    showToast(Tp('toast.shared', { name: sh.doctor, date: fmtDate(sh.expires) }));
+                    hideShareModal();
+                }).catch(err => showToast(String(err.message || err), 'warn'));
+                return;
+            }
             state.shares.push(pendingShare);
             renderShares();
             newShareForm.reset();

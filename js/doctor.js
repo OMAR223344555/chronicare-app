@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
 
     function refreshIcons() {
         if (window.lucide && typeof window.lucide.createIcons === 'function') {
@@ -185,6 +185,22 @@ document.addEventListener('DOMContentLoaded', () => {
             return true;
         });
     }
+    // ---- Optional live API mode ----
+    let apiMode = false;
+    if (window.CCApi && CCApi.hasSession()) {
+        const sessUser = CCApi.user();
+        if (sessUser && sessUser.role === 'doctor') {
+            try {
+                await CCApi.hydrateDoctor(patients);
+                apiMode = true;
+            } catch (err) {
+                CCApi.clearSession();
+            }
+        } else if (sessUser) {
+            CCApi.clearSession();
+        }
+    }
+
     function renderPatients() {
         const list = filteredPatients();
         patientsTable.innerHTML = (list.map(p => `
@@ -295,7 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const list = document.getElementById('notesList');
         list.innerHTML = p.notes.length ? p.notes.map(n => `
             <div class="bg-slate-50 border border-slate-100 rounded-xl p-4">
-                <p class="text-xs text-slate-400 mb-1">${fmtDate(n.date)} • ${T('name.farouk')}</p>
+                <p class="text-xs text-slate-400 mb-1">${fmtDate(n.date)} • ${n.doctor || T('name.farouk')}</p>
                 <p class="text-sm text-slate-700">${n.textKey ? T(n.textKey) : n.text}</p>
             </div>`).join('')
             : `<p class="text-sm text-slate-400">${T('dp.noNotes')}</p>`;
@@ -307,6 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentPatient = patients.find(p => p.id === Number(openBtn.dataset.id));
             if (!currentPatient) return;
             currentPatient.hasNew = false; // opening marks the new files as seen
+            if (apiMode && window.CCApi) CCApi.post('/doctor/patients/' + currentPatient.id + '/mark-seen/').catch(() => {});
             renderPatients();
             renderPatientRecords(currentPatient);
             document.getElementById('patientRecordsNav').classList.remove('hidden');
@@ -324,10 +341,20 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!currentPatient) return;
         const text = document.getElementById('noteText').value.trim();
         if (!text) return;
-        currentPatient.notes.unshift({ date: new Date().toISOString().slice(0, 10), text });
-        document.getElementById('noteText').value = '';
-        renderNotes(currentPatient);
-        showToast(T('toast.noteAdded'));
+        const addLocal = () => {
+            currentPatient.notes.unshift({ date: new Date().toISOString().slice(0, 10), text });
+            document.getElementById('noteText').value = '';
+            renderNotes(currentPatient);
+            showToast(T('toast.noteAdded'));
+        };
+        if (apiMode && window.CCApi) {
+            const target = (currentPatient.files || []).find(fl => fl.apiId);
+            if (!target) { showToast('No shared file to attach the note to', 'warn'); return; }
+            CCApi.post('/notes/', { medical_file: target.apiId, text }).then(addLocal)
+                .catch(err => showToast(String(err.message || err), 'warn'));
+            return;
+        }
+        addLocal();
     });
 
     renderPatients();
