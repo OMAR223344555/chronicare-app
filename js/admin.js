@@ -95,6 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sidebar.classList.remove('hidden');
         sidebar.classList.add('mobile-open');
         document.body.classList.add('drawer-open');
+        if (window.CCScrollLock) CCScrollLock.lock();
         if (mobileMenuBtn) mobileMenuBtn.setAttribute('aria-expanded', 'true');
         if (!document.querySelector('.drawer-overlay')) {
             const overlay = document.createElement('div');
@@ -109,6 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sidebar.classList.add('hidden');
         sidebar.classList.remove('mobile-open');
         document.body.classList.remove('drawer-open');
+        if (window.CCScrollLock) CCScrollLock.unlock();
         if (mobileMenuBtn) mobileMenuBtn.setAttribute('aria-expanded', 'false');
         const overlay = document.querySelector('.drawer-overlay');
         if (overlay) overlay.remove();

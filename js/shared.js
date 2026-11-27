@@ -2,6 +2,32 @@
 (function () {
     'use strict';
 
+    // ---- Scroll lock: freeze the page under drawers, palette and modals ----
+    // body becomes position:fixed at the current scroll offset so touch
+    // gestures on an overlay cannot rubber-band the document or collapse
+    // the mobile browser toolbar; the offset is restored on unlock.
+    window.CCScrollLock = (function () {
+        let count = 0, lockedY = 0;
+        function lock() {
+            if (count++ === 0) {
+                lockedY = window.scrollY || document.documentElement.scrollTop || 0;
+                document.documentElement.classList.add('overlay-open');
+                document.body.classList.add('scroll-locked');
+                document.body.style.top = `-${lockedY}px`;
+            }
+        }
+        function unlock() {
+            if (count > 0 && --count === 0) {
+                document.documentElement.classList.remove('overlay-open');
+                document.body.classList.remove('scroll-locked');
+                document.body.style.top = '';
+                try { window.scrollTo({ top: lockedY, behavior: 'instant' }); }
+                catch (e) { window.scrollTo(0, lockedY); }
+            }
+        }
+        return { lock, unlock };
+    })();
+
     // ---- Theme ----
     function applyTheme(mode) {
         document.documentElement.classList.toggle('dark', mode === 'dark');
@@ -203,13 +229,19 @@
         buildPalette();
         window.CCHist.pushOverlay();
         paletteEl.classList.remove('hidden');
+        if (window.CCScrollLock) CCScrollLock.lock();
         paletteInput.value = '';
         renderPaletteItems();
         setTimeout(() => paletteInput.focus(), 30);
         if (window.lucide) window.lucide.createIcons();
         if (window.CCi18n) CCi18n.applyToDom(paletteEl);
     }
-    function closePalette() { if (paletteEl) paletteEl.classList.add('hidden'); }
+    function closePalette() {
+        if (paletteEl && !paletteEl.classList.contains('hidden')) {
+            paletteEl.classList.add('hidden');
+            if (window.CCScrollLock) CCScrollLock.unlock();
+        }
+    }
     window.CCHist.registerCloser(() => {
         if (paletteEl && !paletteEl.classList.contains('hidden')) { closePalette(); return true; }
         return false;

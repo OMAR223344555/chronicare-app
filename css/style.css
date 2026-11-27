@@ -749,6 +749,34 @@ body.drawer-open {
     overflow: hidden;
 }
 
+/* Full scroll lock while any overlay (drawer, palette, modal) is open:
+   body is frozen at its scroll offset by CCScrollLock so swipes on the
+   overlay cannot rubber-band the page or collapse the browser toolbar. */
+html.overlay-open, html.overlay-open body {
+    overflow: hidden;
+}
+body.scroll-locked {
+    position: fixed;
+    left: 0;
+    right: 0;
+    width: 100%;
+}
+
+/* touches on a backdrop never scroll anything */
+.drawer-overlay, .palette-overlay {
+    overscroll-behavior: none;
+    touch-action: none;
+}
+
+/* the drawer may scroll its own nav if it overflows, but never chains */
+#sidebar.mobile-open {
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+}
+.palette-card, .notif-panel, #fileModal, #shareModal {
+    overscroll-behavior: contain;
+}
+
 @media (max-width: 767px) {
     #sidebar.mobile-open {
         display: flex !important;

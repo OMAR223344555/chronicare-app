@@ -289,6 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sidebar.classList.remove('hidden');
         sidebar.classList.add('mobile-open');
         document.body.classList.add('drawer-open');
+        if (window.CCScrollLock) CCScrollLock.lock();
         if (mobileMenuBtn) mobileMenuBtn.setAttribute('aria-expanded', 'true');
         if (!document.querySelector('.drawer-overlay')) {
             const overlay = document.createElement('div');
@@ -303,6 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sidebar.classList.add('hidden');
         sidebar.classList.remove('mobile-open');
         document.body.classList.remove('drawer-open');
+        if (window.CCScrollLock) CCScrollLock.unlock();
         if (mobileMenuBtn) mobileMenuBtn.setAttribute('aria-expanded', 'false');
         const overlay = document.querySelector('.drawer-overlay');
         if (overlay) overlay.remove();
@@ -469,10 +471,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.CCHist) CCHist.pushOverlay();
         fileModal.classList.remove('hidden');
         fileModal.classList.add('flex');
+        if (window.CCScrollLock) CCScrollLock.lock();
         refreshIcons();
     }
     function closeFileModal() {
         if (!fileModal) return;
+        if (!fileModal.classList.contains('hidden')) { if (window.CCScrollLock) CCScrollLock.unlock(); }
         fileModal.classList.add('hidden');
         fileModal.classList.remove('flex');
     }
@@ -1065,12 +1069,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeShareModal = document.getElementById('closeShareModal');
     let pendingShare = null;
 
-    function openShareModal() { if (shareModal) { if (window.CCHist) CCHist.pushOverlay(); shareModal.classList.remove('hidden'); shareModal.classList.add('flex'); refreshIcons(); } }
+    function openShareModal() { if (shareModal) { if (window.CCHist) CCHist.pushOverlay(); shareModal.classList.remove('hidden'); shareModal.classList.add('flex'); if (window.CCScrollLock) CCScrollLock.lock(); refreshIcons(); } }
     if (window.CCHist) CCHist.registerCloser(() => {
         if (shareModal && !shareModal.classList.contains('hidden')) { hideShareModal(); return true; }
         return false;
     });
-    function hideShareModal() { if (shareModal) { shareModal.classList.add('hidden'); shareModal.classList.remove('flex'); } pendingShare = null; }
+    function hideShareModal() { if (shareModal && !shareModal.classList.contains('hidden')) { if (window.CCScrollLock) CCScrollLock.unlock(); shareModal.classList.add('hidden'); shareModal.classList.remove('flex'); } pendingShare = null; }
     if (closeShareModal) closeShareModal.addEventListener('click', hideShareModal);
     if (shareModal) shareModal.addEventListener('click', (e) => { if (e.target === shareModal) hideShareModal(); });
 
