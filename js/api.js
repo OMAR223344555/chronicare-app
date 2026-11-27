@@ -111,7 +111,7 @@ window.CCApi = (function () {
     }
 
     async function googleLogin(credential) {
-        const d = await post('/auth/google/', { id_token: credential });
+        const d = await post('/auth/google/', { credential: credential });
         localStorage.setItem(LS_TOK, d.token);
         localStorage.setItem(LS_USER, JSON.stringify(d.user));
         return d.user;

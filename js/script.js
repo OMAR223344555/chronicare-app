@@ -314,9 +314,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                         try {
                             const user = await CCApi.googleLogin(resp.credential);
                             if (user.role !== 'patient') { landForRole(user.role); return; }
-                            await CCApi.hydratePatient(state, CONDITION_LABELS, CATEGORY_LABELS);
-                            apiMode = true;
-                            CCApi.populateShareForm(state);
+                            try {
+                                await CCApi.hydratePatient(state, CONDITION_LABELS, CATEGORY_LABELS);
+                                apiMode = true;
+                                CCApi.populateShareForm(state);
+                            } catch (e2) { /* keep built-in demo data; session is valid */ }
                             applyUserChrome(user);
                             applyLiveOverview();
                             landForRole('patient');
