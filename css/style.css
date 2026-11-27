@@ -760,8 +760,11 @@ body.drawer-open {
         left: 0;
         bottom: 0;
         width: min(78vw, 300px);
-        height: 100%;
-        height: 100dvh;
+        /* Stretch between the viewport edges (top:0 + bottom:0, height auto)
+           so the drawer tracks the mobile browser toolbar collapse/expand
+           live. Any explicit height (100vh/100dvh) would win over bottom:0
+           per the over-constrained rule and leave a page strip visible below
+           the drawer while the toolbar animates. */
         z-index: 60;
         background: #ffffff;
         overflow-y: auto;
@@ -770,9 +773,11 @@ body.drawer-open {
         animation: drawerSlideIn 0.25s ease;
     }
 
-    /* keep the bottom block (profile / sign out) pinned low without breaking top alignment */
+    /* keep the bottom block (profile / sign out) pinned low without breaking top alignment,
+       and lift it above the bottom safe area (gesture bar / home indicator) */
     #sidebar.mobile-open > :last-child {
         margin-top: auto;
+        padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
     }
 }
 
@@ -1315,48 +1320,48 @@ html.dark body.portal-luxe {
 }
 
 /* ---------- Sidebar: deep navy gradient, glass accents ---------- */
-body.portal-luxe #sidebar {
+body.portal-luxe #sidebar , body.sidebar-luxe #sidebar {
     background: linear-gradient(178deg, #0f2a4d 0%, #0c2340 45%, #091a30 100%);
     border-inline-end: 1px solid rgba(255, 255, 255, 0.06);
     box-shadow: 4px 0 32px rgba(9, 26, 48, 0.25);
 }
 @media (min-width: 768px) {
-    body.portal-luxe #sidebar { position: relative; }
+    body.portal-luxe #sidebar , body.sidebar-luxe #sidebar { position: relative; }
 }
-body.portal-luxe #sidebar::before {
+body.portal-luxe #sidebar::before , body.sidebar-luxe #sidebar::before {
     content: '';
     position: absolute;
     inset: 0;
     pointer-events: none;
     background: radial-gradient(420px 200px at 20% 0%, rgba(34, 211, 238, 0.14), transparent 65%);
 }
-body.portal-luxe #sidebar > * { position: relative; }
+body.portal-luxe #sidebar > * , body.sidebar-luxe #sidebar > * { position: relative; }
 
 /* brand */
-body.portal-luxe #sidebar h1 { color: #ffffff; letter-spacing: -0.02em; }
-body.portal-luxe #sidebar p[data-i18n^="portal"] { color: #67e8f9; }
-body.portal-luxe #sidebar .text-cyan-500 { color: #22d3ee; filter: drop-shadow(0 0 10px rgba(34, 211, 238, 0.45)); }
+body.portal-luxe #sidebar h1 , body.sidebar-luxe #sidebar h1 { color: #ffffff; letter-spacing: -0.02em; }
+body.portal-luxe #sidebar p[data-i18n^="portal"] , body.sidebar-luxe #sidebar p[data-i18n^="portal"] { color: #67e8f9; }
+body.portal-luxe #sidebar .text-cyan-500 , body.sidebar-luxe #sidebar .text-cyan-500 { color: #22d3ee; filter: drop-shadow(0 0 10px rgba(34, 211, 238, 0.45)); }
 
 /* section label */
-body.portal-luxe #sidebar p.tracking-wider { color: rgba(163, 190, 214, 0.6); letter-spacing: 0.14em; }
+body.portal-luxe #sidebar p.tracking-wider , body.sidebar-luxe #sidebar p.tracking-wider { color: rgba(163, 190, 214, 0.6); letter-spacing: 0.14em; }
 
 /* nav items */
-body.portal-luxe #sidebar .portal-nav-btn {
+body.portal-luxe #sidebar .portal-nav-btn , body.sidebar-luxe #sidebar .portal-nav-btn {
     color: #b9cbde;
     border-radius: 12px;
     position: relative;
 }
-body.portal-luxe #sidebar .portal-nav-btn:hover {
+body.portal-luxe #sidebar .portal-nav-btn:hover , body.sidebar-luxe #sidebar .portal-nav-btn:hover {
     background: rgba(255, 255, 255, 0.07);
     color: #ffffff;
 }
 body.portal-luxe #sidebar .portal-nav-btn.bg-cyan-50,
-body.portal-luxe #sidebar .portal-nav-btn.bg-cyan-50.text-\[\#0c2340\] {
+body.portal-luxe #sidebar .portal-nav-btn.bg-cyan-50.text-\[\#0c2340\] , body.sidebar-luxe #sidebar .portal-nav-btn.bg-cyan-50.text-\[\#0c2340\] {
     background: linear-gradient(90deg, rgba(34, 211, 238, 0.22), rgba(34, 211, 238, 0.10));
     color: #ffffff;
     box-shadow: inset 0 0 0 1px rgba(34, 211, 238, 0.28), 0 4px 14px rgba(34, 211, 238, 0.12);
 }
-body.portal-luxe #sidebar .portal-nav-btn.bg-cyan-50::before {
+body.portal-luxe #sidebar .portal-nav-btn.bg-cyan-50::before , body.sidebar-luxe #sidebar .portal-nav-btn.bg-cyan-50::before {
     content: '';
     position: absolute;
     inset-inline-start: 0;
@@ -1369,28 +1374,36 @@ body.portal-luxe #sidebar .portal-nav-btn.bg-cyan-50::before {
 }
 
 /* profile footer */
-body.portal-luxe #sidebar .border-t { border-color: rgba(255, 255, 255, 0.10); }
+body.portal-luxe #sidebar .border-t , body.sidebar-luxe #sidebar .border-t { border-color: rgba(255, 255, 255, 0.10); }
 body.portal-luxe #sidebar p.text-sm.font-bold,
-body.portal-luxe #sidebar .text-\[\#0c2340\] { color: #eaf2fa; }
+body.portal-luxe #sidebar .text-\[\#0c2340\] , body.sidebar-luxe #sidebar .text-\[\#0c2340\] { color: #eaf2fa; }
 body.portal-luxe #sidebar p.text-xs,
-body.portal-luxe #sidebar .text-slate-500 { color: #8ea2b8; }
-body.portal-luxe #sidebar .text-slate-600 { color: #b3c2d4; }
-body.portal-luxe #sidebar .bg-slate-800 { background: rgba(34, 211, 238, 0.18); color: #a5f3fc; }
-body.portal-luxe #sidebar .bg-cyan-200 { background: rgba(34, 211, 238, 0.20); color: #cffafe; }
-body.portal-luxe #sidebar a { color: #b9cbde; }
-body.portal-luxe #sidebar a:hover { background: rgba(255, 255, 255, 0.07); color: #ffffff; }
-html.dark body.portal-luxe #sidebar {
+body.portal-luxe #sidebar .text-slate-500 , body.sidebar-luxe #sidebar .text-slate-500 { color: #8ea2b8; }
+body.portal-luxe #sidebar .text-slate-600 , body.sidebar-luxe #sidebar .text-slate-600 { color: #b3c2d4; }
+body.portal-luxe #sidebar .bg-slate-800 , body.sidebar-luxe #sidebar .bg-slate-800 { background: rgba(34, 211, 238, 0.18); color: #a5f3fc; }
+body.portal-luxe #sidebar .bg-cyan-200 , body.sidebar-luxe #sidebar .bg-cyan-200 { background: rgba(34, 211, 238, 0.20); color: #cffafe; }
+body.portal-luxe #sidebar a , body.sidebar-luxe #sidebar a { color: #b9cbde; }
+body.portal-luxe #sidebar a:hover , body.sidebar-luxe #sidebar a:hover { background: rgba(255, 255, 255, 0.07); color: #ffffff; }
+html.dark body.portal-luxe #sidebar , html.dark body.sidebar-luxe #sidebar {
     background: linear-gradient(178deg, #0e2138 0%, #0b1a2d 50%, #081422 100%);
+}
+
+
+/* patient portal tagline + help card on the navy sidebar */
+body.sidebar-luxe #sidebar p[data-i18n="app.tagline"] { color: #67e8f9; }
+body.sidebar-luxe #sidebar div.bg-cyan-50.border {
+    background: rgba(34, 211, 238, 0.10);
+    border-color: rgba(34, 211, 238, 0.25);
 }
 
 /* mobile drawer matches the navy identity */
 @media (max-width: 767px) {
-    body.portal-luxe #sidebar.mobile-open {
+    body.portal-luxe #sidebar.mobile-open , body.sidebar-luxe #sidebar.mobile-open {
         background: linear-gradient(178deg, #0f2a4d 0%, #0c2340 45%, #091a30 100%);
         box-shadow: 4px 0 32px rgba(0, 0, 0, 0.45);
     }
-    body.portal-luxe #sidebar #mobile-menu-close { color: #8ea2b8; }
-    body.portal-luxe #sidebar #mobile-menu-close:hover { color: #ffffff; }
+    body.portal-luxe #sidebar #mobile-menu-close , body.sidebar-luxe #sidebar #mobile-menu-close { color: #8ea2b8; }
+    body.portal-luxe #sidebar #mobile-menu-close:hover , body.sidebar-luxe #sidebar #mobile-menu-close:hover { color: #ffffff; }
 }
 
 /* ---------- Top bar (mobile) + header controls ---------- */
