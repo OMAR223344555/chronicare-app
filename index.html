@@ -21,6 +21,40 @@
         /* Boot failsafe: in no-session (or timed-out boot) mode the splash never shows and the auth view wins over .hidden */
         .cc-no-session #boot-splash { display: none !important; }
         .cc-no-session #auth-view { display: block !important; }
+
+        /* Boot splash: fully self-contained (paints before any CDN asset) */
+        #boot-splash.hidden { display: none !important; }
+        #boot-splash { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center;
+            background: radial-gradient(130% 100% at 50% 0%, #ffffff 0%, #eef4f9 55%, #e3edf5 100%); }
+        html.dark #boot-splash { background: radial-gradient(130% 100% at 50% 0%, #0e1e33 0%, #0a1522 60%, #070f1c 100%); }
+        .cc-splash-inner { display: flex; flex-direction: column; align-items: center; gap: 20px; padding: 24px; }
+        .cc-splash-mark { position: relative; width: 128px; height: 128px; display: flex; align-items: center; justify-content: center; }
+        .cc-splash-mark img { width: 108px; height: auto; position: relative; z-index: 1; animation: cc-breathe 2.2s ease-in-out infinite;
+            filter: drop-shadow(0 10px 26px rgba(8, 145, 178, .30)); }
+        .cc-splash-mark::before { content: ""; position: absolute; inset: 0; border-radius: 50%;
+            background: radial-gradient(closest-side, rgba(8,145,178,.16), rgba(8,145,178,0) 75%); animation: cc-breathe 2.2s ease-in-out infinite; }
+        .cc-splash-mark::after { content: ""; position: absolute; inset: 4px; border-radius: 50%;
+            border: 2px solid rgba(8, 145, 178, .45); animation: cc-ripple 2.2s ease-out infinite; }
+        html.dark .cc-splash-mark::after { border-color: rgba(34, 211, 238, .4); }
+        .cc-splash-word { font-family: Inter, system-ui, sans-serif; font-weight: 800; font-size: 21px; letter-spacing: .06em; color: #0c2340; }
+        html.dark .cc-splash-word { color: #e2f3ff; }
+        .cc-splash-ecg { width: 136px; height: 34px; overflow: visible; }
+        .cc-splash-ecg path { stroke: #0891b2; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; fill: none;
+            stroke-dasharray: 260; animation: cc-ecg 2.6s ease-in-out infinite; }
+        html.dark .cc-splash-ecg path { stroke: #22d3ee; }
+        .cc-splash-bar { width: 136px; height: 4px; border-radius: 999px; background: rgba(12, 35, 64, .10); overflow: hidden; }
+        html.dark .cc-splash-bar { background: rgba(226, 243, 255, .12); }
+        .cc-splash-bar span { display: block; height: 100%; width: 40%; border-radius: 999px;
+            background: linear-gradient(90deg, #0c2340, #0891b2); animation: cc-slide 1.4s ease-in-out infinite; }
+        html.dark .cc-splash-bar span { background: linear-gradient(90deg, #155e75, #22d3ee); }
+        @keyframes cc-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+        @keyframes cc-ripple { 0% { transform: scale(.9); opacity: .8; } 70% { transform: scale(1.25); opacity: 0; } 100% { opacity: 0; } }
+        @keyframes cc-ecg { 0% { stroke-dashoffset: 260; } 55% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: -260; } }
+        @keyframes cc-slide { 0% { transform: translateX(-120%); } 100% { transform: translateX(340%); } }
+        @media (prefers-reduced-motion: reduce) {
+            .cc-splash-mark img, .cc-splash-mark::before, .cc-splash-mark::after, .cc-splash-ecg path, .cc-splash-bar span { animation: none; }
+            .cc-splash-ecg path { stroke-dasharray: none; }
+        }
     </style>
     <title>Chronicare - Health Management System</title>
 
@@ -42,16 +76,24 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Stylesheet -->
-    <link rel="stylesheet" href="./css/style.css?v=25">
+    <link rel="stylesheet" href="./css/style.css?v=26">
 </head>
 
 <body class="sidebar-luxe bg-slate-100 min-h-screen font-[Inter] antialiased">
     <a href="#main-content" class="skip-link" data-i18n="a11y.skip">Skip to main content</a>
 
     <!-- Neutral boot splash: replaced by the right view once the session check runs (no sign-in flash) -->
-    <div id="boot-splash" class="min-h-screen flex flex-col items-center justify-center gap-4" style="background: inherit;">
-        <img src="./img/logo-transparent.png" alt="Chronicare" class="w-16 h-16 opacity-80">
-        <div class="w-8 h-8 border-4 border-slate-200 border-t-cyan-600 rounded-full animate-spin"></div>
+    <div id="boot-splash" role="status" aria-label="Loading Chronicare">
+        <div class="cc-splash-inner">
+            <div class="cc-splash-mark">
+                <img src="./img/logo-mark.png" alt="Chronicare" width="108">
+            </div>
+            <div class="cc-splash-word">Chronicare</div>
+            <svg class="cc-splash-ecg" viewBox="0 0 120 32" aria-hidden="true">
+                <path d="M0 16 H26 L33 16 38 5 44 27 50 9 55 16 H70 L76 16 81 8 87 24 92 16 H120" />
+            </svg>
+            <div class="cc-splash-bar"><span></span></div>
+        </div>
     </div>
 
     <!-- ======================================================================
@@ -1331,10 +1373,10 @@
     </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
-    <script src="./js/api.js?v=25"></script>
-    <script src="./js/shared.js?v=25"></script>
-    <script src="./js/i18n.js?v=25"></script>
-    <script src="./js/script.js?v=25"></script>
+    <script src="./js/api.js?v=26"></script>
+    <script src="./js/shared.js?v=26"></script>
+    <script src="./js/i18n.js?v=26"></script>
+    <script src="./js/script.js?v=26"></script>
 
     <!-- Floating theme + language controls -->
     <div class="fab-stack">
