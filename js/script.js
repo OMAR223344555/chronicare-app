@@ -288,6 +288,52 @@ document.addEventListener('DOMContentLoaded', async () => {
         showView('overview');
     }
 
+    // --- Google Sign-In (GSI) ---
+    (function initGoogleSignIn() {
+        const container = document.getElementById('google-gsi-container');
+        const fallback = document.getElementById('google-fallback-btn');
+        if (!container && !fallback) return;
+        if (fallback) {
+            fallback.addEventListener('click', () => {
+                if (!window.google || !google.accounts || !google.accounts.id) {
+                    showToast(CCApi.L('Google sign-in is still loading - please try again in a moment', 'تسجيل الدخول عبر جوجل لا يزال يُحمَّل - حاول مجدداً بعد لحظات'), 'info');
+                }
+            });
+        }
+        let attempts = 0;
+        const timer = setInterval(() => {
+            attempts++;
+            const ready = window.google && google.accounts && google.accounts.id && window.CC_GOOGLE_CLIENT_ID;
+            if (!ready) { if (attempts >= 40) clearInterval(timer); return; } // give up after ~10s
+            clearInterval(timer);
+            try {
+                google.accounts.id.initialize({
+                    client_id: window.CC_GOOGLE_CLIENT_ID,
+                    callback: async (resp) => {
+                        if (!resp || !resp.credential) return;
+                        try {
+                            const user = await CCApi.googleLogin(resp.credential);
+                            if (user.role !== 'patient') { landForRole(user.role); return; }
+                            await CCApi.hydratePatient(state, CONDITION_LABELS, CATEGORY_LABELS);
+                            apiMode = true;
+                            CCApi.populateShareForm(state);
+                            applyUserChrome(user);
+                            applyLiveOverview();
+                            landForRole('patient');
+                        } catch (err) {
+                            showToast(CCApi.L('Google sign-in failed: ', 'فشل تسجيل الدخول عبر جوجل: ') + (err.message || err), 'warn');
+                        }
+                    },
+                });
+                if (container) {
+                    google.accounts.id.renderButton(container, { theme: 'outline', shape: 'pill', size: 'large', width: 320 });
+                    container.classList.remove('hidden');
+                    if (fallback) fallback.classList.add('hidden');
+                }
+            } catch (e) { /* GSI init failed; fallback button stays visible */ }
+        }, 250);
+    })();
+
     const signinRole = document.getElementById('signin-role');
     const signinFormEl = document.querySelector('#signin-form-box form');
     if (signinFormEl) {

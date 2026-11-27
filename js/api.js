@@ -7,6 +7,7 @@
    - When no session exists or the server is unreachable, pages keep their
      built-in demo data (demo fallback).
    ========================================================================== */
+window.CC_GOOGLE_CLIENT_ID = '223774686616-67dftentnt23fomhmm25bjqrgo5n7oiu.apps.googleusercontent.com';
 window.CCApi = (function () {
     const LS_URL = 'cc-api-url';
     const LS_TOK = 'cc-api-token';
@@ -104,6 +105,13 @@ window.CCApi = (function () {
 
     async function login(email, password) {
         const d = await post('/auth/login/', { email, password });
+        localStorage.setItem(LS_TOK, d.token);
+        localStorage.setItem(LS_USER, JSON.stringify(d.user));
+        return d.user;
+    }
+
+    async function googleLogin(credential) {
+        const d = await post('/auth/google/', { id_token: credential });
         localStorage.setItem(LS_TOK, d.token);
         localStorage.setItem(LS_USER, JSON.stringify(d.user));
         return d.user;
@@ -368,7 +376,7 @@ window.CCApi = (function () {
         base, setBase, token, user, hasSession, clearSession, L,
         req, get, post, patch, all, ping,
         adminStats: () => refs.adminStats || null,
-        login, register, logout,
+        login, googleLogin, register, logout,
         hydratePatient, hydrateDoctor, hydrateAdmin,
         toRecord, toShare, uploadFile, testTypeId, allCategoryIds, populateShareForm,
         _refs: refs,
