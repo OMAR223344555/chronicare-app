@@ -1319,7 +1319,9 @@ body.portal-luxe #sidebar {
     background: linear-gradient(178deg, #0f2a4d 0%, #0c2340 45%, #091a30 100%);
     border-inline-end: 1px solid rgba(255, 255, 255, 0.06);
     box-shadow: 4px 0 32px rgba(9, 26, 48, 0.25);
-    position: relative;
+}
+@media (min-width: 768px) {
+    body.portal-luxe #sidebar { position: relative; }
 }
 body.portal-luxe #sidebar::before {
     content: '';
@@ -1586,3 +1588,26 @@ body.portal-luxe .bg-white.rounded-2xl h3 { letter-spacing: -0.01em; }
 
 /* footer microcopy */
 body.portal-luxe main > p[data-i18n="app.footer"] { letter-spacing: 0.18em; }
+
+/* ==================================================================
+   Horizontal overflow hardening (all portals, all widths)
+   ================================================================== */
+
+/* Never let the page itself scroll sideways; tables scroll inside their cards */
+html, body {
+    overflow-x: clip;
+}
+
+/* Flex/grid children must be allowed to shrink below content width */
+#portal-view, #main-content { min-width: 0; }
+#main-content .grid > *,
+#main-content .flex > * {
+    min-width: 0;
+}
+.chart-card, .relative.h-56, .relative.h-64 { min-width: 0; }
+canvas { max-width: 100%; }
+
+/* The drawer is a fixed overlay and must never affect page width */
+#sidebar.mobile-open {
+    max-width: 100vw;
+}
