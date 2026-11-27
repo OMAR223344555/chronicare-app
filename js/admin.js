@@ -208,6 +208,10 @@ document.addEventListener('DOMContentLoaded', () => {
     refreshIcons();
 
     // Deep links: #users, #reference, #audit
-    const hash = window.location.hash.replace('#', '').trim();
-    if (['users', 'reference', 'audit'].includes(hash)) showView(hash);
+    function handleHashRoute() {
+        const hash = window.location.hash.replace('#', '').trim();
+        if (['users', 'reference', 'audit'].includes(hash)) showView(hash);
+    }
+    window.addEventListener('hashchange', handleHashRoute);
+    handleHashRoute();
 });

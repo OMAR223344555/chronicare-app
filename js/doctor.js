@@ -164,14 +164,20 @@ document.addEventListener('DOMContentLoaded', () => {
     refreshIcons();
 
     // Deep links: #patients or #patient-records-<id>
-    const hash = window.location.hash.replace('#', '').trim();
-    if (hash.startsWith('patient-records-')) {
-        const p = patients.find(x => x.id === Number(hash.split('-').pop()));
-        if (p) {
-            currentPatient = p;
-            renderPatientRecords(p);
-            document.getElementById('patientRecordsNav').classList.remove('hidden');
-            showView('patient-records');
+    function handleHashRoute() {
+        const hash = window.location.hash.replace('#', '').trim();
+        if (hash === 'patients') {
+            showView('patients');
+        } else if (hash.startsWith('patient-records-')) {
+            const p = patients.find(x => x.id === Number(hash.split('-').pop()));
+            if (p) {
+                currentPatient = p;
+                renderPatientRecords(p);
+                document.getElementById('patientRecordsNav').classList.remove('hidden');
+                showView('patient-records');
+            }
         }
     }
+    window.addEventListener('hashchange', handleHashRoute);
+    handleHashRoute();
 });
