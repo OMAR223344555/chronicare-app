@@ -265,4 +265,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     window.addEventListener('hashchange', handleHashRoute);
     handleHashRoute();
+
+    // ---- Stage 2: notifications + palette (doctor) ----
+    const doctorNotifs = [
+        { icon: 'folder-heart', kind: 'share', text: 'Maya Hassan shared 2 new files with you', time: '3 hours ago', unread: true },
+        { icon: 'flask-conical', kind: 'info', text: 'New lab trend available for Omar Adel', time: 'Yesterday', unread: true },
+        { icon: 'calendar-check', kind: 'success', text: 'Appointment with Sara Mahmoud confirmed for 28 Nov', time: '2 days ago', unread: false },
+    ];
+    window.CC_NOTIFS = () => doctorNotifs;
+    window.CC_SOURCES = () => {
+        const t = (k, f) => window.CCi18n ? CCi18n.t(k, f) : f;
+        const pages = [
+            { icon: 'users', title: t('nav.patients', 'My Patients'), keywords: 'list', run: () => showView('patients') },
+            { icon: 'folder-heart', title: t('nav.patientRecords', 'Patient Records'), keywords: 'files notes', run: () => showView('patient-records') },
+        ];
+        const pats = patients.map(p => ({
+            icon: 'user',
+            title: p.name,
+            subtitle: p.conditions,
+            keywords: 'patient ' + p.conditions,
+            run: () => {
+                const btn = document.querySelector('.open-patient-btn[data-id="' + p.id + '"]');
+                if (btn) btn.click();
+            },
+        }));
+        const actions = [
+            { icon: 'moon', title: 'Toggle dark mode', keywords: 'theme', run: () => CCUI.toggleTheme() },
+            { icon: 'languages', title: 'Switch language / تغيير اللغة', keywords: 'arabic english', run: () => CCi18n.setLang(CCi18n.lang === 'ar' ? 'en' : 'ar') },
+        ];
+        return [...pages, ...pats, ...actions];
+    };
 });

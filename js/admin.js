@@ -281,4 +281,32 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     window.addEventListener('hashchange', handleHashRoute);
     handleHashRoute();
+
+    // ---- Stage 2: notifications + palette (admin) ----
+    const adminNotifs = [
+        { icon: 'user-plus', kind: 'warn', text: '2 doctors are waiting for verification', time: '1 hour ago', unread: true },
+        { icon: 'user-check', kind: 'success', text: 'New patient registered: Sara Mahmoud', time: 'Yesterday', unread: true },
+        { icon: 'shield-alert', kind: 'info', text: 'Weekly audit summary is ready to review', time: '2 days ago', unread: false },
+    ];
+    window.CC_NOTIFS = () => adminNotifs;
+    window.CC_SOURCES = () => {
+        const t = (k, f) => window.CCi18n ? CCi18n.t(k, f) : f;
+        const pages = [
+            { icon: 'users', title: t('nav.users', 'Manage Users'), keywords: 'accounts doctors patients', run: () => showView('users') },
+            { icon: 'list-checks', title: t('nav.reference', 'Categories & Ranges'), keywords: 'lab reference', run: () => showView('reference') },
+            { icon: 'scroll-text', title: t('nav.audit', 'Audit Log'), keywords: 'history events', run: () => showView('audit') },
+        ];
+        const pend = pendingDoctors.map(d => ({
+            icon: 'user-plus',
+            title: d.name,
+            subtitle: d.specialty + ' • pending verification',
+            keywords: 'doctor pending approve ' + d.specialty,
+            run: () => showView('users'),
+        }));
+        const actions = [
+            { icon: 'moon', title: 'Toggle dark mode', keywords: 'theme', run: () => CCUI.toggleTheme() },
+            { icon: 'languages', title: 'Switch language / تغيير اللغة', keywords: 'arabic english', run: () => CCi18n.setLang(CCi18n.lang === 'ar' ? 'en' : 'ar') },
+        ];
+        return [...pages, ...pend, ...actions];
+    };
 });

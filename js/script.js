@@ -691,4 +691,114 @@ document.addEventListener('DOMContentLoaded', () => {
     renderShares();
     renderLabTable();
     renderTrendChart();
+
+    // ==========================================================================
+    // 9. Stage 2: overview chart, count-up stats, notifications, palette
+    // ==========================================================================
+    let overviewChart = null;
+    let overviewMetric = 'HBA1C';
+    function chartColors() {
+        const dark = document.documentElement.classList.contains('dark');
+        return {
+            grid: dark ? 'rgba(148,163,184,0.12)' : 'rgba(100,116,139,0.12)',
+            tick: dark ? '#8ea2b8' : '#64748b',
+            line: '#06b6d4',
+            fill: dark ? 'rgba(6,182,212,0.18)' : 'rgba(6,182,212,0.12)',
+            point: '#0c2340',
+            pointDark: '#e6eef7',
+        };
+    }
+    function renderOverviewChart() {
+        const canvas = document.getElementById('overviewChart');
+        if (!canvas || typeof Chart === 'undefined') return;
+        const rows = state.labs.filter(l => l.test === overviewMetric).slice().sort((a, b) => a.date.localeCompare(b.date));
+        const c = chartColors();
+        const meta = rows[0] || {};
+        if (overviewChart) overviewChart.destroy();
+        overviewChart = new Chart(canvas, {
+            type: 'line',
+            data: {
+                labels: rows.map(r => fmtDate(r.date)),
+                datasets: [{
+                    label: (meta.label || overviewMetric) + (meta.unit ? ' (' + meta.unit + ')' : ''),
+                    data: rows.map(r => r.value),
+                    borderColor: c.line,
+                    backgroundColor: c.fill,
+                    fill: true,
+                    tension: 0.35,
+                    pointRadius: 4,
+                    pointBackgroundColor: document.documentElement.classList.contains('dark') ? c.pointDark : c.point,
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: c.grid }, ticks: { color: c.tick, font: { size: 10 } } },
+                    y: { grid: { color: c.grid }, ticks: { color: c.tick, font: { size: 10 } } },
+                },
+            },
+        });
+    }
+    const chipsWrap = document.getElementById('overviewChartChips');
+    if (chipsWrap) {
+        chipsWrap.addEventListener('click', (e) => {
+            const chip = e.target.closest('.chart-chip');
+            if (!chip) return;
+            chipsWrap.querySelectorAll('.chart-chip').forEach(x => x.classList.remove('active'));
+            chip.classList.add('active');
+            overviewMetric = chip.dataset.metric;
+            renderOverviewChart();
+        });
+    }
+    document.addEventListener('cc:theme', renderOverviewChart);
+    document.addEventListener('cc:lang', renderOverviewChart);
+    const ovCanvas = document.getElementById('overviewChart');
+    if (ovCanvas) renderOverviewChart();
+
+    // count-up stats when overview shows
+    function animateStats() {
+        document.querySelectorAll('.stat-num').forEach(el => {
+            CCUI.countUp(el, parseFloat(el.dataset.count), { decimals: +(el.dataset.decimals || 0) });
+        });
+    }
+    if (document.querySelector('.stat-num')) animateStats();
+
+    // notifications (patient)
+    const patientNotifs = [
+        { icon: 'eye', kind: 'share', text: 'Dr. Ahmed Farouk viewed your shared HbA1c Lab Report', time: '2 hours ago', unread: true },
+        { icon: 'flask-conical', kind: 'info', text: 'New lab result available: Fasting glucose 108 mg/dL', time: 'Yesterday', unread: true },
+        { icon: 'pill', kind: 'warn', text: 'Medication reminder: Metformin 500mg due at 9:00 PM', time: 'Today', unread: true },
+        { icon: 'clock', kind: 'warn', text: 'Sharing access for Dr. Salma Nabil expires on 25 Nov', time: '2 days ago', unread: false },
+        { icon: 'calendar-check', kind: 'success', text: 'Appointment confirmed: Cardiology follow-up, 30 Nov 11:30 AM', time: '3 days ago', unread: false },
+    ];
+    window.CC_NOTIFS = () => patientNotifs;
+
+    // command palette sources (patient)
+    window.CC_SOURCES = () => {
+        const t = (k, f) => window.CCi18n ? CCi18n.t(k, f) : f;
+        const go = (v) => () => showView(v);
+        const pages = [
+            { icon: 'layout-dashboard', title: t('nav.overview', 'Overview'), keywords: 'home dashboard', run: go('overview') },
+            { icon: 'folder-heart', title: t('nav.medicalFiles', 'My Medical Files'), keywords: 'records documents', run: go('medical-files') },
+            { icon: 'upload', title: t('nav.upload', 'Upload Record'), keywords: 'add file', run: go('upload-file') },
+            { icon: 'trending-up', title: t('nav.labTrends', 'Lab Trends'), keywords: 'charts results', run: go('lab-trends') },
+            { icon: 'sliders-horizontal', title: t('nav.timeline', 'Timeline & Archive'), keywords: 'history', run: go('timeline-archive') },
+            { icon: 'share-2', title: t('nav.sharing', 'Sharing & Access'), keywords: 'doctors permissions', run: go('sharing-access') },
+        ];
+        const recs = state.records.map(r => ({
+            icon: 'file-text',
+            title: r.name,
+            subtitle: (CONDITION_LABELS[r.condition] || r.condition) + ' • ' + fmtDate(r.date),
+            keywords: r.condition + ' ' + r.category + ' record file',
+            run: () => { showView('medical-files'); },
+        }));
+        const actions = [
+            { icon: 'moon', title: 'Toggle dark mode', keywords: 'theme light', run: () => CCUI.toggleTheme() },
+            { icon: 'languages', title: 'Switch language / تغيير اللغة', keywords: 'arabic english rtl', run: () => CCi18n.setLang(CCi18n.lang === 'ar' ? 'en' : 'ar') },
+            { icon: 'log-out', title: t('action.signOut', 'Sign out'), keywords: 'logout exit', run: () => showView('auth') },
+        ];
+        return [...pages, ...recs, ...actions];
+    };
 });

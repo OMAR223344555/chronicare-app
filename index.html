@@ -24,7 +24,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Stylesheet -->
-    <link rel="stylesheet" href="./css/style.css?v=3">
+    <link rel="stylesheet" href="./css/style.css?v=4">
 </head>
 
 <body class="bg-slate-100 min-h-screen font-[Inter] antialiased">
@@ -517,16 +517,21 @@
 
                 <div class="flex items-center gap-4">
                     <!-- Top Search -->
-                    <div class="hidden sm:flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-full px-4 py-2 text-sm text-slate-500 w-64 md:w-80">
+                    <button type="button" data-palette-trigger class="hidden sm:flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-full px-4 py-2 text-sm text-slate-500 w-64 md:w-80 hover:border-cyan-300 transition cursor-pointer">
                         <i data-lucide="search" class="w-4 h-4 text-slate-400"></i>
-                        <input type="text" placeholder="Search records, doctors..." data-i18n-placeholder="topbar.search" class="outline-none bg-transparent w-full text-sm">
+                        <span class="w-full text-start" data-i18n="topbar.search">Search records, doctors...</span>
                         <span class="text-[10px] bg-slate-200 text-slate-600 font-semibold px-1.5 py-0.5 rounded">⌘ K</span>
-                    </div>
+                    </button>
+
+                    <!-- Mobile Search (opens command palette) -->
+                    <button type="button" data-palette-trigger class="sm:hidden w-10 h-10 bg-white border border-slate-200 rounded-full flex items-center justify-center hover:bg-slate-50 text-slate-600 transition" aria-label="Search" data-i18n-aria="topbar.search">
+                        <i data-lucide="search" class="w-5 h-5"></i>
+                    </button>
 
                     <!-- Notification Bell -->
-                    <button class="w-10 h-10 bg-white border border-slate-200 rounded-full flex items-center justify-center hover:bg-slate-50 text-slate-600 transition relative" aria-label="Notifications" data-i18n-aria="topbar.notifications">
+                    <button data-notif-btn class="w-10 h-10 bg-white border border-slate-200 rounded-full flex items-center justify-center hover:bg-slate-50 text-slate-600 transition relative" aria-label="Notifications" data-i18n-aria="topbar.notifications">
                         <i data-lucide="bell" class="w-5 h-5"></i>
-                        <span class="w-2 h-2 bg-cyan-500 rounded-full absolute top-2.5 right-2.5"></span>
+                        <span data-notif-dot class="w-2 h-2 bg-cyan-500 rounded-full absolute top-2.5 right-2.5"></span>
                     </button>
 
                     <!-- User Pill -->
@@ -576,7 +581,7 @@
                     </div>
 
                     <!-- STATS CARDS -->
-                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 stagger-in">
                         <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm cursor-pointer hover:border-cyan-200 transition" data-navigate="medical-files">
                             <div class="flex justify-between items-center">
                                 <p class="text-[11px] font-bold text-slate-500 uppercase">Total Medical Files</p>
@@ -584,7 +589,7 @@
                                     <i data-lucide="file-text" class="w-4 h-4"></i>
                                 </div>
                             </div>
-                            <p class="text-3xl font-extrabold text-[#0c2340] mt-3">42</p>
+                            <p class="text-3xl font-extrabold text-[#0c2340] mt-3 stat-num" data-count="42">42</p>
                             <p class="text-xs text-green-600 font-semibold mt-1">+4 added this month</p>
                         </div>
 
@@ -595,7 +600,7 @@
                                     <i data-lucide="trending-up" class="w-4 h-4"></i>
                                 </div>
                             </div>
-                            <p class="text-3xl font-extrabold text-[#0c2340] mt-3">18</p>
+                            <p class="text-3xl font-extrabold text-[#0c2340] mt-3 stat-num" data-count="18">18</p>
                             <p class="text-xs text-slate-500 mt-1">Across 4 test types</p>
                         </div>
 
@@ -606,7 +611,7 @@
                                     <i data-lucide="share-2" class="w-4 h-4"></i>
                                 </div>
                             </div>
-                            <p class="text-3xl font-extrabold text-[#0c2340] mt-3">3</p>
+                            <p class="text-3xl font-extrabold text-[#0c2340] mt-3 stat-num" data-count="3">3</p>
                             <p class="text-xs text-slate-500 mt-1">2 doctors • 1 specialist</p>
                         </div>
 
@@ -617,9 +622,25 @@
                                     <i data-lucide="hard-drive" class="w-4 h-4"></i>
                                 </div>
                             </div>
-                            <p class="text-3xl font-extrabold text-[#0c2340] mt-3">1.8 <span class="text-base font-normal text-slate-400">GB</span></p>
+                            <p class="text-3xl font-extrabold text-[#0c2340] mt-3"><span class="stat-num" data-count="1.8" data-decimals="1">1.8</span> <span class="text-base font-normal text-slate-400">GB</span></p>
                             <p class="text-xs text-slate-500 mt-1">of 5 GB available</p>
                         </div>
+                    </div>
+
+                    <!-- HEALTH TRENDS CHART -->
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 mb-6 chart-card">
+                        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                            <div>
+                                <h3 class="font-bold text-[#0c2340] text-base" data-i18n="chart.title">Health trends</h3>
+                                <p class="text-xs text-slate-500" data-i18n="chart.subtitle">Track how your key results change over time</p>
+                            </div>
+                            <div class="flex gap-2" id="overviewChartChips">
+                                <button type="button" class="chart-chip active" data-metric="HBA1C">HbA1c</button>
+                                <button type="button" class="chart-chip" data-metric="FBG">Fasting glucose</button>
+                                <button type="button" class="chart-chip" data-metric="SBP">Systolic BP</button>
+                            </div>
+                        </div>
+                        <div style="position:relative;height:240px"><canvas id="overviewChart" aria-label="Health trends chart" role="img"></canvas></div>
                     </div>
 
                     <!-- BOTTOM GRID: RECENT RECORDS & RECENT ACTIVITY -->
@@ -688,22 +709,25 @@
                                 <p class="text-xs text-slate-500 mb-4">Updates across your records</p>
 
                                 <div class="space-y-4 text-sm">
-                                    <div class="flex justify-between items-start">
-                                        <div>
+                                    <div class="flex justify-between items-start gap-3">
+                                        <span class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5" style="background:#f5f3ff;color:#6d28d9"><i data-lucide="eye" class="w-4 h-4"></i></span>
+                                        <div class="flex-1">
                                             <p class="font-bold text-[#0c2340]">Dr. Ahmed viewed a shared report</p>
                                             <p class="text-xs text-slate-500 mt-0.5">HbA1c Lab Report • Shared access</p>
                                         </div>
                                         <span class="text-xs text-slate-400 font-medium">2h</span>
                                     </div>
-                                    <div class="flex justify-between items-start">
-                                        <div>
+                                    <div class="flex justify-between items-start gap-3">
+                                        <span class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5" style="background:#ecfdf5;color:#047857"><i data-lucide="upload" class="w-4 h-4"></i></span>
+                                        <div class="flex-1">
                                             <p class="font-bold text-[#0c2340]">New file uploaded successfully</p>
                                             <p class="text-xs text-slate-500 mt-0.5">HbA1c Lab Report • Diabetes</p>
                                         </div>
                                         <span class="text-xs text-slate-400 font-medium">1d</span>
                                     </div>
-                                    <div class="flex justify-between items-start">
-                                        <div>
+                                    <div class="flex justify-between items-start gap-3">
+                                        <span class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5" style="background:#fffbeb;color:#b45309"><i data-lucide="clock" class="w-4 h-4"></i></span>
+                                        <div class="flex-1">
                                             <p class="font-bold text-[#0c2340]">Access expires soon</p>
                                             <p class="text-xs text-slate-500 mt-0.5">Dr. Salma Nabil • 25 Nov 2026</p>
                                         </div>
@@ -1176,9 +1200,10 @@
     </div>
 
     <!-- Application Script -->
-    <script src="./js/shared.js?v=3"></script>
-    <script src="./js/i18n.js?v=3"></script>
-    <script src="./js/script.js?v=3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="./js/shared.js?v=4"></script>
+    <script src="./js/i18n.js?v=4"></script>
+    <script src="./js/script.js?v=4"></script>
 
     <!-- Floating theme + language controls -->
     <div class="fab-stack">
