@@ -3,7 +3,15 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        try {
+            if (localStorage.getItem('cc-theme') === 'dark') document.documentElement.classList.add('dark');
+            var __lang = localStorage.getItem('cc-lang') || 'en';
+            document.documentElement.lang = __lang;
+            document.documentElement.dir = (__lang === 'ar' ? 'rtl' : 'ltr');
+        } catch (e) {}
+    </script>
     <title>Chronicare - Health Management System</title>
 
     <!-- Tailwind CSS -->
@@ -16,10 +24,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Stylesheet -->
-    <link rel="stylesheet" href="./css/style.css?v=2">
+    <link rel="stylesheet" href="./css/style.css?v=3">
 </head>
 
 <body class="bg-slate-100 min-h-screen font-[Inter] antialiased">
+    <a href="#main-content" class="skip-link" data-i18n="a11y.skip">Skip to main content</a>
 
     <!-- ======================================================================
          1. AUTHENTICATION VIEW (Cloned from Login Folder)
@@ -41,7 +50,7 @@
                     <!-- LOGO -->
                     <div class="flex items-center gap-4 mb-12">
 
-                        <div class="relative flex items-center justify-center text-cyan-300">
+                        <div class="relative flex items-center justify-center text-cyan-300 hero-icon-float">
                             <i data-lucide="heart-pulse" class="w-16 h-16"></i>
                             <i data-lucide="plus" class="w-7 h-7 absolute"></i>
                         </div>
@@ -63,9 +72,9 @@
                     <div id="hero-signin-content">
 
                         <h2 class="text-3xl md:text-4xl font-bold leading-tight mb-10">
-                            Your health
+<span data-i18n="auth.heroTitle1">Your health</span>
                             <br>
-                            <span class="text-cyan-300">is our priority</span>
+                            <span class="text-cyan-300" data-i18n="auth.heroTitle2">is our priority</span>
                         </h2>
 
                         <ul class="space-y-6 text-base text-white">
@@ -74,25 +83,21 @@
                                 <div class="p-3 bg-cyan-300/20 rounded-full">
                                     <i data-lucide="calendar-days" class="w-6 h-6 text-cyan-300"></i>
                                 </div>
-                                <span>
-                                    Track Your Health
-                                    <br>
-                                    and Appointments
-                                </span>
+<span data-i18n="auth.feat1">Track Your Health and Appointments</span>
                             </li>
 
                             <li class="flex items-center gap-4">
                                 <div class="p-3 bg-cyan-300/20 rounded-full">
                                     <i data-lucide="pill" class="w-6 h-6 text-cyan-300"></i>
                                 </div>
-                                <span>Manage Your Medications</span>
+                                <span data-i18n="auth.feat2">Manage Your Medications</span>
                             </li>
 
                             <li class="flex items-center gap-4">
                                 <div class="p-3 bg-cyan-300/20 rounded-full">
                                     <i data-lucide="chart-no-axes-combined" class="w-6 h-6 text-cyan-300"></i>
                                 </div>
-                                <span>Monitor Your Condition</span>
+                                <span data-i18n="auth.feat3">Monitor Your Condition</span>
                             </li>
 
                         </ul>
@@ -162,15 +167,11 @@
 
                     <div class="text-center">
                         <img src="./img/logo.jpeg"
-                        alt="signin image"
+                        alt="Chronicare logo"
                         class="signin-image">
-                        <h2 class="text-4xl font-extrabold text-[#0c2340]">
-                            Sign In
-                        </h2>
+                        <h2 class="text-4xl font-extrabold text-[#0c2340]" data-i18n="auth.signIn">Sign In</h2>
 
-                        <p class="text-sm text-slate-600 mt-3">
-                            Welcome back to Chronicare
-                        </p>
+                        <p class="text-sm text-slate-600 mt-3" data-i18n="auth.welcome">Welcome back to Chronicare</p>
                     </div>
 
 
@@ -180,7 +181,7 @@
                         <div class="relative">
                             <i data-lucide="mail" class="w-5 h-5 absolute left-4 top-4 text-[#0c2340]"></i>
 
-                            <input type="email" placeholder="Email Address"
+                            <input type="email" placeholder="Email Address" data-i18n-placeholder="auth.email" aria-label="Email Address" data-i18n-aria="auth.email"
                                 class="auth-input w-full pl-12 pr-4 py-4 text-sm bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 required>
                         </div>
@@ -190,13 +191,13 @@
                         <div class="relative">
                             <i data-lucide="lock" class="w-5 h-5 absolute left-4 top-4 text-[#0c2340]"></i>
 
-                            <input type="password" id="signin-password" placeholder="Password"
+                            <input type="password" id="signin-password" placeholder="Password" data-i18n-placeholder="auth.password" aria-label="Password" data-i18n-aria="auth.password"
                                 class="auth-input w-full pl-12 pr-12 py-4 text-sm bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 required>
 
                             <button type="button"
                                 class="toggle-password-btn absolute right-4 top-4 text-slate-500"
-                                data-target="signin-password">
+                                data-target="signin-password" aria-label="Show or hide password">
                                 <i data-lucide="eye-off" class="w-5 h-5"></i>
                             </button>
                         </div>
@@ -205,14 +206,9 @@
                         <!-- REMEMBER -->
                         <div class="flex items-center justify-between text-sm">
 
-                            <label class="flex items-center gap-2 text-slate-700">
-                                <input type="checkbox" class="w-5 h-5">
-                                Remember me
-                            </label>
+                            <label class="flex items-center gap-2 text-slate-700"><input type="checkbox" class="w-5 h-5"><span data-i18n="auth.remember">Remember me</span></label>
 
-                            <a href="#" class="text-blue-700 font-semibold hover:underline">
-                                Forgot password?
-                            </a>
+                            <a href="#" class="text-blue-700 font-semibold hover:underline" data-i18n="auth.forgot">Forgot password?</a>
 
                         </div>
 
@@ -223,9 +219,9 @@
 
                             <select id="signin-role"
                                 class="auth-input w-full pl-12 pr-8 py-4 text-sm bg-slate-50 border border-slate-200 rounded-2xl appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                <option value="patient">Sign in as: Patient</option>
-                                <option value="doctor">Sign in as: Doctor</option>
-                                <option value="admin">Sign in as: Administrator</option>
+                                <option value="patient" data-i18n="auth.rolePatient">Sign in as: Patient</option>
+                                <option value="doctor" data-i18n="auth.roleDoctor">Sign in as: Doctor</option>
+                                <option value="admin" data-i18n="auth.roleAdmin">Sign in as: Administrator</option>
                             </select>
 
                             <i data-lucide="chevron-down" class="w-4 h-4 absolute right-4 top-4 pointer-events-none"></i>
@@ -236,9 +232,9 @@
                         <button type="submit"
                             class="w-full bg-[#0c2340] hover:bg-blue-900 text-white font-semibold py-4 rounded-full flex items-center justify-center gap-3 shadow-lg transition">
 
-                            Sign In
+                            <span data-i18n="auth.signIn">Sign In</span>
 
-                            <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                            <i data-lucide="arrow-right" class="w-5 h-5 rtl-flip"></i>
                         </button>
 
                     </form>
@@ -247,7 +243,7 @@
                     <!-- DIVIDER -->
                     <div class="relative flex items-center justify-center py-2">
                         <div class="border-t border-slate-200 w-full"></div>
-                        <span class="bg-white px-4 text-sm text-slate-500 absolute">or</span>
+                        <span class="bg-white px-4 text-sm text-slate-500 absolute" data-i18n="auth.or">or</span>
                     </div>
 
 
@@ -262,15 +258,14 @@
                             <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.7 1.26 6.61l4.02 3.15c.95-2.85 3.6-4.96 6.72-4.96z"/>
                         </svg>
 
-                        Continue with Google
-                    </button>
+                        <span data-i18n="auth.google">Continue with Google</span></button>
 
 
                     <p class="text-center text-sm text-slate-600 pt-2">
-                        Don't have an account?
+                        <span data-i18n="auth.noAccount">Don't have an account?</span>
 
                         <button type="button" id="to-signup-btn"
-                            class="text-blue-700 font-bold hover:underline">
+                            class="text-blue-700 font-bold hover:underline" data-i18n="auth.signUp">
                             Sign Up
                         </button>
                     </p>
@@ -441,41 +436,41 @@
                         </div>
                     </div>
                     <!-- Close button for mobile drawer -->
-                    <button id="mobile-menu-close" class="md:hidden text-slate-400 hover:text-slate-600">
+                    <button id="mobile-menu-close" aria-label="Close navigation menu" data-i18n-aria="drawer.close" class="md:hidden text-slate-400 hover:text-slate-600">
                         <i data-lucide="x" class="w-6 h-6"></i>
                     </button>
                 </div>
 
                 <!-- NAVIGATION SECTIONS -->
-                <p class="text-xs font-bold text-slate-400 tracking-wider mb-2">OVERVIEW</p>
+                <p class="text-xs font-bold text-slate-400 tracking-wider mb-2" data-i18n="nav.section.overview">OVERVIEW</p>
                 <div class="space-y-1 mb-6">
                     <button type="button" class="portal-nav-btn w-full flex items-center gap-3 p-3 rounded-xl transition text-sm font-semibold bg-cyan-50 text-[#0c2340]" data-target="overview" data-navigate="overview">
                         <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
-                        <span>Overview</span>
+                        <span data-i18n="nav.overview">Overview</span>
                     </button>
                 </div>
 
-                <p class="text-xs font-bold text-slate-400 tracking-wider mb-2">MY HEALTH</p>
+                <p class="text-xs font-bold text-slate-400 tracking-wider mb-2" data-i18n="nav.section.myHealth">MY HEALTH</p>
                 <div class="space-y-1 text-slate-600">
                     <button type="button" class="portal-nav-btn w-full flex items-center gap-3 p-3 rounded-xl transition text-sm font-semibold hover:bg-slate-50" data-target="medical-files" data-navigate="medical-files">
                         <i data-lucide="folder-heart" class="w-5 h-5"></i>
-                        <span>My Medical Files</span>
+                        <span data-i18n="nav.medicalFiles">My Medical Files</span>
                     </button>
                     <button type="button" class="portal-nav-btn w-full flex items-center gap-3 p-3 rounded-xl transition text-sm font-semibold hover:bg-slate-50 text-slate-600" data-target="upload-file" data-navigate="upload-file">
                         <i data-lucide="upload" class="w-5 h-5"></i>
-                        <span>Upload Record</span>
+                        <span data-i18n="nav.upload">Upload Record</span>
                     </button>
                     <button type="button" class="portal-nav-btn w-full flex items-center gap-3 p-3 rounded-xl transition text-sm font-semibold hover:bg-slate-50" data-target="lab-trends" data-navigate="lab-trends">
                         <i data-lucide="trending-up" class="w-5 h-5"></i>
-                        <span>Lab Trends</span>
+                        <span data-i18n="nav.labTrends">Lab Trends</span>
                     </button>
                     <button type="button" class="portal-nav-btn w-full flex items-center gap-3 p-3 rounded-xl transition text-sm font-semibold hover:bg-slate-50" data-target="timeline-archive" data-navigate="timeline-archive">
                         <i data-lucide="sliders-horizontal" class="w-5 h-5"></i>
-                        <span>Timeline & Archive</span>
+                        <span data-i18n="nav.timeline">Timeline & Archive</span>
                     </button>
                     <button type="button" class="portal-nav-btn w-full flex items-center gap-3 p-3 rounded-xl transition text-sm font-semibold hover:bg-slate-50" data-target="sharing-access" data-navigate="sharing-access">
                         <i data-lucide="share-2" class="w-5 h-5"></i>
-                        <span>Sharing & Access</span>
+                        <span data-i18n="nav.sharing">Sharing & Access</span>
                     </button>
                 </div>
             </div>
@@ -483,9 +478,9 @@
             <!-- HELP CARD & PROFILE -->
             <div class="pt-6">
                 <div class="bg-cyan-50 border border-cyan-100 p-4 rounded-2xl mb-5">
-                    <p class="font-bold text-[#0c2340] text-sm">Need a hand?</p>
-                    <p class="text-xs text-slate-500 mt-1">Find answers about managing and sharing your health records.</p>
-                    <a href="#" class="text-xs font-bold text-cyan-700 mt-2 block hover:underline">Visit Help Center →</a>
+                    <p class="font-bold text-[#0c2340] text-sm" data-i18n="help.title">Need a hand?</p>
+                    <p class="text-xs text-slate-500 mt-1" data-i18n="help.text">Find answers about managing and sharing your health records.</p>
+                    <a href="#" class="text-xs font-bold text-cyan-700 mt-2 block hover:underline" data-i18n="help.cta">Visit Help Center →</a>
                 </div>
 
                 <div class="flex items-center justify-between border-t border-slate-200 pt-4">
@@ -493,10 +488,10 @@
                         <div class="w-10 h-10 rounded-full bg-cyan-200 flex items-center justify-center font-bold text-[#0c2340] text-sm">MH</div>
                         <div>
                             <p class="font-bold text-sm text-[#0c2340]">Maya Hassan</p>
-                            <p class="text-xs text-slate-500">Patient account</p>
+                            <p class="text-xs text-slate-500" data-i18n="account.patient">Patient account</p>
                         </div>
                     </div>
-                    <button id="sign-out-btn" title="Sign Out" class="text-slate-400 hover:text-red-500 p-2 rounded-lg hover:bg-slate-50 transition">
+                    <button id="sign-out-btn" title="Sign Out" aria-label="Sign out" data-i18n-aria="action.signOut" class="text-slate-400 hover:text-red-500 p-2 rounded-lg hover:bg-slate-50 transition">
                         <i data-lucide="log-out" class="w-4 h-4"></i>
                     </button>
                 </div>
@@ -510,13 +505,13 @@
             <header class="bg-white border-b border-slate-200 px-5 md:px-8 py-4 flex items-center justify-between shrink-0">
                 <div class="flex items-center gap-3">
                     <!-- Mobile Hamburger -->
-                    <button id="mobile-menu-btn" class="md:hidden text-slate-600 hover:text-[#0c2340] p-1.5 rounded-lg border border-slate-200">
+                    <button id="mobile-menu-btn" aria-label="Open navigation menu" data-i18n-aria="drawer.open" aria-expanded="false" aria-controls="sidebar" class="md:hidden text-slate-600 hover:text-[#0c2340] p-1.5 rounded-lg border border-slate-200">
                         <i data-lucide="menu" class="w-5 h-5"></i>
                     </button>
                     <nav class="text-sm text-slate-500 flex items-center gap-2">
-                        <span>Workspace</span>
+                        <span data-i18n="topbar.workspace">Workspace</span>
                         <span class="text-slate-400">/</span>
-                        <span id="breadcrumb-current" class="font-bold text-[#0c2340]">Patient Portal</span>
+                        <span id="breadcrumb-current" class="font-bold text-[#0c2340]" data-i18n="portal.patient">Patient Portal</span>
                     </nav>
                 </div>
 
@@ -524,12 +519,12 @@
                     <!-- Top Search -->
                     <div class="hidden sm:flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-full px-4 py-2 text-sm text-slate-500 w-64 md:w-80">
                         <i data-lucide="search" class="w-4 h-4 text-slate-400"></i>
-                        <input type="text" placeholder="Search records, doctors..." class="outline-none bg-transparent w-full text-sm">
+                        <input type="text" placeholder="Search records, doctors..." data-i18n-placeholder="topbar.search" class="outline-none bg-transparent w-full text-sm">
                         <span class="text-[10px] bg-slate-200 text-slate-600 font-semibold px-1.5 py-0.5 rounded">⌘ K</span>
                     </div>
 
                     <!-- Notification Bell -->
-                    <button class="w-10 h-10 bg-white border border-slate-200 rounded-full flex items-center justify-center hover:bg-slate-50 text-slate-600 transition relative">
+                    <button class="w-10 h-10 bg-white border border-slate-200 rounded-full flex items-center justify-center hover:bg-slate-50 text-slate-600 transition relative" aria-label="Notifications" data-i18n-aria="topbar.notifications">
                         <i data-lucide="bell" class="w-5 h-5"></i>
                         <span class="w-2 h-2 bg-cyan-500 rounded-full absolute top-2.5 right-2.5"></span>
                     </button>
@@ -549,7 +544,7 @@
             <input type="file" id="fileInput" hidden>
 
             <!-- SUBVIEWS CONTAINER -->
-            <main class="flex-1 p-5 md:p-8 overflow-y-auto">
+            <main id="main-content" class="flex-1 p-5 md:p-8 overflow-y-auto">
 
                 <!-- ----------------------------------------------------------
                      SUBVIEW A: OVERVIEW (Patient Portal Dashboard)
@@ -1181,7 +1176,15 @@
     </div>
 
     <!-- Application Script -->
-    <script src="./js/script.js?v=2"></script>
+    <script src="./js/shared.js?v=3"></script>
+    <script src="./js/i18n.js?v=3"></script>
+    <script src="./js/script.js?v=3"></script>
+
+    <!-- Floating theme + language controls -->
+    <div class="fab-stack">
+        <button type="button" data-lang-toggle class="fab-btn" aria-label="Switch language">ع</button>
+        <button type="button" data-theme-toggle class="fab-btn" aria-label="Toggle dark mode"><i data-lucide="moon" class="w-5 h-5"></i></button>
+    </div>
 </body>
 
 </html>

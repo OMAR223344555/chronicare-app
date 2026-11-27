@@ -60,6 +60,10 @@ document.addEventListener('DOMContentLoaded', () => {
             item.classList.toggle('font-bold', active);
             item.classList.toggle('text-slate-600', !active);
         });
+        if (window.CCUI && name === 'patients') {
+            const ptEl = document.getElementById('patientsTable');
+            if (ptEl) CCUI.withSkeleton(ptEl, renderPatients);
+        }
         window.scrollTo({ top: 0, behavior: 'smooth' });
         refreshIcons();
     }
@@ -81,6 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sidebar.classList.remove('hidden');
         sidebar.classList.add('mobile-open');
         document.body.classList.add('drawer-open');
+        if (mobileMenuBtn) mobileMenuBtn.setAttribute('aria-expanded', 'true');
         if (!document.querySelector('.drawer-overlay')) {
             const overlay = document.createElement('div');
             overlay.className = 'drawer-overlay';
@@ -94,6 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sidebar.classList.add('hidden');
         sidebar.classList.remove('mobile-open');
         document.body.classList.remove('drawer-open');
+        if (mobileMenuBtn) mobileMenuBtn.setAttribute('aria-expanded', 'false');
         const overlay = document.querySelector('.drawer-overlay');
         if (overlay) overlay.remove();
     }
@@ -123,6 +129,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!container) {
             container = document.createElement('div');
             container.className = 'toast-container';
+            container.setAttribute('aria-live', 'polite');
+            container.setAttribute('role', 'status');
             document.body.appendChild(container);
         }
         const toast = document.createElement('div');

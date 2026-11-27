@@ -58,6 +58,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!container) {
             container = document.createElement('div');
             container.className = 'toast-container';
+            container.setAttribute('aria-live', 'polite');
+            container.setAttribute('role', 'status');
             document.body.appendChild(container);
         }
         const toast = document.createElement('div');
@@ -211,6 +213,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
+            // skeleton loading for list-heavy views
+            if (window.CCUI) {
+                const listEl = viewName === 'medical-files' ? document.getElementById('recordsTable')
+                    : viewName === 'timeline-archive' ? document.getElementById('timelineList') : null;
+                if (listEl) {
+                    CCUI.withSkeleton(listEl, viewName === 'medical-files' ? renderRecords : renderTimeline);
+                }
+            }
+
             if (breadcrumbCurrent && viewTitles[viewName]) {
                 breadcrumbCurrent.textContent = viewTitles[viewName];
             }
@@ -256,6 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sidebar.classList.remove('hidden');
         sidebar.classList.add('mobile-open');
         document.body.classList.add('drawer-open');
+        if (mobileMenuBtn) mobileMenuBtn.setAttribute('aria-expanded', 'true');
         if (!document.querySelector('.drawer-overlay')) {
             const overlay = document.createElement('div');
             overlay.className = 'drawer-overlay';
@@ -269,6 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sidebar.classList.add('hidden');
         sidebar.classList.remove('mobile-open');
         document.body.classList.remove('drawer-open');
+        if (mobileMenuBtn) mobileMenuBtn.setAttribute('aria-expanded', 'false');
         const overlay = document.querySelector('.drawer-overlay');
         if (overlay) overlay.remove();
     }
