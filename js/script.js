@@ -1386,22 +1386,38 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (l.max != null && l.value > l.max) return true;
         return false;
     }
+    // 'low' | 'high' | null — direction of an out-of-range value
+    function rangeFlag(l) {
+        if (l.min != null && l.value < l.min) return 'low';
+        if (l.max != null && l.value > l.max) return 'high';
+        return null;
+    }
+    // Flag pill shared by the table and the biomarker cards.
+    // High -> red, Low -> amber, Normal -> green. nowrap keeps it on one line.
+    function flagPill(l, pad) {
+        const f = rangeFlag(l);
+        const cls = `text-xs font-bold ${pad} rounded-full whitespace-nowrap inline-flex items-center`;
+        if (f === 'high') return `<span class="bg-red-100 text-red-700 ${cls}">${T('st.high', 'High')}</span>`;
+        if (f === 'low') return `<span class="bg-amber-100 text-amber-700 ${cls}">${T('st.low', 'Low')}</span>`;
+        return `<span class="bg-green-100 text-green-700 ${cls}">${T('st.normal', 'Normal')}</span>`;
+    }
 
     function renderLabTable() {
         if (!labResultsTable) return;
         const test = labTestSelect ? labTestSelect.value : 'all';
         const rows = state.labs
             .filter(l => (test === 'all' || l.test === test) && labInRange(l))
-            .sort((a, b) => b.date.localeCompare(a.date));
+            // Newest first; same-day entries group by test name, then higher value first.
+            .sort((a, b) => b.date.localeCompare(a.date)
+                || String(a.label || a.test).localeCompare(String(b.label || b.test))
+                || b.value - a.value);
         labResultsTable.innerHTML = rows.map(l => `
             <tr class="${outOfRange(l) ? 'bg-red-50' : ''}">
-                <td class="py-2.5">${labLabel(l)}</td>
-                <td class="font-bold ${outOfRange(l) ? 'text-red-600' : 'text-[#0c2340]'}">${l.value} <span class="text-xs font-semibold text-slate-400">${l.unit}</span></td>
-                <td class="text-slate-500">${l.min != null ? l.min : ''}${l.max != null ? ' - ' + l.max : (l.min != null ? '+' : '')} ${l.unit}</td>
-                <td class="text-slate-500">${fmtDate(l.date)}</td>
-                <td>${outOfRange(l)
-                    ? `<span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded-full">${T('st.outRange')}</span>`
-                    : `<span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded-full">${T('st.inRange')}</span>`}</td>
+                <td class="py-2.5 whitespace-nowrap">${labLabel(l)}</td>
+                <td class="whitespace-nowrap font-bold ${outOfRange(l) ? 'text-red-600' : 'text-[#0c2340]'}">${l.value} <span class="text-xs font-semibold text-slate-400">${l.unit}</span></td>
+                <td class="whitespace-nowrap text-slate-500">${l.min != null ? l.min : ''}${l.max != null ? ' - ' + l.max : (l.min != null ? '+' : '')} ${l.unit}</td>
+                <td class="whitespace-nowrap text-slate-500">${fmtDate(l.date)}</td>
+                <td class="whitespace-nowrap">${flagPill(l, 'px-2 py-0.5')}</td>
             </tr>`).join('') || `<tr><td colspan="5" class="text-center text-slate-400 py-6">${state.labs.length ? LLab('No results in this date range or test filter.', 'لا نتائج في هذا المدى الزمني أو الفلتر.') : LLab('No lab results yet. Add your first one below.', 'لا توجد نتائج تحاليل بعد. أضف أول نتيجة من الأسفل.')}</td></tr>`;
     }
 
@@ -1420,9 +1436,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (!points.length) return '';
             const latest = points[0];
             const oor = outOfRange(latest);
-            const chip = oor
-                ? `<span class="bg-red-100 text-red-700 text-xs font-bold px-2.5 py-0.5 rounded-full">${T('st.outRange', 'Out of range')}</span>`
-                : `<span class="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-0.5 rounded-full">${T('st.inRange', 'In range')}</span>`;
+            const chip = flagPill(latest, 'px-2.5 py-0.5');
             const pct = latest.max != null && latest.max > 0 ? Math.min(100, Math.round((latest.value / latest.max) * 100)) : 100;
             const bar = oor ? 'bg-red-500' : 'bg-green-500';
             return `<div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
@@ -1449,11 +1463,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     const METRIC_COLORS = { HBA1C: '#0891b2', FBG: '#7c3aed', SBP: '#dc2626', EGFR: '#059669' };
 
     const LLab = (en, ar) => (window.CCi18n && CCi18n.lang === 'ar') ? ar : en;
+    // Plausibility bounds for the Add Result form: rejects physiologically impossible
+    // entries (typos), NOT out-of-range medical values, which stay allowed and get
+    // flagged High/Low. Bounds: HbA1c 3-18 %, fasting glucose 30-600 mg/dL,
+    // systolic BP 60-250 mmHg, eGFR 5-150 mL/min. Mirrored server-side in
+    // backend/labs/serializers.py (PLAUSIBLE_RANGES).
     const LAB_LIMITS = {
-        HBA1C: { min: 3, max: 20, en: 'HbA1c', ar: 'HbA1c', unit: '%' },
-        FBG: { min: 20, max: 800, en: 'Fasting glucose', ar: 'سكر الصائم', unit: 'mg/dL' },
-        SBP: { min: 50, max: 260, en: 'Systolic blood pressure', ar: 'ضغط الدم الانقباضي', unit: 'mmHg' },
-        EGFR: { min: 1, max: 200, en: 'eGFR', ar: 'معدل الترشيح eGFR', unit: 'mL/min' },
+        HBA1C: { min: 3, max: 18, en: 'HbA1c', ar: 'HbA1c', unit: '%' },
+        FBG: { min: 30, max: 600, en: 'Fasting glucose', ar: 'سكر الصائم', unit: 'mg/dL' },
+        SBP: { min: 60, max: 250, en: 'Systolic blood pressure', ar: 'ضغط الدم الانقباضي', unit: 'mmHg' },
+        EGFR: { min: 5, max: 150, en: 'eGFR', ar: 'معدل الترشيح eGFR', unit: 'mL/min' },
     };
     const todayStr = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
     // Default date range: from one year ago to today; the entry date defaults to today
@@ -1516,9 +1535,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     ${yTicks}
                     ${points.length > 1 ? `<polyline points="${line}" fill="none" stroke="${color}" stroke-width="2.5"/>` : ''}
                     ${points.map((p, i) => `
-                        <circle cx="${x(i)}" cy="${y(p.value)}" r="4.5" fill="${outOfRange(p) ? '#dc2626' : color}"/>
-                        <text class="trend-val-label" x="${x(i)}" y="${y(p.value) - 10}" text-anchor="middle" font-size="10" font-weight="bold">${p.value}</text>
-                        <text class="trend-date-label" x="${x(i)}" y="${H - PAD + 16}" text-anchor="middle" font-size="9">${p.date.slice(5)}</text>`).join('')}
+                        <circle cx="${x(i)}" cy="${y(p.value)}" r="4.5" fill="${outOfRange(p) ? '#dc2626' : color}"><title>${p.value} ${meta.unit || ''} (${p.date})</title></circle>
+                        ${points.length <= 8 ? `<text class="trend-val-label" x="${x(i)}" y="${y(p.value) - 10}" text-anchor="middle" font-size="10" font-weight="bold">${p.value}</text>` : ''}
+                        ${i === 0 || p.date !== points[i - 1].date ? `<text class="trend-date-label" x="${x(i)}" y="${H - PAD + 16}" text-anchor="middle" font-size="9">${p.date.slice(5)}</text>` : ''}`).join('')}
                 </svg>
                 ${points.length === 1 ? `<p class="text-xs text-slate-400 mt-1">${LLab('One result so far - add more results to see a trend.', 'نتيجة واحدة حتى الآن - أضف نتائج أكثر ليظهر الاتجاه.')}</p>` : ''}
                 <p class="text-xs text-slate-400 mt-1">${Tp('lt.chartNote', { label: labLabel(meta), unit: meta.unit })}</p>`;
@@ -1558,8 +1577,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             const val = Math.round(Number(raw) * 100) / 100; // stored with up to 2 decimals
             if (!raw || !isFinite(val)) { showToast(LLab('Enter a valid number for the value.', 'أدخل رقما صحيحا للقيمة.'), 'warn'); return; }
             if (lim && (val < lim.min || val > lim.max)) {
-                showToast(LLab(`${lim.en} is normally between ${lim.min} and ${lim.max} ${lim.unit}. Please check the value or the test you selected.`,
-                    `${lim.ar} عادة بين ${lim.min} و${lim.max} ${lim.unit}. راجع القيمة أو نوع التحليل المختار.`), 'warn');
+                showToast(LLab(`${lim.en} ${val} looks implausible. Plausible values are roughly ${lim.min} - ${lim.max} ${lim.unit} — check the value or the test you selected.`,
+                    `${lim.ar} ${val} قيمة غير منطقية. القيم المعقولة تقريبا بين ${lim.min} و${lim.max} ${lim.unit} — راجع القيمة أو نوع التحليل المختار.`), 'warn');
                 return;
             }
             const date = f.get('measured_at') || todayStr();
@@ -2053,7 +2072,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         exportCsvBtn.addEventListener('click', () => {
             const rows = labRowsForExport();
             const csv = ['Test,Value,Unit,Reference min,Reference max,Date,Flag']
-                .concat(rows.map(l => [l.label, l.value, l.unit, l.min != null ? l.min : '', l.max != null ? l.max : '', l.date, outOfRange(l) ? 'Out of range' : 'In range'].join(',')))
+                .concat(rows.map(l => [l.label, l.value, l.unit, l.min != null ? l.min : '', l.max != null ? l.max : '', l.date, (rangeFlag(l) === 'high' ? 'High' : rangeFlag(l) === 'low' ? 'Low' : 'Normal')].join(',')))
                 .join('\n');
             const blob = new Blob([csv], { type: 'text/csv' });
             const a = document.createElement('a');
@@ -2074,7 +2093,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <p>Patient: Maya Hassan &nbsp;•&nbsp; Period: ${fmtDate(labDateFrom.value)} - ${fmtDate(labDateTo.value)} &nbsp;•&nbsp; Generated ${fmtDate(new Date().toISOString().slice(0, 10))}</p>
                 <table>
                     <thead><tr><th>Test</th><th>Value</th><th>Reference</th><th>Date</th><th>Flag</th></tr></thead>
-                    <tbody>${rows.map(l => `<tr><td>${l.label}</td><td>${l.value} ${l.unit}</td><td>${l.min != null ? l.min : ''}${l.max != null ? ' - ' + l.max : ''} ${l.unit}</td><td>${fmtDate(l.date)}</td><td>${outOfRange(l) ? 'OUT OF RANGE' : 'In range'}</td></tr>`).join('')}</tbody>
+                    <tbody>${rows.map(l => `<tr><td>${l.label}</td><td>${l.value} ${l.unit}</td><td>${l.min != null ? l.min : ''}${l.max != null ? ' - ' + l.max : ''} ${l.unit}</td><td>${fmtDate(l.date)}</td><td>${(rangeFlag(l) === 'high' ? 'HIGH' : rangeFlag(l) === 'low' ? 'LOW' : 'Normal')}</td></tr>`).join('')}</tbody>
                 </table>
                 <p class="note">Demo report generated from the Chronicare patient portal frontend.</p>`;
             document.body.classList.add('printing');

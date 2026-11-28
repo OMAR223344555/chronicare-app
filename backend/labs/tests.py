@@ -56,6 +56,29 @@ class LabTests(APITestCase):
         self.assertEqual(r.status_code, status.HTTP_200_OK)
         self.assertEqual([p["value"] for p in r.data], ["7.20", "6.90"])
 
+    def test_implausible_value_rejected(self):
+        # HbA1c 19.5 % is above the plausible bound (18) -> 400, nothing stored
+        r = self.client.post("/api/lab-results/", {
+            "test_type": self.hba1c.pk, "value": "19.5", "measured_at": "2026-10-01",
+        }, format="json")
+        self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("value", r.data)
+        self.assertEqual(LabResult.objects.count(), 0)
+        # glucose 21 mg/dL below the plausible bound (30) -> 400
+        fglu = LabTestType.objects.create(
+            name="Fasting Glucose", code="FGLU", unit="mg/dL",
+            ref_min="70", ref_max="99",
+        )
+        r = self.client.post("/api/lab-results/", {
+            "test_type": fglu.pk, "value": "21", "measured_at": "2026-10-01",
+        }, format="json")
+        self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(LabResult.objects.count(), 0)
+        # out-of-range but plausible values still pass and are flagged
+        r = self.add("9.0")
+        self.assertEqual(r.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(r.data["out_of_range"])
+
     def test_patient_cannot_manage_test_types(self):
         r = self.client.post("/api/lab-test-types/", {
             "name": "X", "code": "X", "unit": "mg",

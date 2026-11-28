@@ -2590,3 +2590,7 @@ html.dark .trend-val-label { fill: #e8eef6; }
 html.dark .trend-date-label, html.dark .trend-tick { fill: #7e93ab; }
 .trend-band-label { fill: #059669; }
 html.dark .trend-band-label { fill: #34d399; }
+
+/* Lab results table: soft row dividers in dark mode (divide-slate-50 is near-white) */
+html.dark #labResultsTable > tr + tr { border-color: rgba(148, 163, 184, 0.14); }
+html.dark #view-lab-trends thead tr { border-color: rgba(148, 163, 184, 0.18); }
