@@ -7,6 +7,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
 
 from accounts.models import User
+from auditlog.models import AuditLog
 from .models import Category, Condition, MedicalFile
 
 PDF = b"%PDF-1.4 minimal\n%%EOF\n"
@@ -103,3 +104,55 @@ class FileTests(APITestCase):
         )
         auth(self.client, doc)
         self.assertEqual(self.upload().status_code, status.HTTP_403_FORBIDDEN)
+
+
+class CategoryConditionDeleteTests(APITestCase):
+    """FR-11: admins remove categories/conditions, but not while they are in use."""
+
+    def setUp(self):
+        self.admin = User.objects.create_user(
+            username="admin@example.com", email="admin@example.com",
+            password="secret123", role=User.Role.ADMIN,
+        )
+        self.patient = User.objects.create_user(
+            username="p2@example.com", email="p2@example.com",
+            password="secret123", role=User.Role.PATIENT,
+        )
+        self.cat = Category.objects.create(name="Hepotention")
+        self.cond = Condition.objects.create(name="Hepotention condition")
+
+    def test_admin_deletes_unused_category_and_condition(self):
+        auth(self.client, self.admin)
+        r = self.client.delete(f"/api/categories/{self.cat.pk}/")
+        self.assertEqual(r.status_code, status.HTTP_204_NO_CONTENT)
+        r = self.client.delete(f"/api/conditions/{self.cond.pk}/")
+        self.assertEqual(r.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Category.objects.filter(pk=self.cat.pk).exists())
+        self.assertFalse(Condition.objects.filter(pk=self.cond.pk).exists())
+
+    def test_delete_refused_while_in_use(self):
+        MedicalFile.objects.create(
+            owner=self.patient,
+            file=SimpleUploadedFile("report.pdf", PDF, content_type="application/pdf"),
+            title="HbA1c panel", category=self.cat, condition=self.cond,
+            record_date="2026-10-01",
+        )
+        auth(self.client, self.admin)
+        r = self.client.delete(f"/api/categories/{self.cat.pk}/")
+        self.assertEqual(r.status_code, status.HTTP_409_CONFLICT)
+        self.assertEqual(r.data["in_use"], 1)
+        self.assertTrue(Category.objects.filter(pk=self.cat.pk).exists())
+        r = self.client.delete(f"/api/conditions/{self.cond.pk}/")
+        self.assertEqual(r.status_code, status.HTTP_409_CONFLICT)
+        self.assertTrue(Condition.objects.filter(pk=self.cond.pk).exists())
+
+    def test_non_admin_cannot_delete(self):
+        auth(self.client, self.patient)
+        r = self.client.delete(f"/api/categories/{self.cat.pk}/")
+        self.assertEqual(r.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertTrue(Category.objects.filter(pk=self.cat.pk).exists())
+
+    def test_delete_is_audited(self):
+        auth(self.client, self.admin)
+        self.client.delete(f"/api/categories/{self.cat.pk}/")
+        self.assertTrue(AuditLog.objects.filter(action="delete", details__contains="Hepotention").exists())

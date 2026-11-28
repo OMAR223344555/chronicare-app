@@ -1692,3 +1692,52 @@ html.dark #google-gsi-container { color-scheme: dark; }
 /* Clip the Google button iframe's opaque white canvas to the dark pill (dark mode) */
 html.dark #google-gsi-container { display: flex; justify-content: center; }
 html.dark #google-gsi-container > div { width: 320px; max-width: 100%; height: 40px; overflow: hidden; border-radius: 9999px; }
+
+/* ---------- Theme switch: flip in one frame ---------- */
+/* Rows and cards animate at different speeds (transition-all .3s in one place,
+   .15s in another), so a theme flip used to drag them through a muddy grey at
+   different moments. The class is added for the switch and removed two frames
+   later, so every colour lands together with no in-between frame. */
+html.cc-theme-switch *,
+html.cc-theme-switch *::before,
+html.cc-theme-switch *::after {
+    transition: none !important;
+}
+
+/* ---------- Destructive icon button (admin list rows) ---------- */
+.cc-del-btn {
+    color: #94a3b8;
+    cursor: pointer;
+    transition: color .15s ease, background-color .15s ease;
+}
+.cc-del-btn:hover { color: #e11d48; background-color: rgba(225, 29, 72, .09); }
+.cc-del-btn:focus-visible { outline: 2px solid #0891b2; outline-offset: 2px; }
+html.dark .cc-del-btn { color: #6f849c; }
+html.dark .cc-del-btn:hover { color: #fb7185; background-color: rgba(251, 113, 133, .15); }
+
+/* ---------- Dark theme: record library (toolbar, cards, archive button) ---------- */
+/* .toolbar and .records-card/.side-card paint plain white in the light theme and
+   had no dark counterpart, so they stayed bright white with near-black inputs
+   inside them. */
+html.dark .toolbar { background: #101f31; border-color: #1b2c40; }
+html.dark .toolbar select,
+html.dark .filter-btn { background: #16283c; border-color: #22364d; color: #c9d6e4; }
+html.dark .toolbar select:focus,
+html.dark .filter-btn:focus { border-color: #22d3ee; box-shadow: 0 0 0 3px rgba(34, 211, 238, .14); }
+html.dark .search-box i { color: #6f849c; }
+html.dark .toolbar input:not([type=checkbox]):not([type=radio]) {
+    background-color: transparent;
+    border-color: transparent;
+    color: #e6eef7;
+}
+html.dark .search-box input::placeholder { color: #5b7189; }
+html.dark .records-card,
+html.dark .side-card { background: #101f31; border-color: #1b2c40; }
+html.dark .records-card:hover,
+html.dark .side-card:hover { border-color: #2a4258; }
+html.dark .card-heading h2,
+html.dark .side-card h3 { color: #e6eef7; }
+html.dark .archive-btn { background: #16283c; border-color: #22364d; color: #c9d6e4; }
+html.dark .archive-btn:hover { background: #1a2c42; }
+html.dark .sort-btn { background: #16283c; color: #8ea2b8; }
+html.dark .sort-btn:hover { background: #1a2c42; color: #b3c2d4; }

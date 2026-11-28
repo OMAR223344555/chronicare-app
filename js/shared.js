@@ -30,7 +30,16 @@
 
     // ---- Theme ----
     function applyTheme(mode) {
-        document.documentElement.classList.toggle('dark', mode === 'dark');
+        const root = document.documentElement;
+        // One-frame flip: kill every element transition for the switch so rows
+        // and cards do not fade through their own grey midpoint at different
+        // speeds. Also move the html backdrop, which the head script sets once
+        // at load and would otherwise stay on the old colour.
+        root.classList.add('cc-theme-switch');
+        root.classList.toggle('dark', mode === 'dark');
+        root.style.background = mode === 'dark' ? '#0a1522' : '#f1f5f9';
+        requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove('cc-theme-switch')));
+        setTimeout(() => root.classList.remove('cc-theme-switch'), 300);
         try { localStorage.setItem('cc-theme', mode); } catch (e) {}
         document.querySelectorAll('[data-theme-toggle]').forEach(btn => {
             btn.setAttribute('aria-pressed', mode === 'dark' ? 'true' : 'false');

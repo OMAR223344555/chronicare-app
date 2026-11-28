@@ -245,15 +245,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // ---- Categories, conditions, ranges ----
+    function delButton(kind, index) {
+        return `<button type="button" class="cc-del-btn shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-xl" data-del-${kind}="${index}"
+            aria-label="${T('rf.delete')}" title="${T('rf.delete')}"><i data-lucide="trash-2" class="w-4 h-4"></i></button>`;
+    }
+
     function renderLists() {
-        document.getElementById('categoriesList').innerHTML = categories.map(c => `
-            <li class="flex justify-between items-center bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm">
-                <span class="font-semibold text-[#0c2340]">${catLabel(c)}</span>
+        document.getElementById('categoriesList').innerHTML = categories.map((c, i) => `
+            <li class="flex justify-between items-center gap-2 bg-slate-50 border border-slate-100 rounded-xl pl-4 pr-1.5 py-1.5 text-sm">
+                <span class="font-semibold text-[#0c2340] min-w-0 break-words">${catLabel(c)}</span>
+                ${delButton('cat', i)}
             </li>`).join('');
-        document.getElementById('conditionsList').innerHTML = conditions.map(c => `
-            <li class="flex justify-between items-center bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm">
-                <span class="font-semibold text-[#0c2340]">${T(COND_KEYS[c] || '', c)}</span>
+        document.getElementById('conditionsList').innerHTML = conditions.map((c, i) => `
+            <li class="flex justify-between items-center gap-2 bg-slate-50 border border-slate-100 rounded-xl pl-4 pr-1.5 py-1.5 text-sm">
+                <span class="font-semibold text-[#0c2340] min-w-0 break-words">${T(COND_KEYS[c] || '', c)}</span>
+                ${delButton('cond', i)}
             </li>`).join('');
+        refreshIcons();
     }
 
     function renderRanges() {
@@ -280,6 +288,54 @@ document.addEventListener('DOMContentLoaded', async () => {
         const name = input.value.trim();
         if (name && !conditions.includes(name)) { if (apiMode && window.CCApi) CCApi.post('/conditions/', { name }).catch(() => {}); conditions.push(name); renderLists(); showToast(Tp('toast.condAdded', { n: name })); }
         input.value = '';
+    });
+
+    // Remove a category/condition: confirm, delete on the server (admin only,
+    // enforced by the API), then drop it from the list. A 409 means files still
+    // use it - show how many instead of pretending it went away.
+    function apiIdFor(kind, name) {
+        const refs = (window.CCApi && CCApi._refs) || {};
+        const list = kind === 'cat' ? (refs.cats || []) : (refs.conds || []);
+        const hit = list.find(x => x.name === name);
+        return hit ? hit.id : null;
+    }
+
+    async function removeListItem(kind, index) {
+        const list = kind === 'cat' ? categories : conditions;
+        const name = list[index];
+        if (name == null) return;
+        if (!confirm(Tp('rf.deleteConfirm', { n: name }))) return;
+        if (apiMode && window.CCApi) {
+            const id = apiIdFor(kind, name);
+            if (!id) { showToast(T('rf.deleteFailed'), 'warn'); return; }
+            try {
+                await CCApi.req('/' + (kind === 'cat' ? 'categories' : 'conditions') + '/' + id + '/', { method: 'DELETE' });
+                const refs = CCApi._refs;
+                const arr = kind === 'cat' ? refs.cats : refs.conds;
+                const ri = arr.findIndex(x => x.id === id);
+                if (ri > -1) arr.splice(ri, 1);
+            } catch (err) {
+                if (err && err.status === 409 && err.data && err.data.in_use) {
+                    showToast(Tp(kind === 'cat' ? 'rf.catInUse' : 'rf.condInUse', { n: err.data.in_use }), 'warn');
+                } else {
+                    showToast(T('rf.deleteFailed'), 'warn');
+                }
+                return;
+            }
+        }
+        const i = list.indexOf(name);
+        if (i > -1) list.splice(i, 1);
+        renderLists();
+        showToast(Tp(kind === 'cat' ? 'toast.catDeleted' : 'toast.condDeleted', { n: name }));
+    }
+
+    document.getElementById('categoriesList').addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-del-cat]');
+        if (btn) removeListItem('cat', Number(btn.dataset.delCat));
+    });
+    document.getElementById('conditionsList').addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-del-cond]');
+        if (btn) removeListItem('cond', Number(btn.dataset.delCond));
     });
 
     document.addEventListener('change', (e) => {

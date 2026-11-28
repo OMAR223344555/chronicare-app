@@ -14,21 +14,53 @@ from .serializers import CategorySerializer, ConditionSerializer, MedicalFileSer
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
-    """Everyone reads; only admins add/edit (FR-11)."""
+    """Everyone reads; only admins add/edit/remove (FR-11)."""
 
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     pagination_class = None
+    kind = "category"
 
     def get_permissions(self):
         if self.action in ("list", "retrieve"):
             return [IsActiveAccount()]
         return [IsPlatformAdmin()]
 
+    def destroy(self, request, *args, **kwargs):
+        """Remove an unused entry; refuse while files still reference it.
+
+        MedicalFile.category / .condition use on_delete=PROTECT, so deleting a
+        row that is still in use would otherwise blow up as a 500. Refuse with
+        409 and the count so the admin knows what to move first.
+        """
+        obj = self.get_object()
+        in_use = obj.files.count()
+        if in_use:
+            return Response(
+                {
+                    "detail": (
+                        f"This {self.kind} is used by {in_use} file"
+                        f"{'' if in_use == 1 else 's'}. Move those files to another "
+                        f"{self.kind} first."
+                    ),
+                    "in_use": in_use,
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
+        name = obj.name
+        obj.delete()
+        log_action(
+            request.user,
+            "delete",
+            details=f"{self.kind.capitalize()} deleted: {name}",
+        )
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class ConditionViewSet(CategoryViewSet):
     queryset = Condition.objects.all()
     serializer_class = ConditionSerializer
+    kind = "condition"
 
 
 class MedicalFileViewSet(viewsets.ModelViewSet):
