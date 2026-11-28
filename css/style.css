@@ -2488,3 +2488,33 @@ html.dark .auth-deco-plus { color: rgba(34, 211, 238, 0.16); }
     html.cc-no-session .fab-stack,
     #auth-view:not(.hidden) ~ .fab-stack { top: 12px; bottom: auto; }
 }
+
+/* ==========================================================================
+   Timeline rail fix (Nov 28): the container's single line spanned edge to
+   edge, sat 2px off the badge centre and bled through the translucent
+   dark-mode badges. Rebuilt as per-row segments that run badge-to-badge
+   only, with opaque badges on top.
+   ========================================================================== */
+#timelineList::before { content: none !important; } /* retire the container line */
+#timelineList > div::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: 15px; /* badge centre (16px) minus half the 2px width */
+    top: 32px;                /* start at this badge's bottom edge */
+    bottom: -24px;            /* bridge the space-y-6 gap to the next badge */
+    width: 2px;
+    background: #e2e8f0;
+}
+#timelineList > div:last-child::before { content: none; }
+html.dark #timelineList > div::before { background: #22364d; }
+
+/* Badge: opaque, above the rail, with a thin ring of card colour so no
+   anti-aliased seam of line can peek through around the circle */
+#timelineList > div > div:first-child {
+    position: relative; z-index: 1;
+    box-shadow: 0 0 0 2px #ffffff;
+}
+html.dark #timelineList > div > div:first-child {
+    background-color: #12303d;
+    box-shadow: 0 0 0 2px #101f31;
+}
