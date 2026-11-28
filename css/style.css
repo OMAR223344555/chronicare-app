@@ -2543,3 +2543,23 @@ html.dark #timelineList > div > div:first-child {
 /* RTL: keep modal close buttons clear of the title text */
 [dir="rtl"] #shareModal > div > button.absolute,
 [dir="rtl"] #fileModal > div > button.absolute { right: auto; left: 1rem; }
+
+/* While an overlay scroll-lock holds overflow:hidden on <html>, the sticky
+   dashboard sidebar loses its scroll container: it jumps to its document
+   position (shifted up by the scroll offset) and paints above the overlay.
+   Pin it in place as fixed for the duration of the lock, and compensate the
+   flex layout so the page behind the overlay does not jump sideways. */
+@media (min-width: 768px) {
+    html.overlay-open body.portal-luxe #sidebar,
+    html.overlay-open body.sidebar-luxe #sidebar {
+        position: fixed;
+        top: 0;
+        inset-inline-start: 0;
+        height: 100vh;
+        height: 100dvh;
+    }
+    html.overlay-open body.portal-luxe #sidebar + *,
+    html.overlay-open body.sidebar-luxe #sidebar + * {
+        margin-inline-start: 16rem;
+    }
+}
