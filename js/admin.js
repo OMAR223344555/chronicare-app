@@ -679,7 +679,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (seen) bits.push(seen);
         if (a.fileTitle && !seen.includes(a.fileTitle)) bits.push('"' + a.fileTitle + '"');
         if (a.targetEmail && !seen.includes(a.targetEmail)) bits.push(T('au.with') + ' ' + a.targetEmail);
-        return bits.join(' · ') || T('au.noDetails');
+        return bits.join(' · ');
     }
 
     function auditSearchText(a) {
@@ -714,6 +714,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const badge = T('au.act.' + a.action, a.action);
             const actor = nameLabel(a.user);
             const whenSm = [when.time, when.date].filter(Boolean).join(' · ');
+            const detail = auditDetails(a);
             return `
             <li class="au-row au-is-${a.action}">
                 <span class="au-ic"><i data-lucide="${icon}"></i></span>
@@ -723,7 +724,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <span class="au-badge au-b-${a.action}">${badge}</span>
                         <span class="au-when-sm">${whenSm}</span>
                     </p>
-                    <p class="au-detail">${auditDetails(a)}</p>
+                    ${detail ? `<p class="au-detail">${detail}</p>` : ''}
                 </div>
                 <span class="au-when"><b>${when.time}</b><span>${when.date}</span></span>
             </li>`;

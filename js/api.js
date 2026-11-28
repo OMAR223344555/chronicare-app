@@ -351,8 +351,15 @@ window.CCApi = (function () {
             max: t.ref_max != null ? Number(t.ref_max) : null,
         }));
         d.auditEvents.length = 0;
+        // Audit times come back as UTC ISO strings; show them in the admin's own timezone.
+        const localWhen = iso => {
+            const dt = new Date(iso);
+            if (!iso || isNaN(dt)) return String(iso || '').slice(0, 16).replace('T', ' ');
+            const p = n => String(n).padStart(2, '0');
+            return `${dt.getFullYear()}-${p(dt.getMonth() + 1)}-${p(dt.getDate())} ${p(dt.getHours())}:${p(dt.getMinutes())}`;
+        };
         logs.forEach(l => d.auditEvents.push({
-            time: String(l.created_at || '').slice(0, 16).replace('T', ' '),
+            time: localWhen(l.created_at),
             user: l.user_email || 'system',
             action: l.action,
             details: l.details || '',
