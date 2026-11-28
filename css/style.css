@@ -1362,7 +1362,17 @@ body.portal-luxe #sidebar , body.sidebar-luxe #sidebar {
     box-shadow: 4px 0 32px rgba(9, 26, 48, 0.25);
 }
 @media (min-width: 768px) {
-    body.portal-luxe #sidebar , body.sidebar-luxe #sidebar { position: relative; }
+    /* Desktop sidebar: pinned full-height with its own scroll, so it never
+       scrolls away with the page (was position: relative and stretched to
+       the full content height). */
+    body.portal-luxe #sidebar , body.sidebar-luxe #sidebar {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        height: 100dvh;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
 }
 body.portal-luxe #sidebar::before , body.sidebar-luxe #sidebar::before {
     content: '';
@@ -2257,7 +2267,7 @@ html.dark .appt-pill.completed { background: #16294a; color: #8fb4f2; }
 html.dark .appt-btn.no { background: #10233a; border-color: #4a2a25; }
 html.dark .appt-btn.mute { background: #10233a; border-color: #24445f; color: #8ba0b5; }
 @media (prefers-reduced-motion: no-preference) {
-  .portal-subview { animation: ccViewIn .28s ease; }
+  .portal-subview { animation: ccViewIn .18s ease; }
   @keyframes ccViewIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 }
 
