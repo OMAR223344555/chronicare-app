@@ -355,7 +355,9 @@ window.CCApi = (function () {
             time: String(l.created_at || '').slice(0, 16).replace('T', ' '),
             user: l.user_email || 'system',
             action: l.action,
-            details: l.details || l.action_label || l.action,
+            details: l.details || '',
+            fileTitle: l.file_title || '',
+            targetEmail: l.target_email || '',
         }));
         return true;
     }

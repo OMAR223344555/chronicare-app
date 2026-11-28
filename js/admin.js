@@ -434,15 +434,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         refreshIcons();
     }
 
+    // One compact, table-like row per test: name + unit, Min, Max, save state.
     function renderRanges() {
         document.getElementById('rangesTable').innerHTML = ranges.map(r => `
-            <tr>
-                <td><strong>${labName(r.test)}</strong></td>
-                <td>${r.unit}</td>
-                <td><input type="number" step="0.01" class="range-min w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-sm" data-id="${r.id}" value="${r.min != null ? r.min : ''}" placeholder="none"></td>
-                <td><input type="number" step="0.01" class="range-max w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-sm" data-id="${r.id}" value="${r.max != null ? r.max : ''}" placeholder="none"></td>
-                <td><span class="range-saved text-xs text-slate-400" data-id="${r.id}"></span></td>
-            </tr>`).join('');
+            <li class="rr-row">
+                <div class="rr-name"><strong>${labName(r.test)}</strong><span class="rr-unit">${r.unit}</span></div>
+                <input type="number" step="0.01" inputmode="decimal" class="rr-input range-min" data-id="${r.id}"
+                       value="${r.min != null ? r.min : ''}" placeholder="—" aria-label="${T('th.min')} ${labName(r.test)}">
+                <input type="number" step="0.01" inputmode="decimal" class="rr-input range-max" data-id="${r.id}"
+                       value="${r.max != null ? r.max : ''}" placeholder="—" aria-label="${T('th.max')} ${labName(r.test)}">
+                <span class="range-saved rr-saved" data-id="${r.id}"></span>
+            </li>`).join('');
     }
 
     document.getElementById('addCategoryForm').addEventListener('submit', (e) => {
@@ -522,11 +524,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         const value = input.value === '' ? null : Number(input.value);
         if (input.classList.contains('range-min')) r.min = value; else r.max = value;
         const tag = document.querySelector(`.range-saved[data-id="${r.id}"]`);
+        const setTag = (text, ok) => {
+            if (!tag) return;
+            tag.textContent = text;
+            tag.classList.toggle('is-ok', ok === true);
+            tag.classList.toggle('is-err', ok === false);
+        };
         if (apiMode && window.CCApi) {
+            setTag(T('rr.saving'), null);
             CCApi.patch('/lab-test-types/' + r.id + '/', { ref_min: r.min, ref_max: r.max })
-                .then(() => { if (tag) tag.textContent = T('rf.saved'); })
-                .catch(() => { if (tag) tag.textContent = 'save failed'; });
-        } else if (tag) tag.textContent = T('rf.saved');
+                .then(() => setTag(T('rf.saved'), true))
+                .catch(() => setTag(T('rr.saveFailed'), false));
+        } else {
+            setTag(T('rf.saved'), true);
+        }
     });
 
     // ---- Analytics ----
@@ -633,25 +644,98 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ---- Audit log ----
-    function renderAudit() {
-        const filter = document.getElementById('auditFilter').value;
-        const rows = auditEvents.filter(a => filter === 'all' || a.action === filter);
-        const ACTION_STYLES = {
-            view: 'bg-slate-100 text-slate-600', download: 'bg-blue-100 text-blue-700',
-            share: 'bg-green-100 text-green-700', revoke: 'bg-red-100 text-red-700',
-            approve: 'bg-cyan-100 text-cyan-800', note: 'bg-violet-100 text-violet-700',
-            delete: 'bg-red-100 text-red-700', deactivate: 'bg-amber-100 text-amber-800',
-            activate: 'bg-green-100 text-green-700',
-        };
-        document.getElementById('auditTable').innerHTML = rows.map(a => `
-            <tr>
-                <td class="text-slate-500 whitespace-nowrap">${a.time === 'just now' ? T('tm.justNow') : a.time}</td>
-                <td><strong>${nameLabel(a.user)}</strong></td>
-                <td><span class="text-xs font-bold px-2.5 py-1 rounded-full ${ACTION_STYLES[a.action] || 'bg-slate-100 text-slate-600'}">${T('au.act.' + a.action, a.action)}</span></td>
-                <td class="text-slate-600">${a.detailsKey ? T(a.detailsKey) : a.details}</td>
-            </tr>`).join('') || `<tr><td colspan="4" class="text-center text-slate-400 py-8">${T('au.empty')}</td></tr>`;
+    // Compact rows: action icon, actor + action badge, details on one meta line,
+    // time pinned at the end (desktop) or on the actor line (phone).
+    const AU_ICONS = {
+        view: 'eye', download: 'download', share: 'share-2', revoke: 'shield-off',
+        approve: 'user-check', note: 'file-text', delete: 'trash-2', deactivate: 'user-x',
+        activate: 'user-check', upload: 'upload', archive: 'archive', restore: 'rotate-ccw',
+        login: 'log-in', register: 'user-plus', lab_add: 'flask-conical',
+    };
+    let auditFilterValue = 'all';
+
+    function auditWhen(raw) {
+        const t = String(raw || '').trim();
+        if (!t) return { time: '', date: '' };
+        if (t === 'just now') return { time: T('tm.justNow'), date: '' };
+        const parts = t.split(' ');
+        const day = parts[0] || '';
+        const hm = (parts[1] || '').slice(0, 5);
+        const pad = n => String(n).padStart(2, '0');
+        const localIso = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+        let label = day;
+        if (day === localIso(new Date())) label = T('au.today');
+        else if (day === localIso(new Date(Date.now() - 86400000))) label = T('au.yesterday');
+        else if (/^\d{4}-\d{2}-\d{2}$/.test(day)) {
+            label = window.CCi18n ? CCi18n.fmtDate(day, { day: '2-digit', month: 'short' }) : day;
+        }
+        return { time: hm, date: label };
     }
-    document.getElementById('auditFilter').addEventListener('change', renderAudit);
+
+    function auditDetails(a) {
+        if (a.detailsKey) return T(a.detailsKey);
+        const bits = [];
+        const seen = String(a.details || '');
+        if (seen) bits.push(seen);
+        if (a.fileTitle && !seen.includes(a.fileTitle)) bits.push('"' + a.fileTitle + '"');
+        if (a.targetEmail && !seen.includes(a.targetEmail)) bits.push(T('au.with') + ' ' + a.targetEmail);
+        return bits.join(' · ') || T('au.noDetails');
+    }
+
+    function auditSearchText(a) {
+        return [a.user, a.action, a.details, a.detailsKey ? T(a.detailsKey) : '', a.fileTitle, a.targetEmail]
+            .filter(Boolean).join(' ').toLowerCase();
+    }
+
+    function renderAudit() {
+        const list = document.getElementById('auditList');
+        if (!list) return;
+        const searchEl = document.getElementById('auditSearch');
+        const q = (searchEl && searchEl.value ? searchEl.value : '').trim().toLowerCase();
+
+        document.querySelectorAll('.au-chip').forEach(chip => {
+            const f = chip.getAttribute('data-au-filter') || 'all';
+            const n = auditEvents.filter(a => f === 'all' || a.action === f).length;
+            const b = chip.querySelector('b');
+            if (b) b.textContent = n;
+            chip.classList.toggle('is-active', f === auditFilterValue);
+        });
+
+        const rows = auditEvents.filter(a =>
+            (auditFilterValue === 'all' || a.action === auditFilterValue) &&
+            (!q || auditSearchText(a).includes(q)));
+
+        const countEl = document.getElementById('auditCount');
+        if (countEl) countEl.textContent = rows.length;
+
+        list.innerHTML = rows.map(a => {
+            const when = auditWhen(a.time);
+            const icon = AU_ICONS[a.action] || 'activity';
+            const badge = T('au.act.' + a.action, a.action);
+            const actor = nameLabel(a.user);
+            const whenSm = [when.time, when.date].filter(Boolean).join(' · ');
+            return `
+            <li class="au-row au-is-${a.action}">
+                <span class="au-ic"><i data-lucide="${icon}"></i></span>
+                <div class="au-main">
+                    <p class="au-top">
+                        <strong class="au-actor">${actor}</strong>
+                        <span class="au-badge au-b-${a.action}">${badge}</span>
+                        <span class="au-when-sm">${whenSm}</span>
+                    </p>
+                    <p class="au-detail">${auditDetails(a)}</p>
+                </div>
+                <span class="au-when"><b>${when.time}</b><span>${when.date}</span></span>
+            </li>`;
+        }).join('') || `<li class="au-empty">${T('au.empty')}</li>`;
+        refreshIcons();
+    }
+    document.querySelectorAll('.au-chip').forEach(chip => chip.addEventListener('click', () => {
+        auditFilterValue = chip.getAttribute('data-au-filter') || 'all';
+        renderAudit();
+    }));
+    const auditSearchInput = document.getElementById('auditSearch');
+    if (auditSearchInput) auditSearchInput.addEventListener('input', renderAudit);
 
     renderPending();
     renderUsers();

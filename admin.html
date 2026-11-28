@@ -77,7 +77,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@1.82.0/dist/umd/lucide.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./css/style.css?v=43">
+    <link rel="stylesheet" href="./css/style.css?v=44">
 </head>
 
 <body class="portal-luxe bg-slate-100 min-h-screen font-[Inter] antialiased">
@@ -330,20 +330,13 @@
                         <h3 class="font-bold text-[#0c2340]" data-i18n="rf.ranges">Lab test reference ranges</h3>
                         <p class="text-xs text-slate-500" data-i18n="rf.rangesSub">Out-of-range highlighting uses these limits</p>
                     </div>
-                    <div class="table-wrapper">
-                        <table class="records-table w-full">
-                            <thead>
-                                <tr>
-                                    <th data-i18n="th.test">TEST</th>
-                                    <th data-i18n="th.unit">UNIT</th>
-                                    <th data-i18n="th.min">MIN</th>
-                                    <th data-i18n="th.max">MAX</th>
-                                    <th data-i18n="th.action">ACTION</th>
-                                </tr>
-                            </thead>
-                            <tbody id="rangesTable"></tbody>
-                        </table>
+                    <div class="rr-head" aria-hidden="true">
+                        <span data-i18n="th.test">TEST</span>
+                        <span data-i18n="th.min">MIN</span>
+                        <span data-i18n="th.max">MAX</span>
+                        <span class="rr-head-status" data-i18n="rr.status">STATUS</span>
                     </div>
+                    <ul id="rangesTable" class="rr-list"></ul>
                 </div>
             </section>
 
@@ -355,32 +348,37 @@
                         <h1 data-i18n="au.title">Audit Log</h1>
                         <p data-i18n="au.sub">Every file view, share, revoke and download is recorded here.</p>
                     </div>
-                    <select id="auditFilter" class="bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-cyan-500 transition">
-                        <option value="all" data-i18n="au.all">All actions</option>
-                        <option value="view" data-i18n="au.views">Views</option>
-                        <option value="download" data-i18n="au.downloads">Downloads</option>
-                        <option value="share" data-i18n="au.shares">Shares</option>
-                        <option value="revoke" data-i18n="au.revokes">Revokes</option>
-                        <option value="approve" data-i18n="au.approvals">Approvals</option>
-                        <option value="delete" data-i18n="au.deletes">Deleted accounts</option>
-                    </select>
                 </div>
 
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                    <div class="table-wrapper">
-                        <table class="records-table w-full">
-                            <thead>
-                                <tr>
-                                    <th data-i18n="th.time">TIME</th>
-                                    <th data-i18n="th.user">USER</th>
-                                    <th data-i18n="th.action">ACTION</th>
-                                    <th data-i18n="th.details">DETAILS</th>
-                                </tr>
-                            </thead>
-                            <tbody id="auditTable"></tbody>
-                        </table>
+                <section class="au-panel" aria-labelledby="auEventsTitle">
+                    <header class="au-panel-head">
+                        <div class="au-panel-title">
+                            <span class="au-panel-icon"><i data-lucide="scroll-text"></i></span>
+                            <div>
+                                <h2 id="auEventsTitle" data-i18n="au.events">Activity events</h2>
+                                <p data-i18n="au.eventsSub">Who did what, newest first</p>
+                            </div>
+                        </div>
+                        <span id="auditCount" class="au-count">0</span>
+                    </header>
+                    <div class="au-toolbar">
+                        <label class="au-search">
+                            <i data-lucide="search"></i>
+                            <input id="auditSearch" type="search" autocomplete="off"
+                                   data-i18n-placeholder="au.searchPh" placeholder="Search by person, file or details">
+                        </label>
+                        <div class="au-filters" role="group" aria-label="Filter events">
+                            <button type="button" class="au-chip is-active" data-au-filter="all"><span data-i18n="au.all">All actions</span> <b>0</b></button>
+                            <button type="button" class="au-chip" data-au-filter="view"><span data-i18n="au.views">Views</span> <b>0</b></button>
+                            <button type="button" class="au-chip" data-au-filter="download"><span data-i18n="au.downloads">Downloads</span> <b>0</b></button>
+                            <button type="button" class="au-chip" data-au-filter="share"><span data-i18n="au.shares">Shares</span> <b>0</b></button>
+                            <button type="button" class="au-chip" data-au-filter="revoke"><span data-i18n="au.revokes">Revokes</span> <b>0</b></button>
+                            <button type="button" class="au-chip" data-au-filter="approve"><span data-i18n="au.approvals">Approvals</span> <b>0</b></button>
+                            <button type="button" class="au-chip" data-au-filter="delete"><span data-i18n="au.deletes">Deleted accounts</span> <b>0</b></button>
+                        </div>
                     </div>
-                </div>
+                    <ul id="auditList" class="au-list"></ul>
+                </section>
             </section>
 
             <p class="text-right text-[10px] text-slate-400 mt-8" data-i18n="app.footer">CHRONICARE HEALTH SYSTEMS</p>
@@ -388,10 +386,10 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="./js/api.js?v=43"></script>
-    <script src="./js/shared.js?v=43"></script>
-    <script src="./js/i18n.js?v=43"></script>
-    <script src="./js/admin.js?v=43"></script>
+    <script src="./js/api.js?v=44"></script>
+    <script src="./js/shared.js?v=44"></script>
+    <script src="./js/i18n.js?v=44"></script>
+    <script src="./js/admin.js?v=44"></script>
 
     <!-- Floating theme + language controls -->
     <div class="fab-stack">
