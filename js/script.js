@@ -699,10 +699,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.addEventListener('click', (e) => {
         const b = e.target.closest('[data-open-file]');
-        if (!b || !window.CCApi) return;
+        const dl = e.target.closest('[data-download-file]');
+        if ((!b && !dl) || !window.CCApi) return;
         e.preventDefault();
-        b.disabled = true;
-        CCApi.openFile(b.dataset.openFile).catch(err => showToast(String(err.message || err), 'warn')).finally(() => { b.disabled = false; });
+        const btn = b || dl;
+        btn.disabled = true;
+        const run = b
+            ? CCApi.openFile(b.dataset.openFile)
+            : CCApi.openFile(dl.dataset.downloadFile, 'download', dl.dataset.fileName);
+        run.catch(err => showToast(String(err.message || err), 'warn')).finally(() => { btn.disabled = false; });
     });
 
     function renderRecords() {
@@ -838,7 +843,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div class="mt-5 h-40 border border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400">
                 <i data-lucide="file-text" class="w-8 h-8 mb-2 text-cyan-600"></i>
                 ${r.fileUrl
-                    ? `<button type="button" data-open-file="${r.apiId}" class="text-xs font-bold text-cyan-700 hover:underline">${T('fm.openFile', 'Open attached file')}</button>`
+                    ? `<span class="flex items-center gap-4">
+                        <button type="button" data-open-file="${r.apiId}" class="text-xs font-bold text-cyan-700 hover:underline">${T('fm.openFile', 'Open attached file')}</button>
+                        <button type="button" data-download-file="${r.apiId}" data-file-name="${String(r.fileUrl).split('/').pop() || r.name}" class="text-xs font-bold text-slate-500 hover:underline">${T('fm.downloadFile', 'Download')}</button>
+                    </span>`
                     : `<p class="text-xs">${T('fm.preview')}</p>`}
             </div>`;
         if (window.CCHist) CCHist.pushOverlay();

@@ -89,6 +89,23 @@ class FileTests(APITestCase):
         r = self.client.get(f"/api/files/{pk}/download/")
         self.assertEqual(r.status_code, status.HTTP_200_OK)
         self.assertTrue(AuditLog.objects.filter(action="download").exists())
+        self.assertIn("attachment", r["Content-Disposition"])
+
+    def test_view_mode_logs_view_and_serves_inline(self):
+        pk = self.upload().data["id"]
+        r = self.client.get(f"/api/files/{pk}/download/?mode=view")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertTrue(AuditLog.objects.filter(action="view").exists())
+        self.assertFalse(AuditLog.objects.filter(action="download").exists())
+        self.assertIn("inline", r["Content-Disposition"])
+        self.assertEqual(r["Content-Type"], "application/pdf")
+
+    def test_view_mode_keeps_access_rules(self):
+        pk = self.upload().data["id"]
+        auth(self.client, self.other)
+        r = self.client.get(f"/api/files/{pk}/download/?mode=view")
+        self.assertEqual(r.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertFalse(AuditLog.objects.filter(action="view").exists())
 
     def test_timeline_includes_archived(self):
         self.upload()

@@ -108,7 +108,9 @@ you watch live channels; unplug it and it plays the videos on the stick.*
 
 Every sensitive action (login, upload, share, revoke, note, admin approval)
 is written to the `audit_log` table: who did it, what they did, on what, and
-when. Rows are only added, never edited or deleted.
+when. Opening a file in the browser records a `view`; saving it to disk
+records a `download`, so the administrator can tell reading a report apart
+from taking a copy. Rows are only added, never edited or deleted.
 
 *Analogy: a security camera logbook - it doesn't stop anyone, but you can
 always replay exactly what happened.*

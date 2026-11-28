@@ -123,17 +123,19 @@ window.CCApi = (function () {
 
     // Open a stored file through the authenticated download endpoint.
     // (The public /media/ URL is not served by the host, so direct links give "Not Found".)
-    async function openFile(id) {
-        const w = window.open('', '_blank'); // opened synchronously so phone pop-up blockers allow it
+    async function openFile(id, mode, filename) {
+        const asDownload = mode === 'download';
+        const w = asDownload ? null : window.open('', '_blank'); // opened synchronously so phone pop-up blockers allow it
         try {
-            const res = await fetch(base() + '/files/' + id + '/download/', { headers: { 'Authorization': 'Token ' + token() } });
+            const res = await fetch(base() + '/files/' + id + '/download/' + (asDownload ? '?mode=download' : '?mode=view'), { headers: { 'Authorization': 'Token ' + token() } });
             if (!res.ok) throw new Error(res.status === 404 ? L('The file is missing on the server. Please upload it again.', 'الملف غير موجود على الخادم. من فضلك ارفعه مرة أخرى.') : (res.status === 403 || res.status === 401 ? L('You do not have access to this file.', 'ليس لديك صلاحية لفتح هذا الملف.') : 'HTTP ' + res.status));
             const blob = await res.blob();
             const url = URL.createObjectURL(blob);
-            if (w) { w.location.href = url; }
-            else {
+            if (asDownload || !w) {
                 const link = document.createElement('a');
-                link.href = url; link.download = 'chronicare-file'; document.body.appendChild(link); link.click(); link.remove();
+                link.href = url; link.download = filename || 'chronicare-file'; document.body.appendChild(link); link.click(); link.remove();
+            } else {
+                w.location.href = url;
             }
             setTimeout(() => URL.revokeObjectURL(url), 120000);
         } catch (err) {

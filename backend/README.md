@@ -81,7 +81,7 @@ Django models map to the same ERD table names via `Meta.db_table`.
   `GET auth/me/`
 - `GET/POST categories/`, `GET/POST conditions/` (admin writes)
 - `GET/POST files/`, `GET files/{id}/`, `POST files/{id}/archive/`,
-  `POST files/{id}/restore/`, `GET files/{id}/download/`,
+  `POST files/{id}/restore/`, `GET files/{id}/download/` (`?mode=view` opens the file inline and logs a `view`; the default sends an attachment and logs a `download`),
   `GET files/timeline/`
 - `GET/POST lab-results/`, `GET lab-results/trends/?test=<code>`,
   `GET/PATCH lab-test-types/` (admin writes)

@@ -1,3 +1,5 @@
+import mimetypes
+
 from django.http import FileResponse
 from django.utils import timezone
 from rest_framework import generics, status, viewsets
@@ -131,12 +133,27 @@ class MedicalFileViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["get"])
     def download(self, request, pk=None):
+        """Serve the file bytes and record the access (FR-12).
+
+        ?mode=view opens the file inline in the browser and logs a "view";
+        anything else sends it as an attachment and logs a "download".
+        """
         obj = self.get_object()
         if request.user != obj.owner and not request.user.is_platform_admin:
             if not (request.user.is_doctor and doctor_can_access_file(request.user, obj)):
                 raise PermissionDenied("This file is not shared with you.")
-        log_action(request.user, "download", medical_file=obj, target_user=obj.owner)
-        return FileResponse(obj.file.open("rb"), as_attachment=True, filename=obj.file.name.split("/")[-1])
+        inline = request.query_params.get("mode") == "view"
+        log_action(
+            request.user, "view" if inline else "download",
+            medical_file=obj, target_user=obj.owner,
+        )
+        content_type = mimetypes.guess_type(obj.file.name)[0] or "application/octet-stream"
+        return FileResponse(
+            obj.file.open("rb"),
+            as_attachment=not inline,
+            filename=obj.file.name.split("/")[-1],
+            content_type=content_type,
+        )
 
     def _own_file(self, request, pk):
         try:
