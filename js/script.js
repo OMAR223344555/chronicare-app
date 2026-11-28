@@ -1395,7 +1395,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Long units like mL/min/1.73m2 are shortened in the table (full unit in the tooltip).
     function shortUnit(u) {
         if (!u) return '';
-        return u.length > 8 ? u.split('/')[0] : u;
+        if (u.length <= 8) return u;
+        const parts = u.split('/');
+        return parts.length >= 3 ? parts.slice(0, 2).join('/') : parts[0];
     }
     // Flag pill shared by the table and the biomarker cards.
     // High -> red, Low -> amber, Normal -> green. nowrap keeps it on one line.
