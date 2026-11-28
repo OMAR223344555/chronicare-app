@@ -2261,3 +2261,109 @@ html.dark .appt-btn.mute { background: #10233a; border-color: #24445f; color: #8
   .portal-subview { animation: ccViewIn .28s ease; }
   @keyframes ccViewIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 }
+
+/* ==========================================================================
+   Polish pass - elegance across all portals (override-only, no markup change)
+   ========================================================================== */
+:root { --cc-ring: rgba(14, 159, 184, .16); }
+
+::selection { background: rgba(6, 182, 212, .28); }
+html.dark ::selection { background: rgba(34, 211, 238, .32); }
+
+/* Quiet, thin scrollbars */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background-color: rgba(100, 116, 139, .32); border-radius: 999px; border: 3px solid transparent; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background-color: rgba(100, 116, 139, .5); }
+html.dark ::-webkit-scrollbar-thumb { background-color: rgba(148, 163, 184, .26); }
+
+/* Tighter display type */
+.portal-subview h1, .page-heading h1, .portal-subview h2.text-3xl, h2.text-4xl { letter-spacing: -0.022em; }
+.eyebrow { letter-spacing: .15em; }
+
+/* Content cards: layered, softer elevation */
+.portal-subview .bg-white.rounded-2xl.border,
+.au-panel {
+    box-shadow: 0 1px 2px rgba(12, 35, 64, .04), 0 10px 28px -14px rgba(12, 35, 64, .10);
+    transition: box-shadow .22s ease;
+}
+html.dark .portal-subview .bg-white.rounded-2xl.border,
+html.dark .au-panel {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .25), 0 12px 30px -14px rgba(0, 0, 0, .45);
+}
+
+/* Stat cards lift on hover */
+#view-analytics .grid > div,
+#view-overview .grid > div.bg-white,
+.appt-book {
+    transition: transform .2s ease, box-shadow .22s ease;
+}
+#view-analytics .grid > div:hover,
+#view-overview .grid > div.bg-white:hover,
+.appt-book:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(12, 35, 64, .05), 0 18px 36px -14px rgba(12, 35, 64, .16);
+}
+html.dark #view-analytics .grid > div:hover,
+html.dark #view-overview .grid > div.bg-white:hover,
+html.dark .appt-book:hover {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, .3), 0 18px 38px -14px rgba(0, 0, 0, .55);
+}
+@media (prefers-reduced-motion: reduce) {
+    #view-analytics .grid > div:hover,
+    #view-overview .grid > div.bg-white:hover,
+    .appt-book:hover { transform: none; }
+}
+
+/* Sign-in page: glow behind the hero + calmer inputs + pressable primary */
+.auth-hero, .login-hero { position: relative; overflow: hidden; }
+.auth-input { transition: border-color .18s ease, box-shadow .18s ease, background .18s ease; }
+.auth-input:focus {
+    border-color: #0e9fb8 !important;
+    box-shadow: 0 0 0 3px var(--cc-ring);
+    --tw-ring-shadow: 0 0 0 0 #0000;
+    background: #fff;
+}
+html.dark .auth-input:focus { background: #10233a; }
+button[type="submit"].bg-\[\#0c2340\] {
+    background: linear-gradient(135deg, #0c2340, #164a7c);
+    transition: transform .16s ease, box-shadow .22s ease, background .2s ease;
+}
+button[type="submit"].bg-\[\#0c2340\]:hover:not(:disabled) {
+    background: linear-gradient(135deg, #123055, #1b5b96);
+    box-shadow: 0 14px 28px -10px rgba(12, 35, 64, .5);
+    transform: translateY(-1px);
+}
+button[type="submit"].bg-\[\#0c2340\]:active:not(:disabled) { transform: translateY(0) scale(.99); }
+
+/* Table polish: airy header, softer hover */
+.records-table thead th { letter-spacing: .07em; font-size: 10.5px; }
+html.dark .records-table tbody tr:hover { background: #10233a; }
+
+/* Topbar pills: subtle lift */
+[data-notif-btn], [data-palette-trigger], #theme-toggle, #lang-toggle {
+    transition: transform .16s ease, box-shadow .2s ease, border-color .18s ease, background .18s ease;
+}
+[data-notif-btn]:hover, [data-palette-trigger]:hover, #theme-toggle:hover, #lang-toggle:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px -6px rgba(12, 35, 64, .18);
+}
+
+/* Notif panel + palette: crisper elevation */
+.notif-panel, .cmdk-panel, [data-palette] {
+    box-shadow: 0 4px 8px rgba(12, 35, 64, .06), 0 24px 48px -16px rgba(12, 35, 64, .22) !important;
+}
+
+/* Empty states: centered calm with icon tint */
+.au-empty { padding: 34px 20px; font-weight: 600; letter-spacing: .01em; }
+
+/* Sidebar help card: softer */
+#sidebar .bg-cyan-50 { background: linear-gradient(160deg, rgba(34, 211, 238, .12), rgba(34, 211, 238, .05)); border-color: rgba(34, 211, 238, .18); }
+
+/* Sign-in hero decorative glow (the navy panel is already relative) */
+.hero-section::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background:
+        radial-gradient(600px 380px at 85% 12%, rgba(34, 211, 238, .14), transparent 60%),
+        radial-gradient(480px 320px at 10% 95%, rgba(59, 130, 246, .12), transparent 60%);
+}
