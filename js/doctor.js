@@ -324,7 +324,38 @@ document.addEventListener('DOMContentLoaded', async () => {
         }).join('') || `<li class="dr-empty">${T('pr.noLabs')}</li>`;
 
         renderNotes(p);
+        renderPatientMeds(p);
         refreshIcons();
+    }
+
+    // Medications this patient tracks (live API only; read-only for the doctor)
+    function renderPatientMeds(p) {
+        const card = document.getElementById('patientMedsCard');
+        const listEl = document.getElementById('patientMedsList');
+        const countEl = document.getElementById('patientMedsCount');
+        if (!card || !listEl) return;
+        if (!apiMode || !window.CCApi) { card.classList.add('hidden'); return; }
+        card.classList.remove('hidden');
+        countEl.textContent = '…';
+        listEl.innerHTML = `<li class="dr-empty">…</li>`;
+        const forPatient = p;
+        CCApi.all('/medications/?patient=' + p.id).then(meds => {
+            if (currentPatient !== forPatient) return;
+            countEl.textContent = meds.length;
+            listEl.innerHTML = meds.map(m => `
+                <li class="dr-row">
+                    <span class="dr-file" style="background:#fffbeb;color:#b45309"><i data-lucide="pill" class="w-4 h-4"></i></span>
+                    <div class="dr-id">
+                        <p class="dr-title">${m.name}${m.taken_today ? ` <span class="dr-tag" style="background:#ecfdf5;color:#047857">${T('pr.takenToday', 'Taken today')}</span>` : ''}</p>
+                        <p class="dr-meta">${m.dose} <span class="dr-sep">·</span> ${T('pr.dailyAt', 'daily at')} ${m.time}</p>
+                    </div>
+                </li>`).join('') || `<li class="dr-empty">${T('pr.noMeds', 'No medications tracked yet.')}</li>`;
+            refreshIcons();
+        }).catch(() => {
+            if (currentPatient !== forPatient) return;
+            countEl.textContent = '0';
+            listEl.innerHTML = `<li class="dr-empty">${T('pr.noMeds', 'No medications tracked yet.')}</li>`;
+        });
     }
 
     function renderNotes(p) {
