@@ -3,6 +3,16 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Optional local env file with server-only secrets (SMTP password, etc.).
+# One KEY=VALUE per line, # comments allowed. Never committed to git.
+_env_file = BASE_DIR / ".env"
+if _env_file.exists():
+    for _line in _env_file.read_text().splitlines():
+        _line = _line.strip()
+        if _line and not _line.startswith("#") and "=" in _line:
+            _k, _v = _line.split("=", 1)
+            os.environ.setdefault(_k.strip(), _v.strip())
+
 SECRET_KEY = os.environ.get(
     "SECRET_KEY", "django-insecure-chronicare-course-project-change-in-production"
 )
