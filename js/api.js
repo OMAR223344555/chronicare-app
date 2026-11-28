@@ -110,7 +110,6 @@ window.CCApi = (function () {
             text: n.text,
             time: notifTime(n.created_at),
             unread: !n.is_read,
-            liveNotifs, refreshNotifs, markAllNotifsRead,
     };
     }
     function notifRefreshed() {
@@ -489,6 +488,7 @@ window.CCApi = (function () {
         login, googleLogin, register, logout, openFile,
         hydratePatient, hydrateDoctor, hydrateAdmin,
         toRecord, toShare, uploadFile, testTypeId, allCategoryIds, populateShareForm,
+        liveNotifs, refreshNotifs, markAllNotifsRead,
         _refs: refs,
     };
 })();
