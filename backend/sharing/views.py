@@ -6,7 +6,7 @@ from rest_framework.response import Response
 
 from accounts.models import User
 from accounts.permissions import IsActiveAccount, IsApprovedDoctor, IsPatient
-from auditlog.services import log_action
+from auditlog.services import log_action, notify
 from records.models import MedicalFile
 from records.serializers import MedicalFileSerializer
 
@@ -57,6 +57,10 @@ class ShareViewSet(viewsets.ModelViewSet):
             self.request.user, "share", target_user=share.doctor,
             details=f"Share #{share.pk}, expires {share.expires_on}",
         )
+        notify(
+            share.doctor, "share",
+            f"{share.patient.full_name} shared medical files with you.",
+        )
 
     @action(detail=True, methods=["post"])
     def revoke(self, request, pk=None):
@@ -67,6 +71,10 @@ class ShareViewSet(viewsets.ModelViewSet):
             log_action(
                 request.user, "revoke", target_user=share.doctor,
                 details=f"Share #{share.pk} revoked",
+            )
+            notify(
+                share.doctor, "revoke",
+                f"{share.patient.full_name} revoked their file share with you.",
             )
         return Response(ShareSerializer(share, context={"request": request}).data)
 
@@ -155,4 +163,8 @@ class DoctorNoteViewSet(viewsets.ModelViewSet):
         log_action(
             user, "note", medical_file=medical_file,
             target_user=medical_file.owner, details=f"Note #{note.pk}",
+        )
+        notify(
+            medical_file.owner, "note",
+            f'Dr. {user.full_name} added a note on \'{medical_file.title}\'.',
         )

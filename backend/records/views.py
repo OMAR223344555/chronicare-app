@@ -8,7 +8,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
 from accounts.permissions import IsActiveAccount, IsPatient, IsPlatformAdmin
-from auditlog.services import log_action
+from auditlog.services import log_action, notify
 from sharing.services import doctor_can_access_file
 
 from .models import Category, Condition, MedicalFile
@@ -108,6 +108,17 @@ class MedicalFileViewSet(viewsets.ModelViewSet):
             raise PermissionDenied("Only patients upload medical files.")
         obj = serializer.save(owner=self.request.user)
         log_action(self.request.user, "upload", medical_file=obj, details=obj.title)
+        # Tell every doctor whose active share covers this file (directly or
+        # by category) that something new arrived.
+        from sharing.services import active_shares_for_doctor
+        from accounts.models import User as _U
+        seen = set()
+        for doctor in _U.objects.filter(role=_U.Role.DOCTOR, status=_U.Status.ACTIVE):
+            for share in active_shares_for_doctor(doctor).filter(patient=self.request.user).prefetch_related("files", "categories"):
+                if obj.pk in {f.pk for f in share.files.all()} or (obj.category_id and obj.category_id in {c.pk for c in share.categories.all()}):
+                    if doctor.pk not in seen:
+                        seen.add(doctor.pk)
+                        notify(doctor, "upload", f"{self.request.user.full_name} uploaded a new file: {obj.title}.")
 
     def retrieve(self, request, *args, **kwargs):
         obj = self.get_object()

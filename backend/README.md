@@ -93,6 +93,9 @@ Django models map to the same ERD table names via `Meta.db_table`.
 - `GET admin/users/?status=&role=`, `POST admin/users/{id}/approve/`,
   `POST admin/users/{id}/deactivate/`, `POST admin/users/{id}/activate/`
 - `GET my-access-log/` - the patient's own access history: who else viewed, downloaded or annotated their files
+- `GET notifications/` - the signed-in user's own notifications (share, revoke, note, upload, out-of-range lab, approval)
+- `POST notifications/read-all/` - mark all of the user's notifications read
+- `POST notifications/<id>/read/` - mark one notification read
 - `GET admin/audit-log/`
 
 List endpoints are paginated (`count`/`next`/`results`, page size 20).

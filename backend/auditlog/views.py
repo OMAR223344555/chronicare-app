@@ -1,9 +1,10 @@
-from rest_framework import generics
+from rest_framework import generics, status, views
+from rest_framework.response import Response
 
 from accounts.permissions import IsPatient, IsPlatformAdmin
 
-from .models import AuditLog
-from .serializers import AuditLogSerializer
+from .models import AuditLog, Notification
+from .serializers import AuditLogSerializer, NotificationSerializer
 
 
 class AuditLogListView(generics.ListAPIView):
@@ -41,3 +42,23 @@ class MyAccessLogView(generics.ListAPIView):
             )
             .exclude(user=self.request.user)
         )
+
+
+class NotificationListView(generics.ListAPIView):
+    """The signed-in user's own notifications, newest first."""
+
+    serializer_class = NotificationSerializer
+    pagination_class = None
+
+    def get_queryset(self):
+        return Notification.objects.filter(user=self.request.user)[:30]
+
+
+class NotificationReadView(views.APIView):
+    """Mark one or all of the user's notifications as read."""
+
+    def post(self, request, pk=None):
+        qs = Notification.objects.filter(user=request.user, is_read=False)
+        if pk is not None:
+            qs = qs.filter(pk=pk)
+        return Response({"marked_read": qs.update(is_read=True)})

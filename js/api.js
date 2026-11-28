@@ -75,6 +75,72 @@ window.CCApi = (function () {
         return data;
     }
     function get(path) { return req(path); }
+
+    // ---- Live notifications (shared by every portal) ----
+    // Each page exposes window.CC_NOTIFS()/CC_NOTIFS_MARK_READ(); in live mode
+    // they delegate here. liveNotifs() is synchronous for the panel UI and
+    // refreshes the cache in the background when it is stale.
+    const NOTIF_ICONS = {
+        share: 'folder-heart', revoke: 'share-2', note: 'file-text',
+        lab_high: 'flask-conical', approve: 'user-check', upload: 'upload',
+        system: 'bell',
+    };
+    const NOTIF_KINDS = {
+        share: 'share', revoke: 'warn', note: 'info',
+        lab_high: 'warn', approve: 'success', upload: 'share',
+        system: 'info',
+    };
+    const notifState = { items: [], fetchedAt: 0, loading: false };
+
+    function notifTime(iso) {
+        const then = new Date(iso);
+        const mins = Math.max(0, Math.round((Date.now() - then.getTime()) / 60000));
+        if (mins < 1) return L('Just now', 'الآن');
+        if (mins < 60) return L(mins + 'm ago', 'منذ ' + mins + ' د');
+        const hours = Math.round(mins / 60);
+        if (hours < 24) return L(hours + 'h ago', 'منذ ' + hours + ' س');
+        const days = Math.round(hours / 24);
+        return L(days + 'd ago', 'منذ ' + days + ' يوم');
+    }
+    function mapNotif(n) {
+        return {
+            id: n.id,
+            icon: NOTIF_ICONS[n.kind] || 'bell',
+            kind: NOTIF_KINDS[n.kind] || 'info',
+            text: n.text,
+            time: notifTime(n.created_at),
+            unread: !n.is_read,
+            liveNotifs, refreshNotifs, markAllNotifsRead,
+    };
+    }
+    function notifRefreshed() {
+        if (window.CCUI) {
+            CCUI.updateNotifDot();
+            if (CCUI.renderNotifs) CCUI.renderNotifs();
+        }
+    }
+    async function refreshNotifs(force) {
+        if (!hasSession()) return;
+        if (notifState.loading) return;
+        if (!force && Date.now() - notifState.fetchedAt < 15000) return;
+        notifState.loading = true;
+        try {
+            const data = await get('/notifications/');
+            notifState.items = (data || []).map(mapNotif);
+            notifState.fetchedAt = Date.now();
+            notifRefreshed();
+        } catch (e) { /* keep the last good list */ }
+        notifState.loading = false;
+    }
+    function liveNotifs() {
+        refreshNotifs(false);
+        return notifState.items;
+    }
+    async function markAllNotifsRead() {
+        notifState.items.forEach(n => { n.unread = false; });
+        notifRefreshed();
+        try { await post('/notifications/read-all/'); } catch (e) { /* server catches up next refresh */ }
+    }
     function post(path, json) { return req(path, { method: 'POST', json: json || {} }); }
     function patch(path, json) { return req(path, { method: 'PATCH', json: json || {} }); }
 

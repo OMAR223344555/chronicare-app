@@ -193,6 +193,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             try {
                 await CCApi.hydrateDoctor(patients);
                 apiMode = true;
+                CCApi.refreshNotifs(true);
                 // Reflect the signed-in doctor in the demo-authored chrome
                 const nameEl = document.querySelector('[data-i18n="name.farouk"]');
                 if (nameEl) { nameEl.textContent = sessUser.full_name || nameEl.textContent; nameEl.removeAttribute('data-i18n'); }
@@ -417,8 +418,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         { icon: 'flask-conical', kind: 'info', textKey: 'nd.2', timeKey: 'tm.yest', unread: true },
         { icon: 'calendar-check', kind: 'success', textKey: 'nd.3', timeKey: 'tm.2d', unread: false },
     ];
-    window.CC_NOTIFS = () => apiMode ? [] : doctorNotifs.map(n => ({ ...n, text: T(n.textKey), time: T(n.timeKey) }));
-    window.CC_NOTIFS_MARK_READ = () => doctorNotifs.forEach(n => { n.unread = false; });
+    window.CC_NOTIFS = () => apiMode ? CCApi.liveNotifs() : doctorNotifs.map(n => ({ ...n, text: T(n.textKey), time: T(n.timeKey) }));
+    window.CC_NOTIFS_MARK_READ = () => { if (apiMode) { CCApi.markAllNotifsRead(); } else doctorNotifs.forEach(n => { n.unread = false; }); };
     window.CC_SOURCES = () => {
         const t = (k, f) => window.CCi18n ? CCi18n.t(k, f) : f;
         const pages = [

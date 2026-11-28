@@ -120,6 +120,20 @@ touched my files?".
 *Analogy: a security camera logbook - it doesn't stop anyone, but you can
 always replay exactly what happened.*
 
+## Notifications
+
+The bell in the top bar of every portal is live. When something happens that
+concerns a user - a patient shares files with a doctor, revokes a share, a
+doctor adds a note, a patient uploads a file covered by an active share, an
+out-of-range lab result is logged, or an admin approves a doctor - a row is
+written to the `notifications` table for that user. The red dot shows while
+anything is unread; "Mark all read" clears it. Each user only ever sees
+their own notifications (`GET /api/notifications/` is scoped to the
+requesting user). With no session the panel falls back to demo items.
+
+*Analogy: the ward whiteboard - one glance and you know what changed since
+you last looked.*
+
 ## Demo accounts
 
 These accounts exist only for the demo (created by `seed_demo`). Passwords

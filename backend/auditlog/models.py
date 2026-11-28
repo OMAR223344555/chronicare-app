@@ -55,3 +55,33 @@ class AuditLog(models.Model):
     def __str__(self):
         who = self.user or "system"
         return f"{self.created_at:%Y-%m-%d %H:%M} {who} {self.action}"
+
+
+class Notification(models.Model):
+    """In-app notification for one user, derived from platform events."""
+
+    class Kind(models.TextChoices):
+        SHARE = "share", "Files shared with you"
+        REVOKE = "revoke", "Share revoked"
+        NOTE = "note", "Doctor note added"
+        LAB_HIGH = "lab_high", "Out-of-range lab result"
+        APPROVE = "approve", "Account approved"
+        UPLOAD = "upload", "New file in a share"
+        SYSTEM = "system", "System"
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="notifications",
+    )
+    kind = models.CharField(max_length=10, choices=Kind.choices)
+    text = models.CharField(max_length=255)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "notifications"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.created_at:%Y-%m-%d %H:%M} -> {self.user}: {self.text[:40]}"

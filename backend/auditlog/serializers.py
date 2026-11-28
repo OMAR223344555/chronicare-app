@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import AuditLog
+from .models import AuditLog, Notification
 
 
 class AuditLogSerializer(serializers.ModelSerializer):
@@ -15,3 +15,9 @@ class AuditLogSerializer(serializers.ModelSerializer):
             "id", "created_at", "user", "user_email", "action", "action_label",
             "medical_file", "file_title", "target_user", "target_email", "details",
         ]
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = ["id", "kind", "text", "is_read", "created_at"]

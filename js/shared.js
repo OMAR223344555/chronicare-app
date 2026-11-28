@@ -361,5 +361,6 @@
         skeletonRows, skeletonCards, withSkeleton,
         countUp,
         openPalette, closePalette, updateNotifDot,
+        renderNotifs: () => { if (notifPanel && !notifPanel.classList.contains('hidden')) renderNotifs(); },
     };
 })();

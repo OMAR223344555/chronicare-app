@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from accounts.models import User
 from accounts.permissions import IsPlatformAdmin
 from accounts.serializers import UserSerializer
-from auditlog.services import log_action
+from auditlog.services import log_action, notify
 
 
 class AdminUserViewSet(viewsets.ReadOnlyModelViewSet):
@@ -28,6 +28,7 @@ class AdminUserViewSet(viewsets.ReadOnlyModelViewSet):
         user.status = User.Status.ACTIVE
         user.save(update_fields=["status"])
         log_action(request.user, "approve", target_user=user)
+        notify(user, "approve", "Your doctor account has been approved. You can now receive shared files.")
         return Response(UserSerializer(user).data)
 
     @action(detail=True, methods=["post"])

@@ -80,6 +80,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             try {
                 await CCApi.hydratePatient(state, CONDITION_LABELS, CATEGORY_LABELS);
                 apiMode = true;
+                CCApi.refreshNotifs(true);
                 CCApi.populateShareForm(state);
                 applyUserChrome(sessUser);
             } catch (err) {
@@ -354,7 +355,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                             try {
                                 await CCApi.hydratePatient(state, CONDITION_LABELS, CATEGORY_LABELS);
                                 apiMode = true;
+
                                 CCApi.populateShareForm(state);
+                                CCApi.refreshNotifs(true);
                             } catch (e2) { /* keep built-in demo data; session is valid */ }
                             applyUserChrome(user);
                             applyLiveOverview();
@@ -415,7 +418,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                         try {
                             await CCApi.hydratePatient(state, CONDITION_LABELS, CATEGORY_LABELS);
                             apiMode = true;
+
                             CCApi.populateShareForm(state);
+                            CCApi.refreshNotifs(true);
                             applyUserChrome(user);
                             applyLiveOverview();
                         } catch (e2) { /* keep built-in demo data */ }
@@ -476,7 +481,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                             await CCApi.login(payload.email, payload.password);
                             await CCApi.hydratePatient(state, CONDITION_LABELS, CATEGORY_LABELS);
                             apiMode = true;
+
                             CCApi.populateShareForm(state);
+                            CCApi.refreshNotifs(true);
                             applyUserChrome(CCApi.user());
                             applyLiveOverview();
                         } catch (e2) { /* land on the demo state */ }
@@ -1654,8 +1661,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         { icon: 'clock', kind: 'warn', textKey: 'np.4', timeKey: 'tm.2d', unread: false },
         { icon: 'calendar-check', kind: 'success', textKey: 'np.5', timeKey: 'tm.3d', unread: false },
     ];
-    window.CC_NOTIFS = () => apiMode ? [] : patientNotifs.map(n => ({ ...n, text: T(n.textKey), time: T(n.timeKey) }));
-    window.CC_NOTIFS_MARK_READ = () => patientNotifs.forEach(n => { n.unread = false; });
+    window.CC_NOTIFS = () => apiMode ? CCApi.liveNotifs() : patientNotifs.map(n => ({ ...n, text: T(n.textKey), time: T(n.timeKey) }));
+    window.CC_NOTIFS_MARK_READ = () => { if (apiMode) { CCApi.markAllNotifsRead(); } else patientNotifs.forEach(n => { n.unread = false; }); };
 
     // command palette sources (patient)
     window.CC_SOURCES = () => {

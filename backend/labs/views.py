@@ -4,7 +4,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
 from accounts.permissions import IsActiveAccount, IsPatient, IsPlatformAdmin
-from auditlog.services import log_action
+from auditlog.services import log_action, notify
 
 from .models import LabResult, LabTestType
 from .serializers import LabResultSerializer, LabTestTypeSerializer
@@ -59,6 +59,19 @@ class LabResultViewSet(viewsets.ModelViewSet):
             self.request.user, "lab_add",
             details=f"{obj.test_type.code}={obj.value} {obj.test_type.unit}",
         )
+        tt = obj.test_type
+        out_of_range = (tt.ref_min is not None and obj.value < tt.ref_min) or \
+            (tt.ref_max is not None and obj.value > tt.ref_max)
+        if out_of_range:
+            from sharing.services import patients_sharing_labs_with, active_shares_for_doctor
+            for doctor_id in patients_sharing_labs_with(self.request.user):
+                from accounts.models import User as _U
+                doctor = _U.objects.filter(pk=doctor_id).first()
+                if doctor:
+                    notify(
+                        doctor, "lab_high",
+                        f"{self.request.user.full_name} logged an out-of-range {tt.code}: {obj.value} {tt.unit}.",
+                    )
 
     @action(detail=False, methods=["get"])
     def trends(self, request):
