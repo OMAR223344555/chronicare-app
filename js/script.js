@@ -1392,6 +1392,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (l.max != null && l.value > l.max) return 'high';
         return null;
     }
+    // Long units like mL/min/1.73m2 are shortened in the table (full unit in the tooltip).
+    function shortUnit(u) {
+        if (!u) return '';
+        return u.length > 8 ? u.split('/')[0] : u;
+    }
     // Flag pill shared by the table and the biomarker cards.
     // High -> red, Low -> amber, Normal -> green. nowrap keeps it on one line.
     function flagPill(l, pad) {
@@ -1414,8 +1419,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         labResultsTable.innerHTML = rows.map(l => `
             <tr class="${outOfRange(l) ? 'bg-red-50' : ''}">
                 <td class="py-2.5 whitespace-nowrap">${labLabel(l)}</td>
-                <td class="whitespace-nowrap font-bold ${outOfRange(l) ? 'text-red-600' : 'text-[#0c2340]'}">${l.value} <span class="text-xs font-semibold text-slate-400">${l.unit}</span></td>
-                <td class="whitespace-nowrap text-slate-500">${l.min != null ? l.min : ''}${l.max != null ? ' - ' + l.max : (l.min != null ? '+' : '')} ${l.unit}</td>
+                <td class="whitespace-nowrap font-bold ${outOfRange(l) ? 'text-red-600' : 'text-[#0c2340]'}">${l.value} <span class="text-xs font-semibold text-slate-400" title="${l.unit || ''}">${shortUnit(l.unit)}</span></td>
+                <td class="whitespace-nowrap text-slate-500">${l.min != null ? l.min : ''}${l.max != null ? ' - ' + l.max : (l.min != null ? '+' : '')}</td>
                 <td class="whitespace-nowrap text-slate-500">${fmtDate(l.date)}</td>
                 <td class="whitespace-nowrap">${flagPill(l, 'px-2 py-0.5')}</td>
             </tr>`).join('') || `<tr><td colspan="5" class="text-center text-slate-400 py-6">${state.labs.length ? LLab('No results in this date range or test filter.', 'لا نتائج في هذا المدى الزمني أو الفلتر.') : LLab('No lab results yet. Add your first one below.', 'لا توجد نتائج تحاليل بعد. أضف أول نتيجة من الأسفل.')}</td></tr>`;
@@ -1513,7 +1518,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             const { meta, points } = series[0];
             const values = points.map(p => p.value);
             const bounds = [...values, meta.min, meta.max].filter(v => v != null);
-            const vMin = Math.min(...bounds) * 0.95, vMax = Math.max(...bounds) * 1.05;
+            // Additive padding so even extreme outliers stay inside the plot:
+            // a multiplicative margin gets too small when the value span is wide.
+            const lo = Math.min(...bounds), hi = Math.max(...bounds);
+            const pad = Math.max((hi - lo) * 0.1, 0.5);
+            const vMin = lo >= 0 ? Math.max(0, lo - pad) : lo - pad, vMax = hi + pad;
             const x = i => PAD + (points.length === 1 ? (W - 2 * PAD) / 2 : i * (W - 2 * PAD) / (points.length - 1));
             const y = v => H - PAD - ((v - vMin) / (vMax - vMin)) * (H - 2 * PAD);
             const line = points.map((p, i) => `${x(i)},${y(p.value)}`).join(' ');
@@ -1536,7 +1545,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     ${points.length > 1 ? `<polyline points="${line}" fill="none" stroke="${color}" stroke-width="2.5"/>` : ''}
                     ${points.map((p, i) => `
                         <circle cx="${x(i)}" cy="${y(p.value)}" r="4.5" fill="${outOfRange(p) ? '#dc2626' : color}"><title>${p.value} ${meta.unit || ''} (${p.date})</title></circle>
-                        ${points.length <= 8 ? `<text class="trend-val-label" x="${x(i)}" y="${y(p.value) - 10}" text-anchor="middle" font-size="10" font-weight="bold">${p.value}</text>` : ''}
+                        ${points.length <= 8 ? `<text class="trend-val-label" x="${x(i)}" y="${y(p.value) - 12 < 8 ? y(p.value) + 20 : y(p.value) - 12}" text-anchor="middle" font-size="10" font-weight="bold">${p.value}</text>` : ''}
                         ${i === 0 || p.date !== points[i - 1].date ? `<text class="trend-date-label" x="${x(i)}" y="${H - PAD + 16}" text-anchor="middle" font-size="9">${p.date.slice(5)}</text>` : ''}`).join('')}
                 </svg>
                 ${points.length === 1 ? `<p class="text-xs text-slate-400 mt-1">${LLab('One result so far - add more results to see a trend.', 'نتيجة واحدة حتى الآن - أضف نتائج أكثر ليظهر الاتجاه.')}</p>` : ''}
