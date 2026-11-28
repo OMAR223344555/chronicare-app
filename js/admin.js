@@ -142,11 +142,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         const sessUser = CCApi.user();
         if (sessUser && sessUser.role === 'admin') {
             try {
-                await CCApi.hydrateAdmin({ pendingDoctors, users, categories, conditions, ranges, auditEvents });
+                await CCApi.withRetry(() => CCApi.hydrateAdmin({ pendingDoctors, users, categories, conditions, ranges, auditEvents }));
                 apiMode = true;
                 CCApi.refreshNotifs(true);
             } catch (err) {
-                CCApi.clearSession();
+                if (err && (err.status === 401 || err.status === 403)) {
+                    CCApi.clearSession(); // session truly expired
+                } else {
+                    showToast(CCApi.L('Connection is slow - reconnecting to your account...', 'الاتصال بطيء - بنعيد الاتصال بحسابك...'), 'warn');
+                    CCApi.reconnectLoop(() => CCApi.hydrateAdmin({ pendingDoctors, users, categories, conditions, ranges, auditEvents }))
+                        .then(ok => { if (ok) location.reload(); });
+                }
             }
         } else if (sessUser) {
             CCApi.clearSession();

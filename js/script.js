@@ -78,14 +78,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         const sessUser = CCApi.user();
         if (sessUser && sessUser.role === 'patient') {
             try {
-                await CCApi.hydratePatient(state, CONDITION_LABELS, CATEGORY_LABELS);
+                await CCApi.withRetry(() => CCApi.hydratePatient(state, CONDITION_LABELS, CATEGORY_LABELS));
                 apiMode = true;
                 CCApi.refreshNotifs(true);
                 CCApi.populateShareForm(state);
                 applyUserChrome(sessUser);
                 startPatientLiveSync();
             } catch (err) {
-                CCApi.clearSession();
+                if (err && (err.status === 401 || err.status === 403)) {
+                    CCApi.clearSession(); // session truly expired
+                } else {
+                    // Transient failure (cold start, timeout, 5xx): keep the
+                    // session, say we are reconnecting, and reload once the
+                    // server answers instead of dropping into demo data.
+                    showToast(CCApi.L('Connection is slow - reconnecting to your account...', 'الاتصال بطيء - بنعيد الاتصال بحسابك...'), 'warn');
+                    CCApi.reconnectLoop(() => CCApi.hydratePatient(state, CONDITION_LABELS, CATEGORY_LABELS))
+                        .then(ok => { if (ok) location.reload(); });
+                }
             }
         } else if (sessUser) {
             CCApi.clearSession(); // session belongs to another portal
@@ -1490,20 +1499,29 @@ document.addEventListener('DOMContentLoaded', async () => {
             const y = v => H - PAD - ((v - vMin) / (vMax - vMin)) * (H - 2 * PAD);
             const line = points.map((p, i) => `${x(i)},${y(p.value)}`).join(' ');
             const color = METRIC_COLORS[meta.test] || '#0891b2';
-            const rangeBand = (meta.min != null && meta.max != null)
-                ? `<rect x="${PAD}" y="${y(meta.max)}" width="${W - 2 * PAD}" height="${y(meta.min) - y(meta.max)}" fill="#dcfce7" opacity="0.6"/>`
-                : (meta.min != null ? `<rect x="${PAD}" y="${PAD}" width="${W - 2 * PAD}" height="${y(meta.min) - PAD}" fill="#dcfce7" opacity="0.6"/>` : '');
+            const hasBand = meta.min != null && meta.max != null;
+            const rangeBand = hasBand
+                ? `<rect class="trend-band" x="${PAD}" y="${y(meta.max)}" width="${W - 2 * PAD}" height="${y(meta.min) - y(meta.max)}"/>
+                   <text class="trend-band-label" x="${W - PAD - 5}" y="${Math.min(H - PAD - 4, y(meta.max) + 12)}" text-anchor="end" font-size="9" font-weight="bold">${meta.min} - ${meta.max} ${meta.unit || ''}</text>`
+                : (meta.min != null ? `<rect class="trend-band" x="${PAD}" y="${PAD}" width="${W - 2 * PAD}" height="${y(meta.min) - PAD}"/>` : '');
+            // y-axis scale: band edges when present, else the value bounds
+            const tickVals = hasBand ? [meta.min, meta.max] : [Math.round(vMin * 10) / 10, Math.round(vMax * 10) / 10];
+            const yTicks = tickVals.map(v => `
+                    <text class="trend-tick" x="${PAD - 6}" y="${y(v) + 3}" text-anchor="end" font-size="8.5">${v}</text>`).join('');
             trendChart.innerHTML = `
                 <svg viewBox="0 0 ${W} ${H}" class="w-full h-48">
                     ${rangeBand}
-                    <line x1="${PAD}" y1="${H - PAD}" x2="${W - PAD}" y2="${H - PAD}" stroke="#e2e8f0"/>
-                    <polyline points="${line}" fill="none" stroke="${color}" stroke-width="2.5"/>
+                    <line class="trend-axis" x1="${PAD}" y1="${PAD}" x2="${PAD}" y2="${H - PAD}"/>
+                    <line class="trend-axis" x1="${PAD}" y1="${H - PAD}" x2="${W - PAD}" y2="${H - PAD}"/>
+                    ${yTicks}
+                    ${points.length > 1 ? `<polyline points="${line}" fill="none" stroke="${color}" stroke-width="2.5"/>` : ''}
                     ${points.map((p, i) => `
                         <circle cx="${x(i)}" cy="${y(p.value)}" r="4.5" fill="${outOfRange(p) ? '#dc2626' : color}"/>
-                        <text x="${x(i)}" y="${y(p.value) - 10}" text-anchor="middle" font-size="10" fill="#0c2340" font-weight="bold">${p.value}</text>
-                        <text x="${x(i)}" y="${H - PAD + 16}" text-anchor="middle" font-size="9" fill="#94a3b8">${p.date.slice(5)}</text>`).join('')}
+                        <text class="trend-val-label" x="${x(i)}" y="${y(p.value) - 10}" text-anchor="middle" font-size="10" font-weight="bold">${p.value}</text>
+                        <text class="trend-date-label" x="${x(i)}" y="${H - PAD + 16}" text-anchor="middle" font-size="9">${p.date.slice(5)}</text>`).join('')}
                 </svg>
-                <p class="text-xs text-slate-400 mt-2">${Tp('lt.chartNote', { label: labLabel(meta), unit: meta.unit })}</p>`;
+                ${points.length === 1 ? `<p class="text-xs text-slate-400 mt-1">${LLab('One result so far - add more results to see a trend.', 'نتيجة واحدة حتى الآن - أضف نتائج أكثر ليظهر الاتجاه.')}</p>` : ''}
+                <p class="text-xs text-slate-400 mt-1">${Tp('lt.chartNote', { label: labLabel(meta), unit: meta.unit })}</p>`;
             return;
         }
         // multi-metric: each series normalized to its own min/max for overlay comparison
@@ -1511,7 +1529,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const x = i => PAD + (maxLen === 1 ? (W - 2 * PAD) / 2 : i * (W - 2 * PAD) / (maxLen - 1));
         trendChart.innerHTML = `
             <svg viewBox="0 0 ${W} ${H}" class="w-full h-48">
-                <line x1="${PAD}" y1="${H - PAD}" x2="${W - PAD}" y2="${H - PAD}" stroke="#e2e8f0"/>
+                <line class="trend-axis" x1="${PAD}" y1="${H - PAD}" x2="${W - PAD}" y2="${H - PAD}"/>
                 ${series.map(({ meta, points }) => {
                     const vals = points.map(p => p.value);
                     const lo = Math.min(...vals), hi = Math.max(...vals);

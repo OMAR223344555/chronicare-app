@@ -32,6 +32,47 @@ window.CCApi = (function () {
         localStorage.removeItem(LS_TOK);
         localStorage.removeItem(LS_USER);
     }
+
+    // Warm the backend on page load: PythonAnywhere webapps cold-start in
+    // several seconds, and without a warm-up the first real call (login or
+    // hydrate) eats that delay and can time out. Fire-and-forget; any
+    // response, even a 401, wakes the dyno.
+    try { fetch(base() + '/auth/me/', { method: 'GET' }).catch(function () {}); } catch (e) { /* never block boot */ }
+
+    // Retry a request on transient failures only: timeouts and network
+    // errors (status 0 / no status) and 5xx. Client errors (4xx) are real
+    // answers - a 401 means the session is dead, retrying just stalls boot.
+    async function withRetry(fn, tries, baseDelayMs) {
+        tries = tries || 3; baseDelayMs = baseDelayMs || 1500;
+        let lastErr;
+        for (let i = 0; i < tries; i++) {
+            try { return await fn(); }
+            catch (e) {
+                lastErr = e;
+                const s = e && e.status;
+                if (s && s >= 400 && s < 500) throw e;
+                if (i < tries - 1) await new Promise(r => setTimeout(r, baseDelayMs * Math.pow(2, i)));
+            }
+        }
+        throw lastErr;
+    }
+
+    // After a transient boot failure, keep polling quietly in the background
+    // (the session is kept, the page shows a reconnecting toast). Resolves
+    // true once fn succeeds, false after giveUpMs.
+    async function reconnectLoop(fn, intervalMs, giveUpMs) {
+        intervalMs = intervalMs || 5000; giveUpMs = giveUpMs || 120000;
+        const deadline = Date.now() + giveUpMs;
+        while (Date.now() < deadline) {
+            await new Promise(r => setTimeout(r, intervalMs));
+            try { await fn(); return true; }
+            catch (e) {
+                const s = e && e.status;
+                if (s && s >= 400 && s < 500) return false; // session died meanwhile
+            }
+        }
+        return false;
+    }
     function L(en, ar) {
         return (window.CCi18n && CCi18n.lang === 'ar') ? ar : en;
     }
@@ -570,7 +611,7 @@ window.CCApi = (function () {
     }
 
     return {
-        base, setBase, token, user, hasSession, clearSession, L,
+        base, setBase, token, user, hasSession, clearSession, withRetry, reconnectLoop, L,
         req, get, post, patch, all, ping,
         adminStats: () => refs.adminStats || null,
         login, googleLogin, register, logout, openFile,

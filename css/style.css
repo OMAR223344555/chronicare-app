@@ -2563,3 +2563,30 @@ html.dark #timelineList > div > div:first-child {
         margin-inline-start: 16rem;
     }
 }
+
+/* Lab trends dark mode: the out-of-range row override was scoped to
+   body.portal-luxe, but the patient portal is body.sidebar-luxe, so the row
+   stayed light pink with unreadable text in dark mode. Cover both, and give
+   the row text and the red pill/readable dark treatments. */
+body.sidebar-luxe tr.bg-red-50 td:first-child { border-inline-start: 3px solid #fca5a5; }
+html.dark tr.bg-red-50 { background: rgba(239, 68, 68, 0.10); }
+html.dark tr.bg-red-50 td { color: #d7e1ee; }
+html.dark tr.bg-red-50 td .text-slate-500,
+html.dark tr.bg-red-50 td.text-slate-500,
+html.dark tr.bg-red-50 .text-slate-400 { color: #9fb0c4; }
+html.dark .bg-red-100 { background-color: rgba(239, 68, 68, 0.18); }
+html.dark .text-red-700 { color: #f87171; }
+html.dark .text-red-600 { color: #f87171; }
+
+/* Trend chart: theme-aware parts (classes beat SVG presentation attributes,
+   so colors follow theme toggles without re-rendering) */
+.trend-axis { stroke: #e2e8f0; }
+html.dark .trend-axis { stroke: #22364d; }
+.trend-band { fill: #dcfce7; opacity: 0.6; }
+html.dark .trend-band { fill: rgba(16, 185, 129, 0.16); opacity: 1; }
+.trend-val-label { fill: #0c2340; }
+html.dark .trend-val-label { fill: #e8eef6; }
+.trend-date-label, .trend-tick { fill: #94a3b8; }
+html.dark .trend-date-label, html.dark .trend-tick { fill: #7e93ab; }
+.trend-band-label { fill: #059669; }
+html.dark .trend-band-label { fill: #34d399; }

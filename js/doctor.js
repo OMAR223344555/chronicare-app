@@ -191,7 +191,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const sessUser = CCApi.user();
         if (sessUser && sessUser.role === 'doctor') {
             try {
-                await CCApi.hydrateDoctor(patients);
+                await CCApi.withRetry(() => CCApi.hydrateDoctor(patients));
                 apiMode = true;
                 CCApi.refreshNotifs(true);
                 // Reflect the signed-in doctor in the demo-authored chrome
@@ -204,7 +204,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const initials = (sessUser.full_name || '').replace(/^Dr\.?\s+/i, '').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('') || 'DR';
                 document.querySelectorAll('div.rounded-full.bg-cyan-200').forEach(el => { if (el.textContent.trim() === 'AF') el.textContent = initials; });
             } catch (err) {
-                CCApi.clearSession();
+                if (err && (err.status === 401 || err.status === 403)) {
+                    CCApi.clearSession(); // session truly expired
+                } else {
+                    showToast(CCApi.L('Connection is slow - reconnecting to your account...', 'الاتصال بطيء - بنعيد الاتصال بحسابك...'), 'warn');
+                    CCApi.reconnectLoop(() => CCApi.hydrateDoctor(patients))
+                        .then(ok => { if (ok) location.reload(); });
+                }
             }
         } else if (sessUser) {
             CCApi.clearSession();

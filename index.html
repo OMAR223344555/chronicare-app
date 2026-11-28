@@ -78,7 +78,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Stylesheet -->
-    <link rel="stylesheet" href="./css/style.css?v=73">
+    <link rel="stylesheet" href="./css/style.css?v=74">
 </head>
 
 <body class="sidebar-luxe bg-slate-100 min-h-screen font-[Inter] antialiased">
@@ -1308,17 +1308,22 @@
                                     </button>
                                 </div>
                             </div>
-                            <div class="flex flex-wrap items-center gap-2 mb-4">
+                            <div class="flex flex-wrap items-center gap-2 mb-2">
                                 <button type="button" class="chart-chip active" data-labmetric="HBA1C" data-i18n="lab.short.HBA1C">HbA1c</button>
                                 <button type="button" class="chart-chip" data-labmetric="FBG" data-i18n="chart.fbg">Fasting glucose</button>
                                 <button type="button" class="chart-chip" data-labmetric="SBP" data-i18n="chart.sbp">Systolic BP</button>
                                 <button type="button" class="chart-chip" data-labmetric="EGFR" data-i18n="lab.short.EGFR">eGFR</button>
-                                <span class="mx-1"></span>
-                                <label class="text-xs font-semibold text-slate-500" data-i18n="lab.from">From</label>
-                                <input type="date" id="labDateFrom" value="2026-01-01" class="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs outline-none focus:border-cyan-500 transition">
-                                <label class="text-xs font-semibold text-slate-500" data-i18n="lab.to">To</label>
-                                <input type="date" id="labDateTo" value="2026-12-31" class="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs outline-none focus:border-cyan-500 transition">
-                                <select id="labTestSelect" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-cyan-500 transition">
+                            </div>
+                            <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4">
+                                <span class="inline-flex items-center gap-1.5">
+                                    <label for="labDateFrom" class="text-xs font-semibold text-slate-500" data-i18n="lab.from">From</label>
+                                    <input type="date" id="labDateFrom" value="2026-01-01" class="h-9 bg-slate-50 border border-slate-200 rounded-xl px-2.5 text-xs outline-none focus:border-cyan-500 transition">
+                                </span>
+                                <span class="inline-flex items-center gap-1.5">
+                                    <label for="labDateTo" class="text-xs font-semibold text-slate-500" data-i18n="lab.to">To</label>
+                                    <input type="date" id="labDateTo" value="2026-12-31" class="h-9 bg-slate-50 border border-slate-200 rounded-xl px-2.5 text-xs outline-none focus:border-cyan-500 transition">
+                                </span>
+                                <select id="labTestSelect" class="h-9 bg-slate-50 border border-slate-200 rounded-xl px-3 text-xs outline-none focus:border-cyan-500 transition">
                                     <option value="all" data-i18n="lt.allTests">All tests</option>
                                     <option value="HBA1C" data-i18n="lab.short.HBA1C">HbA1c</option>
                                     <option value="FBG" data-i18n="lab.short.FBG">Fasting glucose</option>
@@ -1458,10 +1463,10 @@
         }, (function () { try { return localStorage.getItem('cc-api-token') ? 20000 : 1500; } catch (e) { return 1500; } })());
     </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="./js/api.js?v=73"></script>
-    <script src="./js/shared.js?v=73"></script>
-    <script src="./js/i18n.js?v=73"></script>
-    <script src="./js/script.js?v=73"></script>
+    <script src="./js/api.js?v=74"></script>
+    <script src="./js/shared.js?v=74"></script>
+    <script src="./js/i18n.js?v=74"></script>
+    <script src="./js/script.js?v=74"></script>
 
     <!-- Floating theme + language controls -->
     <div class="fab-stack">
