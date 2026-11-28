@@ -361,7 +361,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                     },
                 });
                 if (container) {
-                    google.accounts.id.renderButton(container, { theme: 'outline', shape: 'pill', size: 'large', width: 320 });
+                    const renderGoogleButton = () => {
+                        const dark = document.documentElement.classList.contains('dark');
+                        container.innerHTML = '';
+                        google.accounts.id.renderButton(container, {
+                            theme: dark ? 'filled_black' : 'outline',
+                            shape: 'pill', size: 'large', width: 320
+                        });
+                    };
+                    renderGoogleButton();
+                    document.addEventListener('cc:theme', renderGoogleButton);
                     container.classList.remove('hidden');
                     if (fallback) fallback.classList.add('hidden');
                 }

@@ -1683,3 +1683,8 @@ input[type="checkbox"], input[type="radio"] { accent-color: #0e7490; }
 }
 html.dark .records-table tbody tr { background: #101e30; border-color: #1b2c40; }
 .condition-row.active { font-weight: 700; color: #0891b2; }
+
+/* ---------- Google sign-in button follows the app theme ---------- */
+html.dark #google-fallback-btn { background-color: #101f31; color: #e6eef7; border-color: #22364d; }
+html.dark #google-fallback-btn:hover { background-color: #1a2c42; }
+html.dark #google-gsi-container { color-scheme: dark; }
