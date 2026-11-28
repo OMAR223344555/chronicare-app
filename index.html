@@ -78,7 +78,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Stylesheet -->
-    <link rel="stylesheet" href="./css/style.css?v=75">
+    <link rel="stylesheet" href="./css/style.css?v=76">
 </head>
 
 <body class="sidebar-luxe bg-slate-100 min-h-screen font-[Inter] antialiased">
@@ -1291,9 +1291,11 @@
                         <p class="text-sm text-slate-400" data-i18n="lt.noBiomarkers">No lab results yet. Add your first result below to start tracking your biomarkers.</p>
                     </div>
 
-                    <div class="grid lg:grid-cols-12 gap-6 items-start">
+                    <!-- xl+ side by side; below xl the table takes the full width so each
+                         row stays on one clean line instead of wrapping or scrolling sideways -->
+                    <div class="grid xl:grid-cols-12 gap-6 items-start">
                         <!-- RESULTS TABLE + CHART -->
-                        <div class="lg:col-span-7 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                        <div class="xl:col-span-7 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
                             <div class="flex justify-between items-center mb-4 flex-wrap gap-3">
                                 <div>
                                     <h3 class="font-bold text-[#0c2340]" data-i18n="lt.results">Results & trend chart</h3>
@@ -1353,7 +1355,7 @@
                         </div>
 
                         <!-- ADD RESULT -->
-                        <div class="lg:col-span-5 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                        <div class="xl:col-span-5 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
                             <h3 class="font-bold text-[#0c2340]" data-i18n="lt.add">Add a lab result</h3>
                             <p class="text-xs text-slate-500 mt-0.5" data-i18n="lt.addSub">Enter the value exactly as printed on your report</p>
                             <form id="labEntryForm" class="mt-5 space-y-4">
@@ -1464,10 +1466,10 @@
         }, (function () { try { return localStorage.getItem('cc-api-token') ? 20000 : 1500; } catch (e) { return 1500; } })());
     </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="./js/api.js?v=75"></script>
-    <script src="./js/shared.js?v=75"></script>
-    <script src="./js/i18n.js?v=75"></script>
-    <script src="./js/script.js?v=75"></script>
+    <script src="./js/api.js?v=76"></script>
+    <script src="./js/shared.js?v=76"></script>
+    <script src="./js/i18n.js?v=76"></script>
+    <script src="./js/script.js?v=76"></script>
 
     <!-- Floating theme + language controls -->
     <div class="fab-stack">
