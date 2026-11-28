@@ -2458,8 +2458,8 @@ html.dark .auth-deco-plus { color: rgba(34, 211, 238, 0.16); }
 .appt-form { margin-top: 0; padding: 16px 20px 18px; }
 
 /* Lab results table: its header/cells had no horizontal padding */
-#view-lab-trends .overflow-x-auto table thead th { padding-block: 8px; padding-inline-end: 12px; }
-#view-lab-trends .overflow-x-auto table tbody td { padding-block: 10px; padding-inline-end: 12px; }
+#view-lab-trends .overflow-x-auto table thead th { padding-block: 8px; padding-inline-end: 8px; }
+#view-lab-trends .overflow-x-auto table tbody td { padding-block: 10px; padding-inline-end: 8px; }
 
 @media (min-width: 641px) {
     /* Appointment rows: airier, with status pills aligned in a steady column */
