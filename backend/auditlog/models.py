@@ -21,6 +21,7 @@ class AuditLog(models.Model):
         DEACTIVATE = "deactivate", "Account deactivated"
         ACTIVATE = "activate", "Account reactivated"
         DELETE = "delete", "Account deleted"
+        APPOINTMENT = "appointment", "Appointment booked or changed"
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -67,6 +68,7 @@ class Notification(models.Model):
         LAB_HIGH = "lab_high", "Out-of-range lab result"
         APPROVE = "approve", "Account approved"
         UPLOAD = "upload", "New file in a share"
+        APPT = "appt", "Appointment update"
         SYSTEM = "system", "System"
 
     user = models.ForeignKey(

@@ -412,6 +412,73 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.addEventListener('cc:popview', handleHashRoute);
     handleHashRoute();
 
+    // ---- Appointments (doctor) ----
+    let apptDItems = [];
+    let apptDLoaded = false;
+    function apptDDemo() {
+        const d1 = new Date(Date.now() + 2 * 86400000); d1.setMinutes(0, 0, 0);
+        const d2 = new Date(Date.now() + 4 * 86400000); d2.setMinutes(30, 0, 0);
+        return [
+            { id: 'demo1', patient_name: 'Maya Hassan', scheduled_at: d1.toISOString(), reason: 'HbA1c follow-up', status: 'pending' },
+            { id: 'demo2', patient_name: 'Omar Adel', scheduled_at: d2.toISOString(), reason: 'Medication review', status: 'confirmed' },
+        ];
+    }
+    async function loadAppointmentsD(force) {
+        if (apptDLoaded && !force) return;
+        apptDLoaded = true;
+        if (apiMode && window.CCApi) {
+            try { apptDItems = await CCApi.all('/appointments/'); } catch (e) { apptDItems = []; }
+        } else {
+            apptDItems = apptDDemo();
+        }
+        const rank = { pending: 0, confirmed: 1, completed: 2, declined: 3, cancelled: 4 };
+        apptDItems = apptDItems.slice().sort((a, b) => (rank[a.status] ?? 9) - (rank[b.status] ?? 9) || new Date(a.scheduled_at) - new Date(b.scheduled_at));
+        renderAppointmentsD();
+    }
+    function apptDParts(iso) {
+        const d = new Date(iso);
+        const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+        const time = d.toLocaleTimeString(window.CCi18n && CCi18n.lang === 'ar' ? 'ar-EG' : 'en-GB', { hour: '2-digit', minute: '2-digit' });
+        return { day: String(d.getDate()).padStart(2, '0'), mon: months[d.getMonth()], time };
+    }
+    function renderAppointmentsD() {
+        const list = document.getElementById('apptDList');
+        if (!list) return;
+        const countEl = document.getElementById('apptDCount');
+        if (countEl) countEl.textContent = apptDItems.length;
+        const now = Date.now();
+        list.innerHTML = apptDItems.map(a => {
+            const w = apptDParts(a.scheduled_at);
+            let actions = '';
+            if (apiMode && a.status === 'pending') {
+                actions = `<span class="appt-act"><button type="button" class="appt-btn ok" data-appt-act="confirm" data-appt-id="${a.id}">${T('appt.confirm', 'Confirm')}</button><button type="button" class="appt-btn no" data-appt-act="decline" data-appt-id="${a.id}">${T('appt.decline', 'Decline')}</button></span>`;
+            } else if (apiMode && a.status === 'confirmed' && new Date(a.scheduled_at).getTime() < now) {
+                actions = `<span class="appt-act"><button type="button" class="appt-btn mute" data-appt-act="complete" data-appt-id="${a.id}">${T('appt.complete', 'Complete')}</button></span>`;
+            }
+            return `
+            <li class="au-row appt-row">
+                <span class="appt-date"><b>${w.day}</b><span>${w.mon}</span></span>
+                <div class="appt-main">
+                    <p class="appt-name">${a.patient_name || ''}</p>
+                    <p class="appt-meta">${w.time}${a.reason ? ' · ' + a.reason : ''}</p>
+                </div>
+                <span class="appt-pill ${a.status}">${T('appt.st.' + a.status, a.status)}</span>
+                ${actions}
+            </li>`;
+        }).join('') || `<li class="au-empty">${T('appt.dEmpty', 'No appointment requests yet.')}</li>`;
+        list.querySelectorAll('[data-appt-act]').forEach(btn => btn.addEventListener('click', async () => {
+            btn.disabled = true;
+            try {
+                await CCApi.post(`/appointments/${btn.dataset.apptId}/status/`, { action: btn.dataset.apptAct });
+                await loadAppointmentsD(true);
+            } catch (e) { btn.disabled = false; showToast(T('appt.bookErr', 'Could not book right now - please try again.'), 'warn'); }
+        }));
+        refreshIcons();
+    }
+    document.addEventListener('cc:lang', () => { if (apptDLoaded) { if (!apiMode) apptDItems = apptDDemo(); renderAppointmentsD(); } });
+    document.querySelectorAll('[data-navigate="appointments"]').forEach(b =>
+        b.addEventListener('click', () => loadAppointmentsD()));
+
     // ---- Stage 2: notifications + palette (doctor) ----
     const doctorNotifs = [
         { icon: 'folder-heart', kind: 'share', textKey: 'nd.1', timeKey: 'tm.3h', unread: true },
@@ -425,6 +492,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const pages = [
             { icon: 'users', title: t('nav.patients', 'My Patients'), keywords: 'list', run: () => showView('patients') },
             { icon: 'folder-heart', title: t('nav.patientRecords', 'Patient Records'), keywords: 'files notes', run: () => showView('patient-records') },
+            { icon: 'calendar-check', title: t('nav.appointments', 'Appointments'), keywords: 'schedule bookings', run: () => showView('appointments') },
         ];
         const pats = patients.map(p => ({
             icon: 'user',

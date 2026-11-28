@@ -96,6 +96,8 @@ Django models map to the same ERD table names via `Meta.db_table`.
 - `GET notifications/` - the signed-in user's own notifications (share, revoke, note, upload, out-of-range lab, approval)
 - `POST notifications/read-all/` - mark all of the user's notifications read
 - `POST notifications/<id>/read/` - mark one notification read
+- `GET/POST appointments/` - list the user's own appointments; patients book (`doctor`, `scheduled_at` (future), `reason`)
+- `POST appointments/<id>/status/` - `{action}` = `confirm`/`decline` (doctor), `cancel` (either side), `complete` (doctor, past confirmed)
 - `GET admin/audit-log/`
 
 List endpoints are paginated (`count`/`next`/`results`, page size 20).

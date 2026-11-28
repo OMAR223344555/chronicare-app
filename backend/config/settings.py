@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     "accounts",
     "records",
     "labs",
+    "appointments",
     "sharing",
     "auditlog",
 ]

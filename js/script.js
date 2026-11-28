@@ -538,6 +538,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         'upload-file': ['nav.upload', 'Upload Record'],
         'sharing-access': ['sh.title', 'Sharing & Access'],
         'access-history': ['ah.title', 'Access History'],
+        'appointments': ['appt.title', 'Appointments'],
         'lab-trends': ['nav.labTrends', 'Lab Trends'],
         'timeline-archive': ['nav.timeline', 'Timeline & Archive']
     };
@@ -619,7 +620,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function handleHashRoute() {
         const hash = window.location.hash.replace('#', '').trim();
-        if (['overview', 'medical-files', 'upload-file', 'sharing-access', 'access-history', 'lab-trends', 'timeline-archive'].includes(hash)) {
+        if (['overview', 'medical-files', 'upload-file', 'sharing-access', 'access-history', 'appointments', 'lab-trends', 'timeline-archive'].includes(hash)) {
             showView(hash, false);
         } else {
             showView('auth', false);
@@ -706,6 +707,127 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('[data-navigate="access-history"]').forEach(b =>
         b.addEventListener('click', () => loadAccessHistory()));
     ahMaybeLoad();
+
+    // ---- Appointments (patient) ----
+    let apptItems = [];
+    let apptLoaded = false;
+    let apptDoctorsLoaded = false;
+    function apptDemo() {
+        const d1 = new Date(Date.now() + 3 * 86400000); d1.setMinutes(0, 0, 0);
+        const d2 = new Date(Date.now() + 6 * 86400000); d2.setMinutes(30, 0, 0);
+        return [
+            { id: 'demo1', doctor_name: T('name.sara', 'Sara Mahmoud'), doctor_specialty: T('specialty.endo', 'Endocrinology'), scheduled_at: d1.toISOString(), reason: T('appt.demoReason1', 'HbA1c follow-up'), status: 'confirmed' },
+            { id: 'demo2', doctor_name: T('name.karim', 'Karim Nabil'), doctor_specialty: T('specialty.cardio', 'Cardiology'), scheduled_at: d2.toISOString(), reason: T('appt.demoReason2', 'Blood pressure check'), status: 'pending' },
+        ];
+    }
+    function apptDemoDoctors() {
+        return [
+            { id: 'demo-d1', full_name: T('name.sara', 'Sara Mahmoud'), specialty: T('specialty.endo', 'Endocrinology') },
+            { id: 'demo-d2', full_name: T('name.karim', 'Karim Nabil'), specialty: T('specialty.cardio', 'Cardiology') },
+        ];
+    }
+    async function populateApptDoctors(force) {
+        const sel = document.getElementById('apptDoctor');
+        if (!sel || (apptDoctorsLoaded && !force)) return;
+        apptDoctorsLoaded = true;
+        let doctors = [];
+        if (apiMode && window.CCApi) {
+            try { doctors = await CCApi.all('/doctors/'); } catch (e) { doctors = []; }
+        } else {
+            doctors = apptDemoDoctors();
+        }
+        sel.innerHTML = '<option value="" disabled selected>' + T('appt.pickDoctor', 'Choose a doctor') + '</option>'
+            + doctors.map(d => `<option value="${d.id}">${d.full_name}${d.specialty ? ' - ' + d.specialty : ''}</option>`).join('');
+    }
+    async function loadAppointments(force) {
+        if (apptLoaded && !force) return;
+        apptLoaded = true;
+        if (apiMode && window.CCApi) {
+            try { apptItems = await CCApi.all('/appointments/'); } catch (e) { apptItems = []; }
+        } else {
+            apptItems = apptDemo();
+        }
+        renderAppointments();
+    }
+    function apptParts(iso) {
+        const d = new Date(iso);
+        const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+        const time = d.toLocaleTimeString(window.CCi18n && CCi18n.lang === 'ar' ? 'ar-EG' : 'en-GB', { hour: '2-digit', minute: '2-digit' });
+        return { day: String(d.getDate()).padStart(2, '0'), mon: months[d.getMonth()], time };
+    }
+    function renderAppointments() {
+        const list = document.getElementById('apptList');
+        if (!list) return;
+        const countEl = document.getElementById('apptCount');
+        if (countEl) countEl.textContent = apptItems.length;
+        const now = Date.now();
+        list.innerHTML = apptItems.map(a => {
+            const w = apptParts(a.scheduled_at);
+            const canCancel = ['pending', 'confirmed'].includes(a.status) && new Date(a.scheduled_at).getTime() > now && apiMode;
+            return `
+            <li class="au-row appt-row">
+                <span class="appt-date"><b>${w.day}</b><span>${w.mon}</span></span>
+                <div class="appt-main">
+                    <p class="appt-name">${a.doctor_name || ''}${a.doctor_specialty ? ' · ' + a.doctor_specialty : ''}</p>
+                    <p class="appt-meta">${w.time}${a.reason ? ' · ' + a.reason : ''}</p>
+                </div>
+                <span class="appt-pill ${a.status}">${T('appt.st.' + a.status, a.status)}</span>
+                ${canCancel ? `<span class="appt-act"><button type="button" class="appt-btn mute" data-appt-cancel="${a.id}">${T('appt.cancel', 'Cancel')}</button></span>` : ''}
+            </li>`;
+        }).join('') || `<li class="au-empty">${T('appt.empty', 'No appointments yet.')}</li>`;
+        list.querySelectorAll('[data-appt-cancel]').forEach(btn => btn.addEventListener('click', async () => {
+            btn.disabled = true;
+            try {
+                await CCApi.post(`/appointments/${btn.dataset.apptCancel}/status/`, { action: 'cancel' });
+                await loadAppointments(true);
+            } catch (e) { btn.disabled = false; showToast(T('appt.bookErr', 'Could not book right now - please try again.'), 'warn'); }
+        }));
+        refreshIcons();
+    }
+    const apptForm = document.getElementById('apptForm');
+    if (apptForm) {
+        apptForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = document.getElementById('apptBookMsg');
+            const btn = document.getElementById('apptBookBtn');
+            const sel = document.getElementById('apptDoctor');
+            const when = document.getElementById('apptWhen');
+            const reason = document.getElementById('apptReason');
+            if (!apiMode || !window.CCApi) {
+                if (msg) { msg.textContent = T('appt.booked', 'Request sent - your doctor has been notified.'); msg.className = 'appt-msg ok'; }
+                apptForm.reset();
+                return;
+            }
+            btn.disabled = true;
+            if (msg) { msg.textContent = T('appt.booking', 'Booking...'); msg.className = 'appt-msg'; msg.classList.remove('hidden'); }
+            try {
+                await CCApi.post('/appointments/', {
+                    doctor: Number(sel.value),
+                    scheduled_at: new Date(when.value).toISOString(),
+                    reason: reason.value.trim(),
+                });
+                if (msg) { msg.textContent = T('appt.booked', 'Request sent - your doctor has been notified.'); msg.className = 'appt-msg ok'; }
+                apptForm.reset();
+                apptDoctorsLoaded = false; populateApptDoctors();
+                await loadAppointments(true);
+            } catch (err) {
+                if (msg) { msg.textContent = T('appt.bookErr', 'Could not book right now - please try again.'); msg.className = 'appt-msg err'; }
+            }
+            btn.disabled = false;
+        });
+    }
+    document.addEventListener('cc:lang', () => {
+        apptDoctorsLoaded = false; populateApptDoctors();
+        if (apptLoaded) { if (!apiMode) apptItems = apptDemo(); renderAppointments(); }
+    });
+    function apptMaybeLoad() {
+        if (window.location.hash.replace('#', '').trim() === 'appointments') { populateApptDoctors(); loadAppointments(); }
+    }
+    window.addEventListener('hashchange', apptMaybeLoad);
+    document.addEventListener('cc:popview', apptMaybeLoad);
+    document.querySelectorAll('[data-navigate="appointments"]').forEach(b =>
+        b.addEventListener('click', () => { populateApptDoctors(); loadAppointments(); }));
+    apptMaybeLoad();
 
     const signOutBtn = document.getElementById('sign-out-btn');
     if (signOutBtn) {
@@ -1675,6 +1797,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             { icon: 'trending-up', title: t('nav.labTrends', 'Lab Trends'), keywords: 'charts results', run: go('lab-trends') },
             { icon: 'sliders-horizontal', title: t('nav.timeline', 'Timeline & Archive'), keywords: 'history', run: go('timeline-archive') },
             { icon: 'share-2', title: t('nav.sharing', 'Sharing & Access'), keywords: 'doctors permissions', run: go('sharing-access') },
+            { icon: 'calendar-check', title: t('nav.appointments', 'Appointments'), keywords: 'book doctor visit', run: go('appointments') },
         ];
         const recs = state.records.map(r => ({
             icon: 'file-text',

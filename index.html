@@ -76,7 +76,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Stylesheet -->
-    <link rel="stylesheet" href="./css/style.css?v=49">
+    <link rel="stylesheet" href="./css/style.css?v=50">
 </head>
 
 <body class="sidebar-luxe bg-slate-100 min-h-screen font-[Inter] antialiased">
@@ -608,6 +608,10 @@
                     <button type="button" class="portal-nav-btn w-full flex items-center gap-3 p-3 rounded-xl transition text-sm font-semibold hover:bg-slate-50" data-target="access-history" data-navigate="access-history">
                         <i data-lucide="history" class="w-5 h-5"></i>
                         <span data-i18n="nav.accessHistory">Access History</span>
+                    </button>
+                    <button type="button" class="portal-nav-btn w-full flex items-center gap-3 p-3 rounded-xl transition text-sm font-semibold hover:bg-slate-50" data-target="appointments" data-navigate="appointments">
+                        <i data-lucide="calendar-check" class="w-5 h-5"></i>
+                        <span data-i18n="nav.appointments">Appointments</span>
                     </button>
                 </div>
             </div>
@@ -1209,6 +1213,61 @@
                     </section>
                 </section>
 
+                <section id="view-appointments" class="portal-subview hidden">
+                    <div class="mb-6">
+                        <p class="text-xs font-bold tracking-widest text-cyan-700" data-i18n="appt.eyebrow">CARE TEAM</p>
+                        <h2 class="text-3xl font-extrabold text-[#0c2340] mt-1" data-i18n="appt.title">Appointments</h2>
+                        <p class="text-sm text-slate-500 mt-1" data-i18n="appt.sub">Book follow-ups with your doctors and track every request's status.</p>
+                    </div>
+
+                    <div class="appt-grid">
+                        <section class="au-panel appt-book" aria-labelledby="apptBookTitle">
+                            <header class="au-panel-head">
+                                <div class="au-panel-title">
+                                    <span class="au-panel-icon"><i data-lucide="calendar-plus"></i></span>
+                                    <div>
+                                        <h2 id="apptBookTitle" data-i18n="appt.bookTitle">Book an appointment</h2>
+                                        <p data-i18n="appt.bookSub">Your doctor is notified instantly</p>
+                                    </div>
+                                </div>
+                            </header>
+                            <form id="apptForm" class="appt-form">
+                                <label class="appt-field">
+                                    <span data-i18n="appt.doctor">Doctor</span>
+                                    <select id="apptDoctor" class="appt-input" required></select>
+                                </label>
+                                <label class="appt-field">
+                                    <span data-i18n="appt.when">Date &amp; time</span>
+                                    <input id="apptWhen" class="appt-input" type="datetime-local" required>
+                                </label>
+                                <label class="appt-field">
+                                    <span data-i18n="appt.reason">Reason <em data-i18n="appt.optional">(optional)</em></span>
+                                    <input id="apptReason" class="appt-input" type="text" maxlength="255" data-i18n-ph="appt.reasonPh" placeholder="e.g. HbA1c follow-up">
+                                </label>
+                                <button type="submit" id="apptBookBtn" class="appt-submit">
+                                    <i data-lucide="calendar-check"></i>
+                                    <span data-i18n="appt.bookBtn">Request appointment</span>
+                                </button>
+                                <p id="apptBookMsg" class="appt-msg hidden" role="status"></p>
+                            </form>
+                        </section>
+
+                        <section class="au-panel" aria-labelledby="apptListTitle">
+                            <header class="au-panel-head">
+                                <div class="au-panel-title">
+                                    <span class="au-panel-icon"><i data-lucide="calendar-clock"></i></span>
+                                    <div>
+                                        <h2 id="apptListTitle" data-i18n="appt.yours">Your appointments</h2>
+                                        <p data-i18n="appt.yoursSub">Requests, confirmations and past visits</p>
+                                    </div>
+                                </div>
+                                <span id="apptCount" class="au-count">0</span>
+                            </header>
+                            <ul id="apptList" class="au-list"></ul>
+                        </section>
+                    </div>
+                </section>
+
                 <section id="view-lab-trends" class="portal-subview hidden">
                     <div class="mb-6">
                         <p class="text-xs font-bold tracking-widest text-cyan-700" data-i18n="lt.eyebrow">CLINICAL METRICS</p>
@@ -1399,10 +1458,10 @@
     </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
-    <script src="./js/api.js?v=49"></script>
-    <script src="./js/shared.js?v=49"></script>
-    <script src="./js/i18n.js?v=49"></script>
-    <script src="./js/script.js?v=49"></script>
+    <script src="./js/api.js?v=50"></script>
+    <script src="./js/shared.js?v=50"></script>
+    <script src="./js/i18n.js?v=50"></script>
+    <script src="./js/script.js?v=50"></script>
 
     <!-- Floating theme + language controls -->
     <div class="fab-stack">

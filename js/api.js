@@ -90,7 +90,7 @@ window.CCApi = (function () {
         lab_high: 'warn', approve: 'success', upload: 'share',
         system: 'info',
     };
-    const notifState = { items: [], fetchedAt: 0, loading: false };
+    const notifState = { items: [], fetchedAt: 0, loading: false, markedAllAt: 0, fetchStartedAt: 0 };
 
     function notifTime(iso) {
         const then = new Date(iso);
@@ -123,8 +123,15 @@ window.CCApi = (function () {
         if (notifState.loading) return;
         if (!force && Date.now() - notifState.fetchedAt < 15000) return;
         notifState.loading = true;
+        notifState.fetchStartedAt = Date.now();
         try {
             const data = await get('/notifications/');
+            if (notifState.markedAllAt > notifState.fetchStartedAt) {
+                // A "mark all read" landed while this fetch was in flight; its
+                // answer is stale. Re-fetch instead of resurrecting unread dots.
+                notifState.loading = false;
+                return refreshNotifs(true);
+            }
             notifState.items = (data || []).map(mapNotif);
             notifState.fetchedAt = Date.now();
             notifRefreshed();
@@ -136,6 +143,7 @@ window.CCApi = (function () {
         return notifState.items;
     }
     async function markAllNotifsRead() {
+        notifState.markedAllAt = Date.now();
         notifState.items.forEach(n => { n.unread = false; });
         notifRefreshed();
         try { await post('/notifications/read-all/'); } catch (e) { /* server catches up next refresh */ }

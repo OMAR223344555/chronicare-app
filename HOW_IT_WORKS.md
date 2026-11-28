@@ -134,6 +134,18 @@ requesting user). With no session the panel falls back to demo items.
 *Analogy: the ward whiteboard - one glance and you know what changed since
 you last looked.*
 
+## Appointments
+
+A patient books a follow-up from the Appointments page: pick an approved
+doctor, a date and time, and an optional reason. The booking lands in the
+`appointments` table as *pending* and the doctor is notified instantly. The
+doctor confirms or declines from their own Appointments page; either side can
+cancel, and the other side is notified every time. Bookings in the past are
+rejected, and each user only ever sees their own appointments.
+
+*Analogy: the clinic's appointment book - the patient writes a request, the
+doctor inks it in or crosses it out, and nobody waits by the phone.*
+
 ## Demo accounts
 
 These accounts exist only for the demo (created by `seed_demo`). Passwords

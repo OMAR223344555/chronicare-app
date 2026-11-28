@@ -2199,3 +2199,65 @@ html.dark .rr-input::placeholder { color: #5c7288; }
 html.dark .rr-saved { color: #6f849c; }
 html.dark .rr-saved.is-ok { color: #4ade80; }
 html.dark .rr-saved.is-err { color: #fca5a5; }
+
+/* ---- Appointments (patient + doctor portals) ---- */
+.appt-grid { display: grid; grid-template-columns: minmax(300px, 380px) 1fr; gap: 20px; align-items: start; }
+@media (max-width: 900px) { .appt-grid { grid-template-columns: 1fr; } }
+.appt-form { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }
+.appt-field { display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; font-weight: 700; color: #33475e; }
+.appt-field em { font-style: normal; font-weight: 500; color: #93a5b8; }
+.appt-input { background: #f6f9fc; border: 1px solid #dbe6f0; border-radius: 12px; padding: 10px 12px;
+  font-size: 13.5px; font-weight: 500; color: #0c2340; outline: none; transition: border-color .18s, box-shadow .18s, background .18s; width: 100%; }
+.appt-input:focus { border-color: #0e9fb8; background: #fff; box-shadow: 0 0 0 3px rgba(14,159,184,.14); }
+.appt-submit { display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  background: linear-gradient(135deg, #0c2340, #12406b); color: #fff; border: 0; border-radius: 12px;
+  padding: 11px 16px; font-size: 13.5px; font-weight: 800; cursor: pointer;
+  transition: transform .15s ease, box-shadow .2s ease, opacity .15s; box-shadow: 0 6px 16px -8px rgba(12,35,64,.5); }
+.appt-submit:hover { transform: translateY(-1px); box-shadow: 0 10px 22px -8px rgba(12,35,64,.55); }
+.appt-submit:active { transform: translateY(0); }
+.appt-submit:disabled { opacity: .55; cursor: default; transform: none; }
+.appt-submit i, .appt-submit svg { width: 16px; height: 16px; }
+.appt-msg { font-size: 12.5px; font-weight: 600; margin: 0; }
+.appt-msg.ok { color: #0d7a5f; }
+.appt-msg.err { color: #b3432f; }
+.appt-row { display: flex; align-items: center; gap: 14px; padding: 14px 18px; }
+.appt-date { flex: none; width: 56px; height: 60px; border-radius: 14px; background: linear-gradient(160deg, #eef7fa, #e2f0f7);
+  border: 1px solid #d3e7ef; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.appt-date b { font-size: 19px; font-weight: 800; color: #0c2340; line-height: 1; }
+.appt-date span { font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #1293ab; margin-top: 3px; }
+.appt-main { flex: 1; min-width: 0; }
+.appt-name { font-size: 14px; font-weight: 700; color: #0c2340; margin: 0; }
+.appt-meta { font-size: 12px; color: #64798e; margin: 2px 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.appt-pill { flex: none; font-size: 10.5px; font-weight: 800; letter-spacing: .04em; padding: 4px 10px; border-radius: 999px; text-transform: uppercase; }
+.appt-pill.pending { background: #fef4e2; color: #a3650d; }
+.appt-pill.confirmed { background: #e2f6ee; color: #0d7a5f; }
+.appt-pill.declined { background: #fdeceb; color: #b3432f; }
+.appt-pill.cancelled { background: #eef1f5; color: #64798e; }
+.appt-pill.completed { background: #e8f0fe; color: #2b5cb8; }
+.appt-act { flex: none; display: flex; gap: 6px; }
+.appt-btn { font-size: 11.5px; font-weight: 800; border-radius: 10px; padding: 7px 12px; cursor: pointer;
+  border: 1px solid transparent; transition: background .15s, border-color .15s, transform .12s; }
+.appt-btn:active { transform: scale(.97); }
+.appt-btn.ok { background: #0d7a5f; color: #fff; }
+.appt-btn.ok:hover { background: #0a6a53; }
+.appt-btn.no { background: #fff; color: #b3432f; border-color: #f0d4cf; }
+.appt-btn.no:hover { background: #fdf3f2; }
+.appt-btn.mute { background: #fff; color: #64798e; border-color: #dbe6f0; }
+.appt-btn.mute:hover { background: #f6f9fc; color: #b3432f; }
+html.dark .appt-field { color: #b8c8d8; }
+html.dark .appt-input { background: #0e1c2c; border-color: #243b52; color: #e6eef5; }
+html.dark .appt-input:focus { background: #10233a; border-color: #14b8cf; }
+html.dark .appt-date { background: #12283c; border-color: #24445f; }
+html.dark .appt-date b { color: #e6f2f8; }
+html.dark .appt-name { color: #e6f2f8; }
+html.dark .appt-pill.pending { background: #3a2c10; color: #f2c069; }
+html.dark .appt-pill.confirmed { background: #0d3328; color: #5fdcb6; }
+html.dark .appt-pill.declined { background: #3d1c18; color: #f49a8b; }
+html.dark .appt-pill.cancelled { background: #1c2a3a; color: #8ba0b5; }
+html.dark .appt-pill.completed { background: #16294a; color: #8fb4f2; }
+html.dark .appt-btn.no { background: #10233a; border-color: #4a2a25; }
+html.dark .appt-btn.mute { background: #10233a; border-color: #24445f; color: #8ba0b5; }
+@media (prefers-reduced-motion: no-preference) {
+  .portal-subview { animation: ccViewIn .28s ease; }
+  @keyframes ccViewIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+}
