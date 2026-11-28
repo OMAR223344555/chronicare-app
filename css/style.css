@@ -2455,3 +2455,22 @@ html.dark .auth-deco-plus { color: rgba(34, 211, 238, 0.16); }
     /* Match the panel header's 15px side padding on small screens */
     .appt-form { padding: 12px 15px 14px; }
 }
+
+/* ==========================================================================
+   Auth stability polish (Nov 28): fixed Google sign-in slot (no layout jump
+   between fallback and the GSI chip/pill), floating buttons park at the top
+   on the mobile auth screen so they never cover the form's bottom row.
+   ========================================================================== */
+
+/* Google sign-in: fallback button and GSI container share one fixed slot */
+#google-fallback-btn { height: 48px; padding-block: 0; }
+#google-gsi-container { display: flex; width: 100%; height: 48px; min-height: 48px;
+    align-items: center; justify-content: center; overflow: hidden; }
+#google-gsi-container.hidden { display: none !important; }
+#google-gsi-container > div { width: 320px; max-width: 100%; height: 40px;
+    overflow: hidden; border-radius: 9999px; margin-inline: auto; }
+
+/* Auth screen on small viewports: FABs park top-right instead of bottom */
+@media (max-width: 767px) {
+    html.cc-no-session .fab-stack { top: 12px; bottom: auto; }
+}

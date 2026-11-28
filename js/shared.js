@@ -38,6 +38,9 @@
         root.classList.add('cc-theme-switch');
         root.classList.toggle('dark', mode === 'dark');
         root.style.background = mode === 'dark' ? '#0a1522' : '#f1f5f9';
+        root.style.colorScheme = mode;
+        const themeMeta = document.querySelector('meta[name="theme-color"]');
+        if (themeMeta) themeMeta.content = mode === 'dark' ? '#0a1522' : '#f1f5f9';
         requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove('cc-theme-switch')));
         setTimeout(() => root.classList.remove('cc-theme-switch'), 300);
         try { localStorage.setItem('cc-theme', mode); } catch (e) {}
