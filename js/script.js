@@ -202,13 +202,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const forgotForm = document.getElementById('forgot-form');
     if (forgotForm) {
+        let forgotBusy = false;
         forgotForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            if (forgotBusy) return;
+            forgotBusy = true;
+            try {
             const email = (document.getElementById('forgot-email') || {}).value || '';
             const resultBox = document.getElementById('forgot-result');
             const resultText = document.getElementById('forgot-result-text');
             const demoLink = document.getElementById('forgot-demo-link');
-            if (!(window.CCApi && (await CCApi.ping()))) {
+            if (!window.CCApi) {
                 showToast(CCApi.L('Live server unreachable - password reset needs the live server', 'الخادم غير متاح - استعادة كلمة المرور تحتاج الخادم'), 'warn');
                 return;
             }
@@ -227,8 +231,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 }
             } catch (err) {
-                showToast(CCApi.L('Could not start the reset: ', 'تعذر بدء الاستعادة: ') + (err.message || err), 'warn');
+                if (err && err.status) showToast(CCApi.L('Could not start the reset: ', 'تعذر بدء الاستعادة: ') + (err.message || err), 'warn');
+                else showToast(CCApi.L('Live server unreachable - password reset needs the live server', 'الخادم غير متاح - استعادة كلمة المرور تحتاج الخادم'), 'warn');
             }
+            } finally { forgotBusy = false; }
         });
     }
 
@@ -381,14 +387,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     const signinRole = document.getElementById('signin-role');
     const signinFormEl = document.querySelector('#signin-form-box form');
     if (signinFormEl) {
+        let signinBusy = false;
         signinFormEl.addEventListener('submit', async (e) => {
             e.preventDefault();
-            hideSigninNotice();
-            const role = signinRole ? signinRole.value : 'patient';
-            if (window.CCApi) {
-                const emailEl = document.getElementById('signin-email');
-                const passEl = document.getElementById('signin-password');
-                if (await CCApi.ping()) {
+            if (signinBusy) return; // repeated clicks must not pile up requests
+            signinBusy = true;
+            const signinSubmitBtn = signinFormEl.querySelector('button[type="submit"]');
+            if (signinSubmitBtn) signinSubmitBtn.disabled = true;
+            try {
+                hideSigninNotice();
+                const role = signinRole ? signinRole.value : 'patient';
+                if (window.CCApi) {
+                    const emailEl = document.getElementById('signin-email');
+                    const passEl = document.getElementById('signin-password');
+                    // No ping pre-check: a slow server made ping time out and the
+                    // form fell into demo mode although the server was up. Try the
+                    // real login and only treat a network-level failure (no HTTP
+                    // response at all) as "unreachable".
                     try {
                         const user = await CCApi.login(emailEl ? emailEl.value.trim() : '', passEl ? passEl.value : '');
                         if (user.role !== role) {
@@ -407,73 +422,96 @@ document.addEventListener('DOMContentLoaded', async () => {
                         landForRole(role);
                         return;
                     } catch (err) {
-                        if (!showAuthError(err)) {
-                            if (err.status === 403) showToast(CCApi.L('Account is pending approval or deactivated', 'الحساب في انتظار الموافقة أو موقوف'), 'warn');
-                            else showToast(CCApi.L('Sign-in failed: ', 'فشل تسجيل الدخول: ') + (err.message || err), 'warn');
+                        // Any HTTP answer (wrong password, wrong role, pending or
+                        // deactivated account) is a real sign-in failure: show it
+                        // and stay on the form. Never fall into demo mode here.
+                        if (err && err.status) {
+                            if (!showAuthError(err)) {
+                                if (err.status === 403) showToast(CCApi.L('Account is pending approval or deactivated', 'الحساب في انتظار الموافقة أو موقوف'), 'warn');
+                                else showToast(CCApi.L('Sign-in failed: ', 'فشل تسجيل الدخول: ') + (err.message || err), 'warn');
+                            }
+                            return;
                         }
-                        return;
+                        showToast(CCApi.L('Live server unreachable - continuing in demo mode', 'الخادم غير متاح - وضع تجريبي'), 'info');
                     }
                 }
-                showToast(CCApi.L('Live server unreachable - continuing in demo mode', 'الخادم غير متاح - وضع تجريبي'), 'info');
+                landForRole(role);
+            } finally {
+                signinBusy = false;
+                if (signinSubmitBtn) signinSubmitBtn.disabled = false;
             }
-            landForRole(role);
         });
     }
 
     const signupFormEl = document.querySelector('#signup-form-box form');
     if (signupFormEl) {
+        let signupBusy = false;
         signupFormEl.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const role = signupRole ? signupRole.value : 'patient';
-            if (window.CCApi && (await CCApi.ping())) {
-                const val = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
-                const payload = { email: val('signup-email'), password: val('signup-password'), full_name: val('signup-name'), role };
-                if (role === 'doctor') {
-                    payload.specialty = val('signup-specialty');
-                    payload.license_number = val('signup-license');
-                }
-                try {
-                    await CCApi.register(payload);
+            if (signupBusy) return; // repeated clicks must not pile up requests
+            signupBusy = true;
+            const signupSubmitBtn = signupFormEl.querySelector('button[type="submit"]');
+            if (signupSubmitBtn) signupSubmitBtn.disabled = true;
+            try {
+                const role = signupRole ? signupRole.value : 'patient';
+                if (window.CCApi) {
+                    const val = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+                    const payload = { email: val('signup-email'), password: val('signup-password'), full_name: val('signup-name'), role };
                     if (role === 'doctor') {
-                        // Doctors wait for admin approval: back to sign-in, no session.
-                        showAuthPanel(signInForm);
-                        const em = document.getElementById('signin-email');
-                        if (em) em.value = payload.email;
-                        showSigninNotice('Doctor account created. It is pending admin approval - you can sign in here once approved.',
-                            'تم إنشاء حساب الطبيب وهو في انتظار موافقة المسؤول - يمكنك تسجيل الدخول من هنا بعد الموافقة.');
-                        return;
+                        payload.specialty = val('signup-specialty');
+                        payload.license_number = val('signup-license');
                     }
                     try {
-                        await CCApi.login(payload.email, payload.password);
-                        await CCApi.hydratePatient(state, CONDITION_LABELS, CATEGORY_LABELS);
-                        apiMode = true;
-                        CCApi.populateShareForm(state);
-                        applyUserChrome(CCApi.user());
-                        applyLiveOverview();
-                    } catch (e2) { /* land on the demo state */ }
-                    landForRole('patient');
-                    return;
-                } catch (err) {
-                    showToast(CCApi.L('Sign-up failed: ', 'فشل إنشاء الحساب: ') + (err.message || err), 'warn');
+                        await CCApi.register(payload);
+                        if (role === 'doctor') {
+                            // Doctors wait for admin approval: back to sign-in, no session.
+                            showAuthPanel(signInForm);
+                            const em = document.getElementById('signin-email');
+                            if (em) em.value = payload.email;
+                            showSigninNotice('Doctor account created. It is pending admin approval - you can sign in here once approved.',
+                                'تم إنشاء حساب الطبيب وهو في انتظار موافقة المسؤول - يمكنك تسجيل الدخول من هنا بعد الموافقة.');
+                            return;
+                        }
+                        try {
+                            await CCApi.login(payload.email, payload.password);
+                            await CCApi.hydratePatient(state, CONDITION_LABELS, CATEGORY_LABELS);
+                            apiMode = true;
+                            CCApi.populateShareForm(state);
+                            applyUserChrome(CCApi.user());
+                            applyLiveOverview();
+                        } catch (e2) { /* land on the demo state */ }
+                        landForRole('patient');
+                        return;
+                    } catch (err) {
+                        // An HTTP answer is a real sign-up failure (validation,
+                        // duplicate email): show it and stay. Only a genuine
+                        // network failure drops to the demo notice below.
+                        if (err && err.status) {
+                            showToast(CCApi.L('Sign-up failed: ', 'فشل إنشاء الحساب: ') + (err.message || err), 'warn');
+                            return;
+                        }
+                    }
+                }
+                // Demo mode (no live server): say so clearly instead of faking a saved account
+                if (role === 'doctor') {
+                    showToast(CCApi.L(
+                        'Demo mode - no live server, so nothing is saved. In the live demo, doctor accounts wait for admin approval.',
+                        'وضع تجريبي - لا يوجد خادم، لذا لن يُحفظ الحساب. في النسخة الحية تنتظر حسابات الأطباء موافقة المسؤول.'
+                    ), 'info');
+                    showAuthPanel(signInForm);
+                    showSigninNotice('Doctor account created. It is pending admin approval - you can sign in here once approved.',
+                        'تم إنشاء حساب الطبيب وهو في انتظار موافقة المسؤول - يمكنك تسجيل الدخول من هنا بعد الموافقة.');
                     return;
                 }
-            }
-            // Demo mode (no live server): say so clearly instead of faking a saved account
-            if (role === 'doctor') {
                 showToast(CCApi.L(
-                    'Demo mode - no live server, so nothing is saved. In the live demo, doctor accounts wait for admin approval.',
-                    'وضع تجريبي - لا يوجد خادم، لذا لن يُحفظ الحساب. في النسخة الحية تنتظر حسابات الأطباء موافقة المسؤول.'
+                    'Demo mode - no live server, so nothing is saved. You are browsing the built-in sample data (patient: Maya Hassan).',
+                    'وضع تجريبي - لا يوجد خادم، لذا لن يُحفظ الحساب. تتصفح البيانات التجريبية المدمجة (المريضة: مايا حسن).'
                 ), 'info');
-                showAuthPanel(signInForm);
-                showSigninNotice('Doctor account created. It is pending admin approval - you can sign in here once approved.',
-                    'تم إنشاء حساب الطبيب وهو في انتظار موافقة المسؤول - يمكنك تسجيل الدخول من هنا بعد الموافقة.');
-                return;
+                landForRole('patient');
+            } finally {
+                signupBusy = false;
+                if (signupSubmitBtn) signupSubmitBtn.disabled = false;
             }
-            showToast(CCApi.L(
-                'Demo mode - no live server, so nothing is saved. You are browsing the built-in sample data (patient: Maya Hassan).',
-                'وضع تجريبي - لا يوجد خادم، لذا لن يُحفظ الحساب. تتصفح البيانات التجريبية المدمجة (المريضة: مايا حسن).'
-            ), 'info');
-            landForRole('patient');
         });
     }
 
