@@ -2539,3 +2539,7 @@ html.dark #timelineList > div > div:first-child {
 @media (min-width: 768px) and (min-height: 820px) {
     #auth-view .form-section { padding-bottom: 130px; }
 }
+
+/* RTL: keep modal close buttons clear of the title text */
+[dir="rtl"] #shareModal > div > button.absolute,
+[dir="rtl"] #fileModal > div > button.absolute { right: auto; left: 1rem; }
