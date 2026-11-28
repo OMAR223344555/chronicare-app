@@ -16,6 +16,10 @@ to built-in demo data.
 - Database: `chronicare-schema.sql` (MySQL script matching the ERD; Django
   models use the same table names)
 - Design/spec: Tailwind + Inter + lucide, Arabic/English, dark mode.
+  A Nov 2026 polish pass adds layered card elevation, hover lift on stat
+  cards, gradient primary buttons and calmer input focus states as
+  override-only CSS appended to `css/style.css` (dark-mode and
+  reduced-motion variants included).
 
 ## Demo accounts
 
