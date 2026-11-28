@@ -166,5 +166,5 @@ class DoctorNoteViewSet(viewsets.ModelViewSet):
         )
         notify(
             medical_file.owner, "note",
-            f'Dr. {user.full_name} added a note on \'{medical_file.title}\'.',
+            f'{user.full_name} added a note on \'{medical_file.title}\'.',
         )

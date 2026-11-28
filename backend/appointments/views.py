@@ -62,7 +62,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
                 raise serializers.ValidationError("Only a pending appointment can be confirmed.")
             appt.status = S.CONFIRMED
             notify(appt.patient, "appt",
-                   f"Dr. {appt.doctor.full_name} confirmed your appointment on {appt.scheduled_at:%d %b %Y, %H:%M}.")
+                   f"{appt.doctor.full_name} confirmed your appointment on {appt.scheduled_at:%d %b %Y, %H:%M}.")
         elif act == "decline":
             if user != appt.doctor:
                 raise PermissionDenied("Only the doctor can decline.")
@@ -70,7 +70,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
                 raise serializers.ValidationError("Only a pending appointment can be declined.")
             appt.status = S.DECLINED
             notify(appt.patient, "appt",
-                   f"Dr. {appt.doctor.full_name} declined your appointment on {appt.scheduled_at:%d %b %Y, %H:%M}.")
+                   f"{appt.doctor.full_name} declined your appointment on {appt.scheduled_at:%d %b %Y, %H:%M}.")
         elif act == "cancel":
             if user not in (appt.patient, appt.doctor):
                 raise PermissionDenied("Only the patient or the doctor can cancel.")
