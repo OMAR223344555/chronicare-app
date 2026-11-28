@@ -2414,3 +2414,10 @@ html.dark .records-table tbody tr:hover { background: #10233a; }
     #auth-view { padding-bottom: 0; }
     #auth-view .form-section { padding-bottom: 132px; }
 }
+
+/* Decorative plus on the auth form: a desktop-panel ornament. It reads as a
+   stray glyph on mobile, so hide it there; in dark mode keep it faint. */
+html.dark .auth-deco-plus { color: rgba(34, 211, 238, 0.16); }
+@media (max-width: 767px) {
+    .auth-deco-plus { display: none; }
+}
