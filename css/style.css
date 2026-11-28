@@ -2427,3 +2427,31 @@ html.dark .auth-deco-plus { color: rgba(34, 211, 238, 0.16); }
 @media (max-width: 767px) {
     .auth-deco-plus { display: none; }
 }
+
+/* ==========================================================================
+   Booking card & tables polish (Nov 28): the appointments booking form ran
+   flush to its card edges; appointment rows, the lab results table and the
+   records tables get consistent inner padding and column alignment.
+   ========================================================================== */
+
+/* Booking form: inner padding matching the panel header */
+.appt-form { margin-top: 0; padding: 16px 20px 18px; }
+
+/* Lab results table: its header/cells had no horizontal padding */
+#view-lab-trends .overflow-x-auto table thead th { padding-block: 8px; padding-inline-end: 12px; }
+#view-lab-trends .overflow-x-auto table tbody td { padding-block: 10px; padding-inline-end: 12px; }
+
+@media (min-width: 641px) {
+    /* Appointment rows: airier, with status pills aligned in a steady column */
+    .appt-row { padding: 12px 20px; gap: 14px; align-items: center; }
+    .appt-pill { min-width: 94px; text-align: center; }
+
+    /* Records tables (My Files, My Patients): consistent airy cell padding */
+    .records-table th { padding: 11px 16px; }
+    .records-table td { padding: 13px 16px; }
+}
+
+@media (max-width: 640px) {
+    /* Match the panel header's 15px side padding on small screens */
+    .appt-form { padding: 12px 15px 14px; }
+}
