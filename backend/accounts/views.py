@@ -193,6 +193,14 @@ class PasswordResetRequestView(APIView):
         email = str(request.data.get("email", "")).strip().lower()
         if not email:
             return Response({"detail": "Email is required."}, status=status.HTTP_400_BAD_REQUEST)
+        if not settings.EMAIL_IS_CONFIGURED:
+            # No mail backend wired yet: be honest instead of claiming a link
+            # was emailed. The same answer goes out for every address, known
+            # or not, so it still reveals nothing about which emails exist.
+            return Response({
+                "detail": "Password reset by email is not available yet. Please ask the clinic administrator to reset your password.",
+                "email_configured": False,
+            })
         data = {"detail": "If an account exists for this email, a reset link has been sent."}
         user = User.objects.filter(email__iexact=email).first()
         # Admins and the shared demo logins never get a reset: same neutral

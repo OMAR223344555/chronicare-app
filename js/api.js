@@ -3,7 +3,8 @@
    Connects the static frontend to the Django REST backend when available.
    - Base URL: localStorage 'cc-api-url' -> window.CC_API_BASE -> hosted demo API
    - (set localStorage 'cc-api-url' to http://127.0.0.1:8000/api for local dev)
-   - Session: token + user cached in localStorage (cc-api-token / cc-api-user)
+   - Session: token + user cached in localStorage ("Remember me" ticked) or
+     sessionStorage (unticked - session ends when the browser closes).
    - When no session exists or the server is unreachable, pages keep their
      built-in demo data (demo fallback).
    ========================================================================== */
@@ -23,14 +24,26 @@ window.CCApi = (function () {
     function setBase(u) {
         if (u) localStorage.setItem(LS_URL, u); else localStorage.removeItem(LS_URL);
     }
-    function token() { return localStorage.getItem(LS_TOK) || ''; }
+    function token() { return localStorage.getItem(LS_TOK) || sessionStorage.getItem(LS_TOK) || ''; }
     function user() {
-        try { return JSON.parse(localStorage.getItem(LS_USER) || 'null'); } catch (e) { return null; }
+        try { return JSON.parse(localStorage.getItem(LS_USER) || sessionStorage.getItem(LS_USER) || 'null'); } catch (e) { return null; }
     }
     function hasSession() { return !!token(); }
+    // remember=true -> localStorage (survives closing the browser);
+    // remember=false -> sessionStorage (gone when the browser closes).
+    function setSession(tok, usr, remember) {
+        const keep = remember === false ? sessionStorage : localStorage;
+        const drop = remember === false ? localStorage : sessionStorage;
+        drop.removeItem(LS_TOK);
+        drop.removeItem(LS_USER);
+        keep.setItem(LS_TOK, tok);
+        keep.setItem(LS_USER, JSON.stringify(usr));
+    }
     function clearSession() {
         localStorage.removeItem(LS_TOK);
         localStorage.removeItem(LS_USER);
+        sessionStorage.removeItem(LS_TOK);
+        sessionStorage.removeItem(LS_USER);
     }
 
     // Warm the backend on page load: PythonAnywhere webapps cold-start in
@@ -217,17 +230,15 @@ window.CCApi = (function () {
         } catch (e) { return false; }
     }
 
-    async function login(email, password) {
+    async function login(email, password, remember) {
         const d = await post('/auth/login/', { email, password });
-        localStorage.setItem(LS_TOK, d.token);
-        localStorage.setItem(LS_USER, JSON.stringify(d.user));
+        setSession(d.token, d.user, remember);
         return d.user;
     }
 
     async function googleLogin(credential, role) {
         const d = await post('/auth/google/', { credential: credential, role: role || 'patient' });
-        localStorage.setItem(LS_TOK, d.token);
-        localStorage.setItem(LS_USER, JSON.stringify(d.user));
+        setSession(d.token, d.user, true); // Google sign-in always stays signed in
         return d.user;
     }
 

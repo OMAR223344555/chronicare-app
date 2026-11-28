@@ -228,11 +228,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
             try {
-                await CCApi.post('/auth/password-reset/request/', { email: email.trim() });
+                const res = await CCApi.post('/auth/password-reset/request/', { email: email.trim() });
                 if (resultBox && resultText) {
-                    // The API never returns the link; it only travels by email.
                     resultBox.classList.remove('hidden');
-                    resultText.textContent = T('auth.resetSent', 'If an account exists for this email, a reset link has been sent.');
+                    if (res && res.email_configured === false) {
+                        // No mail backend on the server yet: say so honestly.
+                        resultBox.classList.remove('bg-slate-50', 'border-slate-200');
+                        resultBox.classList.add('bg-amber-50', 'border-amber-300');
+                        resultText.textContent = T('auth.resetUnavailable', 'Password reset by email is not available yet. Please ask the clinic administrator to reset your password.');
+                    } else {
+                        // The API never returns the link; it only travels by email.
+                        resultBox.classList.add('bg-slate-50', 'border-slate-200');
+                        resultBox.classList.remove('bg-amber-50', 'border-amber-300');
+                        resultText.textContent = T('auth.resetSent', 'If an account exists for this email, a reset link has been sent.');
+                    }
                     if (demoLink) demoLink.classList.add('hidden');
                 }
             } catch (err) {
@@ -481,7 +490,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     // real login and only treat a network-level failure (no HTTP
                     // response at all) as "unreachable".
                     try {
-                        const user = await CCApi.login(emailEl ? emailEl.value.trim() : '', passEl ? passEl.value : '');
+                        const rememberEl = document.getElementById('signin-remember');
+                        const user = await CCApi.login(emailEl ? emailEl.value.trim() : '', passEl ? passEl.value : '', rememberEl ? rememberEl.checked : true);
                         if (user.role !== role) {
                             CCApi.clearSession();
                             showToast(CCApi.L('This account is registered as a ' + user.role + ' - pick the matching role above', 'هذا الحساب مسجل بدور مختلف - اختر الدور الصحيح'), 'warn');

@@ -19,6 +19,18 @@ class PasswordResetFlowTests(TestCase):
         # No email backend: nowhere safe for the link to go, so no token either.
         self.assertEqual(PasswordResetToken.objects.filter(user=self.user).count(), 0)
 
+    def test_request_without_email_backend_says_so_honestly(self):
+        # Same flag for known and unknown emails: honest, still no enumeration.
+        for email in ("maya@example.com", "nobody@example.com"):
+            r = self.client.post("/api/auth/password-reset/request/", {"email": email}, format="json")
+            self.assertEqual(r.status_code, 200)
+            self.assertEqual(r.data.get("email_configured"), False)
+
+    def test_request_with_email_configured_keeps_neutral_message(self):
+        with override_settings(EMAIL_IS_CONFIGURED=True):
+            r = self.client.post("/api/auth/password-reset/request/", {"email": "maya@example.com"}, format="json")
+        self.assertNotEqual(r.data.get("email_configured"), False)
+
     def test_request_with_email_configured_creates_token_but_returns_no_link(self):
         with override_settings(EMAIL_IS_CONFIGURED=True):
             r = self.client.post("/api/auth/password-reset/request/", {"email": "maya@example.com"}, format="json")
@@ -104,12 +116,21 @@ class PasswordResetProtectedAccountsTests(TestCase):
             self.assertEqual(PasswordResetToken.objects.filter(user=user).count(), 0, user.email)
 
     def test_protected_answer_identical_to_unknown_email(self):
-        unknown = self._request("nobody@example.com")
-        for email in ("admin@chronicare.demo", "ADMIN@Chronicare.Demo", "maya@chronicare.demo", "boss@example.com"):
+        # With no email backend configured, every address gets the same
+        # honest "not available" answer. With email configured, protected and
+        # unknown addresses get the same neutral "link sent" answer.
+        with override_settings(EMAIL_IS_CONFIGURED=True):
+            unknown = self._request("nobody@example.com")
+            for email in ("admin@chronicare.demo", "ADMIN@Chronicare.Demo", "maya@chronicare.demo", "boss@example.com"):
+                r = self._request(email)
+                self.assertEqual(r.status_code, unknown.status_code)
+                self.assertEqual(r.data, unknown.data)
+            self.assertEqual(unknown.data["detail"], self.NEUTRAL)
+        unknown2 = self._request("nobody@example.com")
+        for email in ("admin@chronicare.demo", "maya@chronicare.demo"):
             r = self._request(email)
-            self.assertEqual(r.status_code, unknown.status_code)
-            self.assertEqual(r.data, unknown.data)
-        self.assertEqual(unknown.data["detail"], self.NEUTRAL)
+            self.assertEqual(r.data, unknown2.data)
+        self.assertEqual(unknown2.data.get("email_configured"), False)
 
     def test_passwords_unchanged_after_attempts(self):
         self._request("admin@chronicare.demo")
