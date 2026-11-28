@@ -240,7 +240,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             const key = 'u:' + u.id;
             const active = u.status === 'Active';
             const isSelf = meId != null && u.id === meId;
-            const meta = detailText(u);
+            let meta = detailText(u);
+            if (!meta || meta === u.email || meta === '- • -') meta = '';
             return `<li class="um-row${active ? '' : ' is-off'}">
                 <span class="um-avatar ${u.role === 'Doctor' ? 'um-av-doctor' : 'um-av-patient'}">${initials(u.name)}</span>
                 <div class="um-id">
