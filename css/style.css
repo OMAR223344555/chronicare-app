@@ -768,6 +768,16 @@ body.scroll-locked {
     touch-action: none;
 }
 
+/* FABs never float above an open overlay (modal, palette, drawer) */
+html.overlay-open .fab-stack { visibility: hidden; }
+
+/* Modals scroll internally on short viewports so their actions stay reachable */
+#shareModal > div, #fileModal > div {
+    max-height: calc(100dvh - 2rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
 /* the drawer may scroll its own nav if it overflows, but never chains */
 #sidebar.mobile-open {
     overscroll-behavior: contain;

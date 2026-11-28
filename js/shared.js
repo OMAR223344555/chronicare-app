@@ -7,13 +7,24 @@
     // gestures on an overlay cannot rubber-band the document or collapse
     // the mobile browser toolbar; the offset is restored on unlock.
     window.CCScrollLock = (function () {
-        let count = 0, lockedY = 0;
+        let count = 0, lockedY = 0, padded = false;
+        const isDesktop = () => window.matchMedia('(min-width: 768px)').matches;
         function lock() {
             if (count++ === 0) {
                 lockedY = window.scrollY || document.documentElement.scrollTop || 0;
                 document.documentElement.classList.add('overlay-open');
-                document.body.classList.add('scroll-locked');
-                document.body.style.top = `-${lockedY}px`;
+                if (isDesktop()) {
+                    // Freeze with overflow only: position:fixed on the body breaks the
+                    // sticky sidebar's paint order and puts it above overlays.
+                    // Compensate the disappearing scrollbar so the layout does not jump.
+                    const sbw = window.innerWidth - document.documentElement.clientWidth;
+                    if (sbw > 0) { document.documentElement.style.paddingInlineEnd = sbw + 'px'; padded = true; }
+                } else {
+                    // Mobile: pin the body so swipes cannot rubber-band the page or
+                    // collapse the browser toolbar behind the overlay.
+                    document.body.classList.add('scroll-locked');
+                    document.body.style.top = `-${lockedY}px`;
+                }
             }
         }
         function unlock() {
@@ -21,8 +32,11 @@
                 document.documentElement.classList.remove('overlay-open');
                 document.body.classList.remove('scroll-locked');
                 document.body.style.top = '';
-                try { window.scrollTo({ top: lockedY, behavior: 'instant' }); }
-                catch (e) { window.scrollTo(0, lockedY); }
+                if (padded) { document.documentElement.style.paddingInlineEnd = ''; padded = false; }
+                if (!isDesktop()) {
+                    try { window.scrollTo({ top: lockedY, behavior: 'instant' }); }
+                    catch (e) { window.scrollTo(0, lockedY); }
+                }
             }
         }
         return { lock, unlock };

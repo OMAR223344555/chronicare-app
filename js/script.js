@@ -2067,13 +2067,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // --- Share flow: review modal with summary + QR + link ---
+    // --- Share flow: review modal with summary ---
     const shareModal = document.getElementById('shareModal');
     const shareSummary = document.getElementById('shareSummary');
-    const shareQr = document.getElementById('shareQr');
-    const shareLinkEl = document.getElementById('shareLink');
     const confirmShareBtn = document.getElementById('confirmShareBtn');
-    const copyShareLink = document.getElementById('copyShareLink');
     const closeShareModal = document.getElementById('closeShareModal');
     let pendingShare = null;
 
@@ -2099,7 +2096,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             const isAll = fileText.startsWith('All');
             const perms = [...newShareForm.querySelectorAll('input[type=checkbox]')]
                 .map(cb => ({ label: cb.closest('label').querySelector('span').textContent, on: cb.checked }));
-            const code = Math.random().toString(36).slice(2, 10).toUpperCase();
             pendingShare = {
                 id: state.nextShareId++,
                 doctor: name, specialty,
@@ -2108,7 +2104,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 files: fileText,
                 count: isAll ? state.records.filter(r => !r.archived).length : 1,
                 expires: expiryInput.value,
-                link: `https://chronicare.app/s/${code}`,
             };
             if (shareSummary) {
                 shareSummary.innerHTML = `
@@ -2117,22 +2112,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <p><span class="font-bold text-[#0c2340]">${T('share.modal.expires')}</span> ${fmtDate(expiryInput.value)}</p>
                     <p><span class="font-bold text-[#0c2340]">${T('share.modal.permissions')}</span></p>
                     <ul class="list-none space-y-1">${perms.map(p => `<li class="flex items-center gap-2 text-xs"><i data-lucide="${p.on ? 'check-circle-2' : 'x-circle'}" class="w-3.5 h-3.5 ${p.on ? 'text-green-600' : 'text-slate-400'}"></i>${p.label}</li>`).join('')}</ul>`;
-            }
-            if (shareLinkEl) shareLinkEl.textContent = pendingShare.link;
-            if (shareQr) {
-                shareQr.innerHTML = '';
-                try {
-                    if (typeof qrcode === 'function') {
-                        const qr = qrcode(0, 'M');
-                        qr.addData(pendingShare.link);
-                        qr.make();
-                        shareQr.innerHTML = qr.createImgTag(3, 4);
-                    } else {
-                        shareQr.innerHTML = '<span class="w-24 h-24 flex items-center justify-center text-slate-300"><i data-lucide="qr-code" class="w-12 h-12"></i></span>';
-                    }
-                } catch (err) {
-                    shareQr.innerHTML = '<span class="w-24 h-24 flex items-center justify-center text-slate-300"><i data-lucide="qr-code" class="w-12 h-12"></i></span>';
-                }
             }
             openShareModal();
         });
@@ -2168,22 +2147,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             newShareForm.reset();
             showToast(Tp('toast.shared', { name: pendingShare.doctor, date: fmtDate(pendingShare.expires) }));
             hideShareModal();
-        });
-    }
-    if (copyShareLink) {
-        copyShareLink.addEventListener('click', () => {
-            const link = shareLinkEl ? shareLinkEl.textContent : '';
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(link).then(() => showToast(T('toast.linkCopied')), () => showToast(T('toast.linkFail'), 'warn'));
-            } else {
-                const ta = document.createElement('textarea');
-                ta.value = link;
-                document.body.appendChild(ta);
-                ta.select();
-                document.execCommand('copy');
-                ta.remove();
-                showToast(T('toast.linkCopied'));
-            }
         });
     }
 
