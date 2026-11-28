@@ -319,9 +319,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- Google Sign-In (GSI) ---
     // The button language follows the app language, not the browser: the GSI
-    // bundle loads with ?hl=<lang> and reloads on every language toggle. The
-    // rendered button is swapped in atomically (fresh node, then
-    // replaceChildren) so theme/language changes never flash an empty slot.
+    // bundle loads with ?hl=<lang> and reloads on every language toggle, and
+    // renderButton gets an explicit `locale` — hl on the script URL alone is
+    // not forwarded into the personalized chip's iframe, so it falls back to
+    // the browser locale without it. The rendered button is swapped in
+    // atomically (fresh node, then replaceChildren) so theme/language changes
+    // never flash an empty slot.
     (function initGoogleSignIn() {
         const container = document.getElementById('google-gsi-container');
         const fallback = document.getElementById('google-fallback-btn');
@@ -361,10 +364,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         const renderGoogleButton = () => {
             if (!container || !window.google || !google.accounts || !google.accounts.id) return;
             const dark = document.documentElement.classList.contains('dark');
+            const lang = ((window.CCi18n && CCi18n.lang) || localStorage.getItem('cc-lang') || 'en') === 'ar' ? 'ar' : 'en';
             const fresh = document.createElement('div');
             google.accounts.id.renderButton(fresh, {
                 theme: dark ? 'filled_black' : 'outline',
-                shape: 'pill', size: 'large', width: 320
+                shape: 'pill', size: 'large', width: 320, locale: lang
             });
             container.replaceChildren(fresh);
             container.classList.remove('hidden');
