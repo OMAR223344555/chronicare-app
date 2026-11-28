@@ -542,6 +542,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (bootSplash) bootSplash.classList.add('hidden');
 
         if (viewName === 'auth') {
+            // Always land on the Sign in form: an earlier visit may have left the
+            // Sign up (or forgot-password) panel open, which made sign-out look
+            // like it had dumped the user on the wrong page. A reset link keeps
+            // its own panel.
+            if (signInForm && typeof showAuthPanel === 'function' && !/^#reset\?token=/.test(location.hash)) {
+                showAuthPanel(signInForm);
+            }
             if (authView) authView.classList.remove('hidden');
             if (portalView) portalView.classList.add('hidden');
             if (updateHash && window.CCHist) CCHist.pushView('auth');
@@ -1586,7 +1593,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const actions = [
             { icon: 'moon', title: t('pal.theme', 'Toggle dark mode'), keywords: 'theme light', run: () => CCUI.toggleTheme() },
             { icon: 'languages', title: t('pal.lang', 'Switch language'), keywords: 'arabic english rtl', run: () => CCi18n.setLang(CCi18n.lang === 'ar' ? 'en' : 'ar') },
-            { icon: 'log-out', title: t('action.signOut', 'Sign out'), keywords: 'logout exit', run: () => showView('auth') },
+            { icon: 'log-out', title: t('action.signOut', 'Sign out'), keywords: 'logout exit', run: () => { if (window.CCApi) CCApi.logout(); showView('auth'); } },
         ];
         return [...pages, ...recs, ...actions];
     };

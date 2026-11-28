@@ -142,9 +142,20 @@ window.CCApi = (function () {
         }
     }
 
-    async function logout() {
-        try { await post('/auth/logout/'); } catch (e) { /* offline is fine */ }
+    function logout() {
+        // Clear locally first so sign-out always works (slow or offline server,
+        // or navigating away straight after). The server call is best-effort and
+        // keepalive so it still goes out during the redirect.
+        const tok = token();
         clearSession();
+        if (!tok) return;
+        try {
+            fetch(base() + '/auth/logout/', {
+                method: 'POST', keepalive: true,
+                headers: { 'Authorization': 'Token ' + tok, 'Content-Type': 'application/json' },
+                body: '{}',
+            }).catch(() => {});
+        } catch (e) { /* offline is fine */ }
     }
 
     // ---- name <-> frontend key maps -------------------------------------

@@ -71,6 +71,17 @@
         if (window.lucide) window.lucide.createIcons();
     });
 
+    // ---- Sign out from any portal ----
+    // The doctor and admin portals link back to index.html; without this the
+    // session stayed in localStorage and the patient portal opened signed in.
+    document.addEventListener('click', (e) => {
+        const link = e.target.closest('[data-signout]');
+        if (!link) return;
+        e.preventDefault();
+        if (window.CCApi && CCApi.logout) CCApi.logout();
+        window.location.href = './index.html';
+    });
+
     // ---- Skeleton loaders ----
     // ---- History-aware navigation (Back button support) ----
     const ccClosers = [];
