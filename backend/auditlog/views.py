@@ -1,6 +1,6 @@
 from rest_framework import generics
 
-from accounts.permissions import IsPlatformAdmin
+from accounts.permissions import IsPatient, IsPlatformAdmin
 
 from .models import AuditLog
 from .serializers import AuditLogSerializer
@@ -16,3 +16,28 @@ class AuditLogListView(generics.ListAPIView):
 
     def get_queryset(self):
         return AuditLog.objects.select_related("user", "target_user", "medical_file")
+
+
+class MyAccessLogView(generics.ListAPIView):
+    """Patient-facing transparency (FR-12): every time someone else opened,
+    downloaded or annotated one of the patient's own files. The patient's own
+    actions are excluded - this list answers "who else touched my files?".
+    """
+
+    permission_classes = [IsPatient]
+    serializer_class = AuditLogSerializer
+    filterset_fields = ["action", "medical_file"]
+
+    def get_queryset(self):
+        return (
+            AuditLog.objects.select_related("user", "target_user", "medical_file")
+            .filter(
+                target_user=self.request.user,
+                action__in=[
+                    AuditLog.Action.VIEW,
+                    AuditLog.Action.DOWNLOAD,
+                    AuditLog.Action.NOTE,
+                ],
+            )
+            .exclude(user=self.request.user)
+        )

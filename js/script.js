@@ -530,6 +530,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         'medical-files': ['nav.medicalFiles', 'My Medical Files'],
         'upload-file': ['nav.upload', 'Upload Record'],
         'sharing-access': ['sh.title', 'Sharing & Access'],
+        'access-history': ['ah.title', 'Access History'],
         'lab-trends': ['nav.labTrends', 'Lab Trends'],
         'timeline-archive': ['nav.timeline', 'Timeline & Archive']
     };
@@ -611,7 +612,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function handleHashRoute() {
         const hash = window.location.hash.replace('#', '').trim();
-        if (['overview', 'medical-files', 'upload-file', 'sharing-access', 'lab-trends', 'timeline-archive'].includes(hash)) {
+        if (['overview', 'medical-files', 'upload-file', 'sharing-access', 'access-history', 'lab-trends', 'timeline-archive'].includes(hash)) {
             showView(hash, false);
         } else {
             showView('auth', false);
@@ -621,6 +622,83 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.addEventListener('cc:popview', handleHashRoute);
     handleHashRoute();
     if (apiMode && !location.hash) showView('overview');
+
+    // ---- Access history: who opened my files (FR-12, patient view) ----
+    const AH_ICONS = { view: 'eye', download: 'download', note: 'stethoscope' };
+    let accessEvents = [];
+    let accessLoaded = false;
+    function ahDemoEvents() {
+        const now = Date.now();
+        return [
+            { user: 'Dr. Hana Sherif', action: 'view', file: 'HbA1c panel', time: new Date(now - 2 * 3600e3).toISOString() },
+            { user: 'Dr. Ahmed Farouk', action: 'download', file: 'Kidney ultrasound', time: new Date(now - 26 * 3600e3).toISOString() },
+            { user: 'Dr. Hana Sherif', action: 'note', file: 'Chest X-Ray', time: new Date(now - 30 * 3600e3).toISOString() },
+        ];
+    }
+    function ahWhen(iso) {
+        const d = new Date(iso);
+        const lang = (window.CCi18n && CCi18n.lang === 'ar') ? 'ar-EG' : 'en-GB';
+        const time = d.toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit' });
+        const today = new Date();
+        const yest = new Date(Date.now() - 86400e3);
+        const sameDay = (a, b) => a.toDateString() === b.toDateString();
+        const day = sameDay(d, today) ? T('ah.today', 'Today')
+            : sameDay(d, yest) ? T('ah.yesterday', 'Yesterday')
+            : d.toLocaleDateString(lang, { day: '2-digit', month: 'short' });
+        return { time, day };
+    }
+    async function loadAccessHistory(force) {
+        if (accessLoaded && !force) return;
+        accessLoaded = true;
+        if (apiMode && window.CCApi) {
+            try {
+                const rows = await CCApi.all('/my-access-log/');
+                accessEvents = rows.map(e => ({
+                    user: e.user_email || '-',
+                    action: e.action,
+                    file: e.file_title || '',
+                    time: e.created_at,
+                }));
+            } catch (err) { accessEvents = []; }
+        } else {
+            accessEvents = ahDemoEvents();
+        }
+        renderAccessHistory();
+    }
+    function renderAccessHistory() {
+        const list = document.getElementById('accessHistoryList');
+        if (!list) return;
+        const countEl = document.getElementById('accessHistoryCount');
+        if (countEl) countEl.textContent = accessEvents.length;
+        list.innerHTML = accessEvents.map(a => {
+            const w = ahWhen(a.time);
+            const icon = AH_ICONS[a.action] || 'activity';
+            const badge = T('au.act.' + a.action, a.action);
+            return `
+            <li class="au-row au-is-${a.action}">
+                <span class="au-ic"><i data-lucide="${icon}"></i></span>
+                <div class="au-main">
+                    <p class="au-top">
+                        <strong class="au-actor">${a.user}</strong>
+                        <span class="au-badge au-b-${a.action}">${badge}</span>
+                        <span class="au-when-sm">${w.time} · ${w.day}</span>
+                    </p>
+                    ${a.file ? `<p class="au-detail">${a.file}</p>` : ''}
+                </div>
+                <span class="au-when"><b>${w.time}</b><span>${w.day}</span></span>
+            </li>`;
+        }).join('') || `<li class="au-empty">${T('ah.empty', 'No one has opened your files yet.')}</li>`;
+        refreshIcons();
+    }
+    document.addEventListener('cc:lang', () => { if (accessLoaded) renderAccessHistory(); });
+    function ahMaybeLoad() {
+        if (window.location.hash.replace('#', '').trim() === 'access-history') loadAccessHistory();
+    }
+    window.addEventListener('hashchange', ahMaybeLoad);
+    document.addEventListener('cc:popview', ahMaybeLoad);
+    document.querySelectorAll('[data-navigate="access-history"]').forEach(b =>
+        b.addEventListener('click', () => loadAccessHistory()));
+    ahMaybeLoad();
 
     const signOutBtn = document.getElementById('sign-out-btn');
     if (signOutBtn) {

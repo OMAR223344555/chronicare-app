@@ -112,6 +112,11 @@ when. Opening a file in the browser records a `view`; saving it to disk
 records a `download`, so the administrator can tell reading a report apart
 from taking a copy. Rows are only added, never edited or deleted.
 
+The patient gets their own read-only slice of this log on the Access History
+page: everyone else who opened, downloaded or annotated one of their files,
+with the time. Their own actions are hidden - the page answers "who else
+touched my files?".
+
 *Analogy: a security camera logbook - it doesn't stop anyone, but you can
 always replay exactly what happened.*
 

@@ -76,7 +76,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Stylesheet -->
-    <link rel="stylesheet" href="./css/style.css?v=46">
+    <link rel="stylesheet" href="./css/style.css?v=47">
 </head>
 
 <body class="sidebar-luxe bg-slate-100 min-h-screen font-[Inter] antialiased">
@@ -604,6 +604,10 @@
                     <button type="button" class="portal-nav-btn w-full flex items-center gap-3 p-3 rounded-xl transition text-sm font-semibold hover:bg-slate-50" data-target="sharing-access" data-navigate="sharing-access">
                         <i data-lucide="share-2" class="w-5 h-5"></i>
                         <span data-i18n="nav.sharing">Sharing & Access</span>
+                    </button>
+                    <button type="button" class="portal-nav-btn w-full flex items-center gap-3 p-3 rounded-xl transition text-sm font-semibold hover:bg-slate-50" data-target="access-history" data-navigate="access-history">
+                        <i data-lucide="history" class="w-5 h-5"></i>
+                        <span data-i18n="nav.accessHistory">Access History</span>
                     </button>
                 </div>
             </div>
@@ -1182,6 +1186,29 @@
                 <!-- ----------------------------------------------------------
                      SUBVIEW D: LAB TRENDS
                      ---------------------------------------------------------- -->
+                <!-- SUBVIEW: ACCESS HISTORY -->
+                <section id="view-access-history" class="portal-subview hidden">
+                    <div class="mb-6">
+                        <p class="text-xs font-bold tracking-widest text-cyan-700" data-i18n="ah.eyebrow">PRIVACY &amp; TRANSPARENCY</p>
+                        <h2 class="text-3xl font-extrabold text-[#0c2340] mt-1" data-i18n="ah.title">Access History</h2>
+                        <p class="text-sm text-slate-500 mt-1" data-i18n="ah.sub">Everyone who opened or downloaded one of your files, and when.</p>
+                    </div>
+
+                    <section class="au-panel" aria-labelledby="ahEventsTitle">
+                        <header class="au-panel-head">
+                            <div class="au-panel-title">
+                                <span class="au-panel-icon"><i data-lucide="history"></i></span>
+                                <div>
+                                    <h2 id="ahEventsTitle" data-i18n="ah.events">File access events</h2>
+                                    <p data-i18n="ah.eventsSub">Newest first - only what others did with your files</p>
+                                </div>
+                            </div>
+                            <span id="accessHistoryCount" class="au-count">0</span>
+                        </header>
+                        <ul id="accessHistoryList" class="au-list"></ul>
+                    </section>
+                </section>
+
                 <section id="view-lab-trends" class="portal-subview hidden">
                     <div class="mb-6">
                         <p class="text-xs font-bold tracking-widest text-cyan-700" data-i18n="lt.eyebrow">CLINICAL METRICS</p>
@@ -1372,10 +1399,10 @@
     </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
-    <script src="./js/api.js?v=46"></script>
-    <script src="./js/shared.js?v=46"></script>
-    <script src="./js/i18n.js?v=46"></script>
-    <script src="./js/script.js?v=46"></script>
+    <script src="./js/api.js?v=47"></script>
+    <script src="./js/shared.js?v=47"></script>
+    <script src="./js/i18n.js?v=47"></script>
+    <script src="./js/script.js?v=47"></script>
 
     <!-- Floating theme + language controls -->
     <div class="fab-stack">

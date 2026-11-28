@@ -92,6 +92,7 @@ Django models map to the same ERD table names via `Meta.db_table`.
 - `GET/POST notes/` (`?medical_file=<id>`)
 - `GET admin/users/?status=&role=`, `POST admin/users/{id}/approve/`,
   `POST admin/users/{id}/deactivate/`, `POST admin/users/{id}/activate/`
+- `GET my-access-log/` - the patient's own access history: who else viewed, downloaded or annotated their files
 - `GET admin/audit-log/`
 
 List endpoints are paginated (`count`/`next`/`results`, page size 20).
