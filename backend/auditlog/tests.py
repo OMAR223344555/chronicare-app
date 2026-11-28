@@ -135,3 +135,62 @@ class NotificationTests(APITestCase):
         notify(self.patient, "system", "for the patient only")
         r = self.client.get("/api/notifications/")
         self.assertEqual(r.data, [])
+
+
+class SyncTests(APITestCase):
+    def setUp(self):
+        self.patient = User.objects.create_user(
+            username="sp@example.com", email="sp@example.com",
+            password="secret123", role=User.Role.PATIENT,
+        )
+        self.doctor = User.objects.create_user(
+            username="sd@example.com", email="sd@example.com",
+            password="secret123", role=User.Role.DOCTOR,
+            status=User.Status.ACTIVE,
+        )
+
+    def auth(self, user):
+        token, _ = Token.objects.get_or_create(user=user)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")
+
+    def test_counts_move_when_appointment_is_booked(self):
+        self.auth(self.doctor)
+        r = self.client.get("/api/sync/")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertEqual(r.data["appointments"]["count"], 0)
+        self.assertEqual(r.data["notifications_unread"], 0)
+        # patient books with the doctor
+        self.auth(self.patient)
+        r = self.client.post("/api/appointments/", {
+            "doctor": self.doctor.id,
+            "scheduled_at": "2030-01-01T10:00:00Z",
+            "reason": "checkup",
+        }, format="json")
+        self.assertEqual(r.status_code, status.HTTP_201_CREATED)
+        # doctor's sync view moves
+        self.auth(self.doctor)
+        r = self.client.get("/api/sync/")
+        self.assertEqual(r.data["appointments"]["count"], 1)
+        self.assertIsNotNone(r.data["appointments"]["max_updated"])
+        self.assertEqual(r.data["notifications_unread"], 1)
+        self.assertIsNotNone(r.data["notifications_latest"])
+
+    def test_scoping_and_auth(self):
+        # anonymous is rejected
+        r = self.client.get("/api/sync/")
+        self.assertIn(r.status_code, (status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN))
+        # each side sees only its own appointments
+        self.auth(self.patient)
+        self.client.post("/api/appointments/", {
+            "doctor": self.doctor.id,
+            "scheduled_at": "2030-01-01T10:00:00Z",
+        }, format="json")
+        r = self.client.get("/api/sync/")
+        self.assertEqual(r.data["appointments"]["count"], 1)
+        other = User.objects.create_user(
+            username="sp2@example.com", email="sp2@example.com",
+            password="secret123", role=User.Role.PATIENT,
+        )
+        self.auth(other)
+        r = self.client.get("/api/sync/")
+        self.assertEqual(r.data["appointments"]["count"], 0)

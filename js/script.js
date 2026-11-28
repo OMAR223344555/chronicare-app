@@ -83,6 +83,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 CCApi.refreshNotifs(true);
                 CCApi.populateShareForm(state);
                 applyUserChrome(sessUser);
+                startPatientLiveSync();
             } catch (err) {
                 CCApi.clearSession();
             }
@@ -293,6 +294,45 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (role === 'doctor') { window.location.href = './doctor.html'; return; }
         if (role === 'admin') { window.location.href = './admin.html'; return; }
         showView('overview');
+        startPatientLiveSync();
+    }
+
+    // ---- Live sync: poll the cheap /sync/ fingerprint and refresh only what moved ----
+    async function resyncAppointmentsLive() {
+        let appts;
+        try { appts = await CCApi.all('/appointments/'); } catch (e) { return; }
+        apptItems = appts;
+        apptLoaded = true;
+        renderAppointments();
+        const nowTs = Date.now();
+        state.appointments = appts
+            .filter(a => ['pending', 'confirmed'].includes(a.status) && new Date(a.scheduled_at).getTime() > nowTs)
+            .map(a => ({
+                id: a.id, live: true, doctor: a.doctor_name || '', spec: a.doctor_specialty || '',
+                date: String(a.scheduled_at).slice(0, 10),
+                time: new Date(a.scheduled_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+                place: a.reason || '',
+            }));
+        renderCarePlan();
+        applyLiveOverview();
+    }
+
+    async function resyncSharesLive() {
+        let shares;
+        try { shares = await CCApi.all('/shares/'); } catch (e) { return; }
+        state.shares = shares.map(s => { const sh = CCApi.toShare(s); sh.id = s.id; return sh; });
+        renderShares();
+        applyLiveOverview();
+    }
+
+    function startPatientLiveSync() {
+        if (!window.CCApi || !CCApi.startLiveSync) return;
+        CCApi.startLiveSync((chg) => {
+            if (!apiMode) return;
+            if (chg.notifications) CCApi.refreshNotifs(true);
+            if (chg.appointments) resyncAppointmentsLive();
+            if (chg.shares) resyncSharesLive();
+        });
     }
 
     // Sign-in page notice (pending approval, deactivated, role mismatch)

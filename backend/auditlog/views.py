@@ -1,7 +1,9 @@
+from django.db.models import Count, Max
+from django.utils import timezone
 from rest_framework import generics, status, views
 from rest_framework.response import Response
 
-from accounts.permissions import IsPatient, IsPlatformAdmin
+from accounts.permissions import IsActiveAccount, IsPatient, IsPlatformAdmin
 
 from .models import AuditLog, Notification
 from .serializers import AuditLogSerializer, NotificationSerializer
@@ -62,3 +64,38 @@ class NotificationReadView(views.APIView):
         if pk is not None:
             qs = qs.filter(pk=pk)
         return Response({"marked_read": qs.update(is_read=True)})
+
+
+class SyncView(views.APIView):
+    """Cheap change detector for light client-side polling: the portals call
+    this every few seconds instead of refetching whole lists. It returns only
+    counts and newest-change timestamps, scoped to the requesting user; the
+    client refetches the real data only when one of these values moves.
+    """
+
+    permission_classes = [IsActiveAccount]
+
+    def get(self, request):
+        from appointments.models import Appointment
+        from sharing.models import Share
+
+        user = request.user
+        if user.is_patient:
+            appts = Appointment.objects.filter(patient=user)
+            shares = Share.objects.filter(patient=user)
+        elif user.is_doctor:
+            appts = Appointment.objects.filter(doctor=user)
+            shares = Share.objects.filter(doctor=user)
+        else:
+            appts = Appointment.objects.all()
+            shares = Share.objects.all()
+
+        appt_agg = appts.aggregate(count=Count("id"), max_updated=Max("updated_at"))
+        share_agg = shares.aggregate(count=Count("id"), max_created=Max("created_at"))
+        return Response({
+            "server_time": timezone.now().isoformat(),
+            "appointments": {"count": appt_agg["count"], "max_updated": appt_agg["max_updated"]},
+            "shares": {"count": share_agg["count"], "max_created": share_agg["max_created"]},
+            "notifications_unread": Notification.objects.filter(user=user, is_read=False).count(),
+            "notifications_latest": Notification.objects.filter(user=user).aggregate(m=Max("created_at"))["m"],
+        })

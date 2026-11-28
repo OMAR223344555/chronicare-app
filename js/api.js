@@ -502,6 +502,70 @@ window.CCApi = (function () {
         }
     }
 
+    // ---- Light live sync (shared poller) ----
+    // PythonAnywhere cannot hold websockets, so the portals poll the cheap
+    // /sync/ endpoint (counts + newest timestamps) every few seconds while
+    // the tab is visible, pause when it is hidden, and poll immediately on
+    // focus. Whole lists are refetched only when a fingerprint moves.
+    const SYNC_INTERVAL = 6000;
+    const syncState = { last: null, timer: null, handlers: [], running: false };
+
+    async function syncNow() {
+        if (!hasSession()) return;
+        let snap;
+        try {
+            snap = await get('/sync/');
+        } catch (e) {
+            if (e && (e.status === 401 || e.status === 403)) stopLiveSync(); // expired session - stop quietly
+            return;
+        }
+        const prev = syncState.last;
+        syncState.last = snap;
+        if (!prev) return; // first snapshot only sets the baseline
+        const moved = (a, b) => !a || !b || a.count !== b.count || a.max_updated !== b.max_updated || a.max_created !== b.max_created;
+        const changed = {
+            appointments: moved(prev.appointments, snap.appointments),
+            shares: moved(prev.shares, snap.shares),
+            notifications: prev.notifications_unread !== snap.notifications_unread
+                || prev.notifications_latest !== snap.notifications_latest,
+            prev: prev,
+            snap: snap,
+        };
+        if (changed.appointments || changed.shares || changed.notifications) {
+            syncState.handlers.forEach(fn => { try { fn(changed); } catch (e) { /* one bad handler must not kill the loop */ } });
+        }
+    }
+
+    function scheduleSync() {
+        clearTimeout(syncState.timer);
+        if (!syncState.running) return;
+        syncState.timer = setTimeout(() => { syncNow().finally(scheduleSync); }, SYNC_INTERVAL);
+    }
+
+    function startLiveSync(handler) {
+        if (handler && syncState.handlers.indexOf(handler) === -1) syncState.handlers.push(handler);
+        if (syncState.running || !hasSession()) return;
+        syncState.running = true;
+        syncNow().finally(scheduleSync);
+    }
+
+    function stopLiveSync() {
+        syncState.running = false;
+        clearTimeout(syncState.timer);
+        syncState.timer = null;
+        syncState.last = null;
+    }
+
+    if (typeof document !== 'undefined') {
+        const syncKick = () => {
+            if (!syncState.running) return;
+            clearTimeout(syncState.timer);
+            syncNow().finally(scheduleSync);
+        };
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) syncKick(); });
+        window.addEventListener('focus', syncKick);
+    }
+
     return {
         base, setBase, token, user, hasSession, clearSession, L,
         req, get, post, patch, all, ping,
@@ -510,6 +574,7 @@ window.CCApi = (function () {
         hydratePatient, hydrateDoctor, hydrateAdmin,
         toRecord, toShare, uploadFile, testTypeId, allCategoryIds, populateShareForm,
         liveNotifs, refreshNotifs, markAllNotifsRead,
+        startLiveSync, stopLiveSync,
         _refs: refs,
     };
 })();

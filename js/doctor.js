@@ -212,6 +212,40 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     setTimeout(() => { if (window.ccGateOpen) window.ccGateOpen(); }, 60);
 
+    // ---- Live sync: poll the cheap /sync/ fingerprint and refresh only what moved ----
+    async function resyncPatientsLive() {
+        const scroller = document.scrollingElement || document.documentElement;
+        const y = scroller.scrollTop;
+        const openId = currentPatient ? currentPatient.id : null;
+        try { await CCApi.hydrateDoctor(patients); } catch (e) { return; }
+        if (openId != null) currentPatient = patients.find(p => p.id === openId) || currentPatient;
+        renderPatients();
+        if (currentPatient) {
+            const recordsView = document.getElementById('view-patient-records');
+            if (recordsView && !recordsView.classList.contains('hidden')) {
+                renderPatientRecords(currentPatient);
+                renderPatientMeds(currentPatient);
+                renderNotes(currentPatient);
+            }
+        }
+        scroller.scrollTop = y;
+        refreshIcons();
+    }
+
+    if (window.CCApi && CCApi.startLiveSync) {
+        CCApi.startLiveSync((chg) => {
+            if (!apiMode) return;
+            if (chg.notifications) CCApi.refreshNotifs(true);
+            if (chg.appointments) {
+                if (chg.prev && chg.prev.appointments && chg.snap.appointments.count > chg.prev.appointments.count) {
+                    showToast(CCApi.L('New appointment request', 'طلب موعد جديد'), 'success');
+                }
+                loadAppointmentsD(true);
+            }
+            if (chg.shares) resyncPatientsLive();
+        });
+    }
+
     function renderPatients() {
         const list = filteredPatients();
         patientsTable.innerHTML = (list.map(p => `

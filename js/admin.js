@@ -785,6 +785,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     ];
     window.CC_NOTIFS = () => apiMode ? CCApi.liveNotifs() : adminNotifs.map(n => ({ ...n, text: T(n.textKey), time: T(n.timeKey) }));
     window.CC_NOTIFS_MARK_READ = () => { if (apiMode) { CCApi.markAllNotifsRead(); } else adminNotifs.forEach(n => { n.unread = false; }); };
+    // Live sync: the bell is the admin surface that changes from outside
+    if (window.CCApi && CCApi.startLiveSync) {
+        CCApi.startLiveSync((chg) => { if (apiMode && chg.notifications) CCApi.refreshNotifs(true); });
+    }
     window.CC_SOURCES = () => {
         const t = (k, f) => window.CCi18n ? CCi18n.t(k, f) : f;
         const pages = [
