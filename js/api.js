@@ -539,7 +539,10 @@ window.CCApi = (function () {
     function scheduleSync() {
         clearTimeout(syncState.timer);
         if (!syncState.running) return;
-        syncState.timer = setTimeout(() => { syncNow().finally(scheduleSync); }, SYNC_INTERVAL);
+        syncState.timer = setTimeout(() => {
+            if (typeof document !== 'undefined' && document.hidden) { scheduleSync(); return; } // paused while the tab is hidden
+            syncNow().finally(scheduleSync);
+        }, SYNC_INTERVAL);
     }
 
     function startLiveSync(handler) {
