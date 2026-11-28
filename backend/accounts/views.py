@@ -181,10 +181,10 @@ class MeView(APIView):
 
 
 class PasswordResetRequestView(APIView):
-    """Start a password reset. Always answers 200 so nobody can probe
-    which emails have accounts. When no real email backend is configured
-    (the class demo), the reset link is returned in the response so the
-    frontend can show it on screen, clearly labelled as a demo fallback.
+    """Start a password reset. Always answers 200 with the same neutral
+    message so nobody can probe which emails have accounts. The reset link
+    only ever travels by email: it is never returned in the API response,
+    so someone who knows an email address cannot take over the account.
     """
 
     permission_classes = [AllowAny]
@@ -200,31 +200,27 @@ class PasswordResetRequestView(APIView):
         if user is not None and user.is_reset_protected:
             log_action(user, "password_reset_blocked")
             user = None
-        if user is not None:
+        # Without a real email backend the link would have nowhere safe to
+        # go, so no token is created at all; an admin resets the password
+        # through the Django admin instead.
+        if user is not None and settings.EMAIL_IS_CONFIGURED:
             # One active token at a time: invalidate earlier ones.
             user.password_reset_tokens.filter(used_at__isnull=True).update(used_at=timezone.now())
             reset = PasswordResetToken.objects.create(user=user)
             link = f"{settings.PASSWORD_RESET_FRONTEND_URL}?token={reset.token}"
             log_action(user, "password_reset_request")
-            if settings.EMAIL_IS_CONFIGURED:
-                send_mail(
-                    subject="Chronicare password reset",
-                    message=(
-                        f"Hi {user.full_name or user.email},\n\n"
-                        f"Use this link to choose a new password (valid for "
-                        f"{PasswordResetToken.EXPIRY_MINUTES} minutes):\n\n{link}\n\n"
-                        "If you did not ask for this, ignore this email."
-                    ),
-                    from_email=None,
-                    recipient_list=[user.email],
-                    fail_silently=True,
-                )
-            else:
-                # Demo fallback: no email server, so hand the link back to the UI.
-                data["demo_reset_link"] = link
-                data["detail"] = (
-                    "Demo mode: no email server is connected, so here is your reset link."
-                )
+            send_mail(
+                subject="Chronicare password reset",
+                message=(
+                    f"Hi {user.full_name or user.email},\n\n"
+                    f"Use this link to choose a new password (valid for "
+                    f"{PasswordResetToken.EXPIRY_MINUTES} minutes):\n\n{link}\n\n"
+                    "If you did not ask for this, ignore this email."
+                ),
+                from_email=None,
+                recipient_list=[user.email],
+                fail_silently=True,
+            )
         return Response(data)
 
 

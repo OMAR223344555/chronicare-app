@@ -1,4 +1,4 @@
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from rest_framework.test import APIClient
 
 from .models import PasswordResetToken, User
@@ -12,10 +12,18 @@ class PasswordResetFlowTests(TestCase):
             password="OldPass123", full_name="Maya", role="patient",
         )
 
-    def test_request_returns_demo_link_without_email_backend(self):
+    def test_request_never_returns_link_without_email_backend(self):
         r = self.client.post("/api/auth/password-reset/request/", {"email": "maya@example.com"}, format="json")
         self.assertEqual(r.status_code, 200)
-        self.assertIn("demo_reset_link", r.data)
+        self.assertNotIn("demo_reset_link", r.data)
+        # No email backend: nowhere safe for the link to go, so no token either.
+        self.assertEqual(PasswordResetToken.objects.filter(user=self.user).count(), 0)
+
+    def test_request_with_email_configured_creates_token_but_returns_no_link(self):
+        with override_settings(EMAIL_IS_CONFIGURED=True):
+            r = self.client.post("/api/auth/password-reset/request/", {"email": "maya@example.com"}, format="json")
+        self.assertEqual(r.status_code, 200)
+        self.assertNotIn("demo_reset_link", r.data)
         self.assertEqual(PasswordResetToken.objects.filter(user=self.user).count(), 1)
 
     def test_request_unknown_email_still_200_and_no_token(self):
@@ -24,7 +32,8 @@ class PasswordResetFlowTests(TestCase):
         self.assertNotIn("demo_reset_link", r.data)
 
     def test_confirm_changes_password_and_kills_sessions(self):
-        self.client.post("/api/auth/password-reset/request/", {"email": "maya@example.com"}, format="json")
+        with override_settings(EMAIL_IS_CONFIGURED=True):
+            self.client.post("/api/auth/password-reset/request/", {"email": "maya@example.com"}, format="json")
         tok = PasswordResetToken.objects.get(user=self.user)
         r = self.client.post("/api/auth/password-reset/confirm/",
                              {"token": str(tok.token), "password": "NewPass123"}, format="json")
@@ -43,7 +52,8 @@ class PasswordResetFlowTests(TestCase):
         r = self.client.post("/api/auth/password-reset/confirm/",
                              {"token": "00000000-0000-0000-0000-000000000000", "password": "NewPass123"}, format="json")
         self.assertEqual(r.status_code, 400)
-        self.client.post("/api/auth/password-reset/request/", {"email": "maya@example.com"}, format="json")
+        with override_settings(EMAIL_IS_CONFIGURED=True):
+            self.client.post("/api/auth/password-reset/request/", {"email": "maya@example.com"}, format="json")
         tok = PasswordResetToken.objects.get(user=self.user)
         r2 = self.client.post("/api/auth/password-reset/confirm/",
                               {"token": str(tok.token), "password": "short"}, format="json")
@@ -117,9 +127,13 @@ class PasswordResetProtectedAccountsTests(TestCase):
         tok.refresh_from_db()
         self.assertIsNotNone(tok.used_at)
 
-    def test_ordinary_user_still_gets_on_screen_link_and_can_reset_once(self):
+    def test_ordinary_user_gets_no_link_but_can_reset_once(self):
         r = self._request("sam@example.com")
-        self.assertIn("demo_reset_link", r.data)
+        self.assertNotIn("demo_reset_link", r.data)
+        self.assertEqual(PasswordResetToken.objects.filter(user=self.ordinary).count(), 0)
+        with override_settings(EMAIL_IS_CONFIGURED=True):
+            r = self._request("sam@example.com")
+        self.assertNotIn("demo_reset_link", r.data)
         tok = PasswordResetToken.objects.get(user=self.ordinary)
         ok = self.client.post("/api/auth/password-reset/confirm/",
                               {"token": str(tok.token), "password": "BrandNew123"}, format="json")
@@ -131,7 +145,8 @@ class PasswordResetProtectedAccountsTests(TestCase):
     def test_ordinary_token_expires(self):
         from datetime import timedelta
         from django.utils import timezone
-        self._request("sam@example.com")
+        with override_settings(EMAIL_IS_CONFIGURED=True):
+            self._request("sam@example.com")
         tok = PasswordResetToken.objects.get(user=self.ordinary)
         PasswordResetToken.objects.filter(pk=tok.pk).update(
             created_at=timezone.now() - timedelta(minutes=PasswordResetToken.EXPIRY_MINUTES + 1))

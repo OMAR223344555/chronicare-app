@@ -56,8 +56,8 @@ class User(AbstractUser):
     @property
     def is_reset_protected(self):
         """Admins and the shared demo logins can never be reset through the
-        public forgot-password flow (the link would be shown on screen to
-        whoever typed the email)."""
+        public forgot-password flow; an admin changes those passwords
+        through the Django admin instead."""
         return (
             self.role == self.Role.ADMIN
             or self.is_staff

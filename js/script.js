@@ -218,18 +218,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
             try {
-                const res = await CCApi.post('/auth/password-reset/request/', { email: email.trim() });
+                await CCApi.post('/auth/password-reset/request/', { email: email.trim() });
                 if (resultBox && resultText) {
+                    // The API never returns the link; it only travels by email.
                     resultBox.classList.remove('hidden');
-                    if (res && res.demo_reset_link && demoLink) {
-                        resultText.textContent = T('auth.resetDemoNote', 'Demo note: no email server is connected, so here is your reset link:');
-                        demoLink.textContent = res.demo_reset_link;
-                        demoLink.href = res.demo_reset_link;
-                        demoLink.classList.remove('hidden');
-                    } else {
-                        resultText.textContent = T('auth.resetSent', 'If an account exists for this email, a reset link has been sent.');
-                        if (demoLink) demoLink.classList.add('hidden');
-                    }
+                    resultText.textContent = T('auth.resetSent', 'If an account exists for this email, a reset link has been sent.');
+                    if (demoLink) demoLink.classList.add('hidden');
                 }
             } catch (err) {
                 if (err && err.status) showToast(CCApi.L('Could not start the reset: ', 'تعذر بدء الاستعادة: ') + (err.message || err), 'warn');

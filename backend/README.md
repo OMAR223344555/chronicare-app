@@ -52,7 +52,13 @@ built-in demo mode.
 - `CORS_ALLOWED_ORIGINS` - comma-separated; default covers localhost and
   `https://omar223344555.github.io`
 
+Password reset: links are only ever sent by email (set `EMAIL_HOST`,
+`EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, and `EMAIL_BACKEND`). The API
+response never contains the reset link. Without a mail server no reset
+token is created; an admin resets the password via the Django admin.
+
 Secrets are read from the environment only; nothing sensitive is committed.
+`DEBUG` defaults to off; set `DEBUG=1` only for local development.
 `chronicare-schema.sql` (repo root) is the matching MySQL schema script; the
 Django models map to the same ERD table names via `Meta.db_table`.
 
