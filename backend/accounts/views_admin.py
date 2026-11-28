@@ -113,8 +113,26 @@ class AdminUserViewSet(viewsets.ReadOnlyModelViewSet):
                 total_bytes += f.file.size if f.file else 0
             except OSError:
                 pass
+        from django.utils import timezone
+        from appointments.models import Appointment
+        from auditlog.models import AuditLog
+        from sharing.models import Share
+
+        today = timezone.now().date()
+        week_ago = timezone.now() - timezone.timedelta(days=7)
+        appts = Appointment.objects.values("status").annotate(n=Count("id"))
+        audit_7d = AuditLog.objects.filter(created_at__gte=week_ago)
         return Response({
             "files_total": MedicalFile.objects.count(),
             "storage_bytes": total_bytes,
             "categories": [{"name": c["name"], "count": c["n"]} for c in cats],
+            "shares_active": Share.objects.filter(revoked_at__isnull=True, expires_on__gte=today).count(),
+            "appointments": {a["status"]: a["n"] for a in appts},
+            "appointments_upcoming": Appointment.objects.filter(
+                scheduled_at__gte=timezone.now(),
+                status__in=[Appointment.Status.PENDING, Appointment.Status.CONFIRMED],
+            ).count(),
+            "views_7d": audit_7d.filter(action="view").count(),
+            "downloads_7d": audit_7d.filter(action="download").count(),
+            "logins_7d": audit_7d.filter(action="login").count(),
         })

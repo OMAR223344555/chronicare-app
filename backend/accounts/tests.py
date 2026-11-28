@@ -214,3 +214,47 @@ class AdminDeleteAccountTests(APITestCase):
 
         self.assertEqual(r.status_code, status.HTTP_403_FORBIDDEN)
         self.assertTrue(User.objects.filter(pk=other.pk).exists())
+
+
+class AdminStatsTests(APITestCase):
+    def setUp(self):
+        self.admin = User.objects.create_user(
+            username="sa@example.com", email="sa@example.com",
+            password="secret123", role=User.Role.ADMIN,
+        )
+        token, _ = Token.objects.get_or_create(user=self.admin)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")
+
+    def test_stats_include_engagement_and_appointments(self):
+        from django.utils import timezone
+        from datetime import timedelta
+        from appointments.models import Appointment
+        patient = User.objects.create_user(
+            username="sp@example.com", email="sp@example.com",
+            password="secret123", role=User.Role.PATIENT,
+        )
+        doctor = User.objects.create_user(
+            username="sd@example.com", email="sd@example.com",
+            password="secret123", role=User.Role.DOCTOR, status=User.Status.ACTIVE,
+        )
+        Appointment.objects.create(
+            patient=patient, doctor=doctor,
+            scheduled_at=timezone.now() + timedelta(days=1),
+        )
+        r = self.client.get("/api/admin/users/stats/")
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        for key in ("files_total", "storage_bytes", "categories", "shares_active",
+                    "appointments", "appointments_upcoming", "views_7d", "downloads_7d", "logins_7d"):
+            self.assertIn(key, r.data, key)
+        self.assertEqual(r.data["appointments"], {"pending": 1})
+        self.assertEqual(r.data["appointments_upcoming"], 1)
+
+    def test_stats_reject_non_admin(self):
+        patient = User.objects.create_user(
+            username="sp2@example.com", email="sp2@example.com",
+            password="secret123", role=User.Role.PATIENT,
+        )
+        token, _ = Token.objects.get_or_create(user=patient)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")
+        r = self.client.get("/api/admin/users/stats/")
+        self.assertIn(r.status_code, (status.HTTP_403_FORBIDDEN, status.HTTP_401_UNAUTHORIZED))

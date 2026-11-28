@@ -573,6 +573,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('statDoctors').textContent = users.filter(u => u.role === 'Doctor').length;
         document.getElementById('statPatients').textContent = users.filter(u => u.role === 'Patient').length;
         document.getElementById('statPending').textContent = pendingDoctors.length;
+        const st = apiMode && window.CCApi && CCApi.adminStats ? CCApi.adminStats() : null;
+        const fmtMB = b => b >= 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
+        const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+        setText('statFiles', st ? st.files_total : '-');
+        setText('statStorage', st ? fmtMB(st.storage_bytes || 0) : '-');
+        setText('statShares', st ? st.shares_active : '-');
+        setText('statAppts', st ? st.appointments_upcoming : '-');
+        setText('statViews7d', st ? st.views_7d : '-');
+        setText('statDl7d', st ? st.downloads_7d : '-');
         if (!window.Chart) return;
         chartRefs.forEach(c => c.destroy());
         chartRefs = [];
