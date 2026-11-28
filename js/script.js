@@ -318,6 +318,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // --- Google Sign-In (GSI) ---
+    // The button language follows the app language, not the browser: the GSI
+    // bundle loads with ?hl=<lang> and reloads on every language toggle. The
+    // rendered button is swapped in atomically (fresh node, then
+    // replaceChildren) so theme/language changes never flash an empty slot.
     (function initGoogleSignIn() {
         const container = document.getElementById('google-gsi-container');
         const fallback = document.getElementById('google-fallback-btn');
@@ -329,56 +333,78 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
         }
-        let attempts = 0;
-        const timer = setInterval(() => {
-            attempts++;
-            const ready = window.google && google.accounts && google.accounts.id && window.CC_GOOGLE_CLIENT_ID;
-            if (!ready) { if (attempts >= 40) clearInterval(timer); return; } // give up after ~10s
-            clearInterval(timer);
+        const handleCredential = async (resp) => {
+            if (!resp || !resp.credential) return;
+            hideSigninNotice();
+            const roleSel = document.getElementById('signin-role');
+            const wantedRole = roleSel ? roleSel.value : 'patient';
             try {
-                google.accounts.id.initialize({
-                    client_id: window.CC_GOOGLE_CLIENT_ID,
-                    callback: async (resp) => {
-                        if (!resp || !resp.credential) return;
-                        hideSigninNotice();
-                        const roleSel = document.getElementById('signin-role');
-                        const wantedRole = roleSel ? roleSel.value : 'patient';
-                        try {
-                            const user = await CCApi.googleLogin(resp.credential, wantedRole);
-                            if (user.role !== 'patient') { landForRole(user.role); return; }
-                            try {
-                                await CCApi.hydratePatient(state, CONDITION_LABELS, CATEGORY_LABELS);
-                                apiMode = true;
+                const user = await CCApi.googleLogin(resp.credential, wantedRole);
+                if (user.role !== 'patient') { landForRole(user.role); return; }
+                try {
+                    await CCApi.hydratePatient(state, CONDITION_LABELS, CATEGORY_LABELS);
+                    apiMode = true;
 
-                                CCApi.populateShareForm(state);
-                                CCApi.refreshNotifs(true);
-                            } catch (e2) { /* keep built-in demo data; session is valid */ }
-                            applyUserChrome(user);
-                            applyLiveOverview();
-                            landForRole('patient');
-                        } catch (err) {
-                            if (!showAuthError(err)) {
-                                showToast(CCApi.L('Google sign-in failed: ', 'فشل تسجيل الدخول عبر جوجل: ') + (err.message || err), 'warn');
-                            }
-                        }
-                    },
-                });
-                if (container) {
-                    const renderGoogleButton = () => {
-                        const dark = document.documentElement.classList.contains('dark');
-                        container.innerHTML = '';
-                        google.accounts.id.renderButton(container, {
-                            theme: dark ? 'filled_black' : 'outline',
-                            shape: 'pill', size: 'large', width: 320
-                        });
-                    };
-                    renderGoogleButton();
-                    document.addEventListener('cc:theme', renderGoogleButton);
-                    container.classList.remove('hidden');
-                    if (fallback) fallback.classList.add('hidden');
+                    CCApi.populateShareForm(state);
+                    CCApi.refreshNotifs(true);
+                } catch (e2) { /* keep built-in demo data; session is valid */ }
+                applyUserChrome(user);
+                applyLiveOverview();
+                landForRole('patient');
+            } catch (err) {
+                if (!showAuthError(err)) {
+                    showToast(CCApi.L('Google sign-in failed: ', 'فشل تسجيل الدخول عبر جوجل: ') + (err.message || err), 'warn');
                 }
-            } catch (e) { /* GSI init failed; fallback button stays visible */ }
-        }, 250);
+            }
+        };
+        let poller = null, attempts = 0, gsiTag = null, ready = false;
+        const renderGoogleButton = () => {
+            if (!container || !window.google || !google.accounts || !google.accounts.id) return;
+            const dark = document.documentElement.classList.contains('dark');
+            const fresh = document.createElement('div');
+            google.accounts.id.renderButton(fresh, {
+                theme: dark ? 'filled_black' : 'outline',
+                shape: 'pill', size: 'large', width: 320
+            });
+            container.replaceChildren(fresh);
+            container.classList.remove('hidden');
+            if (fallback) fallback.classList.add('hidden');
+        };
+        const startPoller = () => {
+            if (poller) clearInterval(poller);
+            attempts = 0;
+            poller = setInterval(() => {
+                attempts++;
+                if (!(window.google && google.accounts && google.accounts.id && window.CC_GOOGLE_CLIENT_ID)) {
+                    if (attempts >= 60) { clearInterval(poller); poller = null; } // give up after ~15s
+                    return;
+                }
+                clearInterval(poller); poller = null;
+                try {
+                    google.accounts.id.initialize({
+                        client_id: window.CC_GOOGLE_CLIENT_ID,
+                        callback: handleCredential,
+                    });
+                    renderGoogleButton();
+                    ready = true;
+                } catch (e) { /* GSI init failed; fallback button stays visible */ }
+            }, 250);
+        };
+        const loadGsi = () => {
+            const lang = (window.CCi18n && CCi18n.lang) || localStorage.getItem('cc-lang') || 'en';
+            if (gsiTag) gsiTag.remove();
+            window.google = undefined; // the loaded bundle carries the old locale
+            ready = false;
+            gsiTag = document.createElement('script');
+            gsiTag.src = 'https://accounts.google.com/gsi/client?hl=' + (lang === 'ar' ? 'ar' : 'en');
+            gsiTag.async = true;
+            gsiTag.defer = true;
+            document.head.appendChild(gsiTag);
+            startPoller();
+        };
+        loadGsi();
+        document.addEventListener('cc:theme', () => { if (ready) renderGoogleButton(); });
+        document.addEventListener('cc:lang', loadGsi);
     })();
 
     const signinRole = document.getElementById('signin-role');
