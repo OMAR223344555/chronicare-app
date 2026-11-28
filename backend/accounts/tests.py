@@ -1,9 +1,18 @@
 """Auth, roles and admin-approval flow (FR-01, FR-10)."""
+from datetime import timedelta
+
+from django.core.files.storage import default_storage
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
 
 from .models import User
+from auditlog.models import AuditLog
+from labs.models import LabResult, LabTestType
+from records.models import Category, Condition, MedicalFile
+from sharing.models import DoctorNote, Share
 
 
 def make_user(email, password, role=User.Role.PATIENT, status_=User.Status.ACTIVE, **kw):
@@ -92,3 +101,116 @@ class AuthTests(APITestCase):
         self.assertEqual(r.data["status"], "deactivated")
         r = self.client.post(f"/api/admin/users/{target.pk}/activate/")
         self.assertEqual(r.data["status"], "active")
+
+
+class AdminDeleteAccountTests(APITestCase):
+    """FR-10: an admin can delete an account, with safeguards and cleanup."""
+
+    def setUp(self):
+        self.admin = make_user(
+            "admin@example.com", "secret123", User.Role.ADMIN, full_name="Admin One"
+        )
+        self.category = Category.objects.create(name="Lab Report")
+        self.condition = Condition.objects.create(name="Diabetes")
+
+    def make_patient_with_data(self):
+        patient = make_user("pat@example.com", "secret123", full_name="Pat One")
+        record = MedicalFile.objects.create(
+            owner=patient,
+            title="Blood test",
+            file=SimpleUploadedFile(
+                "blood.pdf", b"%PDF-1.4 minimal\n%%EOF%%", content_type="application/pdf"
+            ),
+            category=self.category,
+            condition=self.condition,
+            record_date=timezone.localdate(),
+        )
+        doctor = make_user(
+            "doc@example.com", "secret123", User.Role.DOCTOR, full_name="Doc One"
+        )
+        share = Share.objects.create(
+            patient=patient,
+            doctor=doctor,
+            expires_on=timezone.localdate() + timedelta(days=7),
+        )
+        share.files.add(record)
+        note = DoctorNote.objects.create(
+            doctor=doctor, medical_file=record, text="Looks fine."
+        )
+        test_type = LabTestType.objects.create(name="HbA1c", code="HBA1C", unit="%")
+        LabResult.objects.create(
+            patient=patient, test_type=test_type, value=5.4,
+            measured_at=timezone.localdate(),
+        )
+        return patient, doctor, record, share, note
+
+    def test_deleting_a_patient_removes_files_shares_and_lab_results(self):
+        patient, _doctor, record, share, note = self.make_patient_with_data()
+        file_name = record.file.name
+        auth(self.client, self.admin)
+
+        r = self.client.delete(f"/api/admin/users/{patient.pk}/delete_account/")
+
+        self.assertEqual(r.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(User.objects.filter(pk=patient.pk).exists())
+        self.assertFalse(MedicalFile.objects.filter(owner_id=patient.pk).exists())
+        self.assertFalse(Share.objects.filter(pk=share.pk).exists())
+        self.assertFalse(LabResult.objects.filter(patient_id=patient.pk).exists())
+        self.assertFalse(DoctorNote.objects.filter(pk=note.pk).exists())
+        self.assertFalse(default_storage.exists(file_name))
+
+        entry = AuditLog.objects.filter(action="delete").first()
+        self.assertIsNotNone(entry)
+        self.assertIn("pat@example.com", entry.details)
+        self.assertIsNone(entry.target_user)
+
+    def test_deleting_a_doctor_removes_their_shares_and_notes(self):
+        patient, doctor, record, share, note = self.make_patient_with_data()
+        auth(self.client, self.admin)
+
+        r = self.client.delete(f"/api/admin/users/{doctor.pk}/delete_account/")
+
+        self.assertEqual(r.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(User.objects.filter(pk=doctor.pk).exists())
+        self.assertFalse(Share.objects.filter(pk=share.pk).exists())
+        self.assertFalse(DoctorNote.objects.filter(pk=note.pk).exists())
+        # the patient and their file stay
+        self.assertTrue(MedicalFile.objects.filter(pk=record.pk).exists())
+
+    def test_admin_cannot_delete_their_own_account(self):
+        auth(self.client, self.admin)
+
+        r = self.client.delete(f"/api/admin/users/{self.admin.pk}/delete_account/")
+
+        self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("own account", r.data["detail"])
+        self.assertTrue(User.objects.filter(pk=self.admin.pk).exists())
+
+    def test_last_administrator_cannot_be_deleted(self):
+        staff = make_user("staff@example.com", "secret123", is_staff=True)
+        auth(self.client, staff)
+
+        r = self.client.delete(f"/api/admin/users/{self.admin.pk}/delete_account/")
+
+        self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("last administrator", r.data["detail"])
+        self.assertTrue(User.objects.filter(pk=self.admin.pk).exists())
+
+    def test_another_admin_can_be_deleted_when_an_admin_remains(self):
+        second = make_user("admin2@example.com", "secret123", User.Role.ADMIN)
+        auth(self.client, self.admin)
+
+        r = self.client.delete(f"/api/admin/users/{second.pk}/delete_account/")
+
+        self.assertEqual(r.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(User.objects.filter(pk=second.pk).exists())
+
+    def test_patients_cannot_delete_accounts(self):
+        patient, _doctor, _record, _share, _note = self.make_patient_with_data()
+        other = make_user("pat2@example.com", "secret123")
+        auth(self.client, patient)
+
+        r = self.client.delete(f"/api/admin/users/{other.pk}/delete_account/")
+
+        self.assertEqual(r.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertTrue(User.objects.filter(pk=other.pk).exists())

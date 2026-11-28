@@ -1,3 +1,4 @@
+
 from rest_framework import generics, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -47,16 +48,49 @@ class AdminUserViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=True, methods=["delete"])
     def delete_account(self, request, pk=None):
+        """Permanently delete an account (FR-10).
+
+        Safeguards: an administrator can never delete their own account, and
+        the last remaining administrator can never be deleted.
+
+        A patient's or doctor's medical files, lab results, shares (given and
+        received, with their share-file links) and doctor notes are removed
+        with the account by the model cascades; the uploaded file bytes are
+        deleted from storage first so nothing is left orphaned on disk. The
+        audit entry is written before the delete and survives it (the audit
+        foreign keys are SET_NULL), so the trail keeps who was removed.
+        """
         user = self.get_object()
-        if user.role == User.Role.ADMIN:
+
+        if user.pk == request.user.pk:
             return Response(
-                {"detail": "Admin accounts cannot be deleted."}, status=400
+                {"detail": "You cannot delete your own account."}, status=400
             )
+
+        if user.role == User.Role.ADMIN:
+            other_admins = (
+                User.objects.filter(role=User.Role.ADMIN)
+                .exclude(pk=user.pk)
+                .exists()
+            )
+            if not other_admins:
+                return Response(
+                    {"detail": "You cannot delete the last administrator account."},
+                    status=400,
+                )
+
+        label = user.full_name or user.username or user.email
+        details = f"deleted {user.role} account {user.email} ({label})"
+
         # Remove uploaded file bytes from storage before the cascade removes rows.
         for medical_file in user.medical_files.all():
-            medical_file.file.delete(save=False)
-        log_action(request.user, "delete", target_user=user,
-                   details="deleted account " + user.email)
+            try:
+                if medical_file.file:
+                    medical_file.file.delete(save=False)
+            except OSError:
+                pass
+
+        log_action(request.user, "delete", target_user=user, details=details)
         user.delete()
         return Response(status=204)
 

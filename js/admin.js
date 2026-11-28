@@ -25,17 +25,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Demo state (client-side only, no backend yet)
     const pendingDoctors = [
-        { id: 1, name: 'Dr. Youssef Nader', specialty: 'Endocrinology', license: 'MED-2026-4471', applied: '2026-11-24' },
-        { id: 2, name: 'Dr. Hana Sherif', specialty: 'Nephrology', license: 'MED-2025-8823', applied: '2026-11-26' },
+        { id: 1, name: 'Dr. Youssef Nader', email: 'youssef.nader@chronicare.demo', specialty: 'Endocrinology', license: 'MED-2026-4471', applied: '2026-11-24' },
+        { id: 2, name: 'Dr. Hana Sherif', email: 'hana.sherif@chronicare.demo', specialty: 'Nephrology', license: 'MED-2025-8823', applied: '2026-11-26' },
     ];
 
     const users = [
-        { id: 11, name: 'Dr. Ahmed Farouk', role: 'Doctor', detail: 'Internal Medicine • MED-2019-1024', status: 'Active' },
-        { id: 12, name: 'Dr. Salma Nabil', role: 'Doctor', detail: 'Cardiology • MED-2018-5567', status: 'Active' },
-        { id: 13, name: 'Dr. Mariam Khaled', role: 'Doctor', detail: 'Nephrology • MED-2021-3390', status: 'Active' },
-        { id: 14, name: 'Maya Hassan', role: 'Patient', detail: 'Diabetes, Hypertension', detailKey: 'conds', status: 'Active' },
-        { id: 15, name: 'Omar Adel', role: 'Patient', detail: 'Hypertension', detailKey: 'conds', status: 'Active' },
-        { id: 16, name: 'Sara Mahmoud', role: 'Patient', detail: 'Chronic kidney disease', detailKey: 'conds', status: 'Active' },
+        { id: 11, name: 'Dr. Ahmed Farouk', email: 'ahmed.farouk@chronicare.demo', role: 'Doctor', detail: 'Internal Medicine • MED-2019-1024', status: 'Active' },
+        { id: 12, name: 'Dr. Salma Nabil', email: 'salma.nabil@chronicare.demo', role: 'Doctor', detail: 'Cardiology • MED-2018-5567', status: 'Active' },
+        { id: 13, name: 'Dr. Mariam Khaled', email: 'mariam.khaled@chronicare.demo', role: 'Doctor', detail: 'Nephrology • MED-2021-3390', status: 'Active' },
+        { id: 14, name: 'Maya Hassan', email: 'maya.hassan@chronicare.demo', role: 'Patient', detail: 'Diabetes, Hypertension', detailKey: 'conds', status: 'Active' },
+        { id: 15, name: 'Omar Adel', email: 'omar.adel@chronicare.demo', role: 'Patient', detail: 'Hypertension', detailKey: 'conds', status: 'Active' },
+        { id: 16, name: 'Sara Mahmoud', email: 'sara.mahmoud@chronicare.demo', role: 'Patient', detail: 'Chronic kidney disease', detailKey: 'conds', status: 'Active' },
     ];
 
     const categories = ['Lab Report', 'Prescription', 'Imaging', 'Specialist Report', 'Discharge Summary'];
@@ -153,40 +153,130 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     if (window.ccGateOpen && !apiMode) window.ccGateOpen();
 
+    // ---- Manage Users: compact, aligned rows with explicit actions ----
+    const meId = (window.CCApi && CCApi.user() && CCApi.user().id) || null;
+    let userAction = null;   // { key: 'u:11' | 'p:1', kind: 'delete' | 'deactivate' | 'decline' }
+    let userQuery = '';
+    let userRole = 'all';
+
+    function initials(name) {
+        const parts = String(name || '?').replace(/^Dr\.?\s+/i, '').trim().split(/\s+/).filter(Boolean);
+        return (parts[0] ? parts[0][0] : '?').toUpperCase() + (parts[1] ? parts[1][0].toUpperCase() : '');
+    }
+    function detailText(u) {
+        if (u.detailKey === 'conds') return condsLabel(u.detail);
+        const bits = String(u.detail || '').split(' • ');
+        return SPEC_KEYS[bits[0]] ? specLabel(bits[0]) + (bits[1] ? ' • ' + bits[1] : '') : (u.detail || '');
+    }
+    function apiError(err, fallbackKey) {
+        if (err && err.status === 403) return T('ad.notAllowed');
+        if (err && err.data && typeof err.data.detail === 'string' && !(window.CCi18n && CCi18n.lang === 'ar')) return err.data.detail;
+        return T(fallbackKey);
+    }
+    function confirmBar(key, kind, name) {
+        const isDelete = kind === 'delete';
+        const title = isDelete ? Tp('ad.deleteConfirm', { name }) : Tp('ad.deactivateConfirm', { name });
+        const warn = isDelete ? T('ad.deleteWarn') : T('ad.deactivateWarn');
+        return `<div class="um-confirm" role="group">
+            <p class="um-confirm-text"><i data-lucide="alert-triangle"></i><span><strong>${title}</strong> ${warn}</span></p>
+            <div class="um-confirm-actions">
+                <button type="button" class="um-btn ${isDelete ? 'um-btn-danger' : 'um-btn-warn'}" data-um-confirm="${key}">${isDelete ? T('action.delete') : T('ad.deactivate')}</button>
+                <button type="button" class="um-btn um-btn-quiet" data-um-cancel="${key}">${T('action.cancel')}</button>
+            </div>
+        </div>`;
+    }
+
     function renderPending() {
-        const tbody = document.getElementById('pendingDoctorsTable');
+        const list = document.getElementById('pendingDoctorsList');
         document.getElementById('pendingCount').textContent = Tp('ad.pendingN', { n: pendingDoctors.length });
-        tbody.innerHTML = pendingDoctors.length ? pendingDoctors.map(d => `
-            <tr>
-                <td><strong>${nameLabel(d.name)}</strong></td>
-                <td>${specLabel(d.specialty)}</td>
-                <td><span class="font-mono text-xs">${d.license}</span></td>
-                <td>${d.applied}</td>
-                <td>
-                    <div class="flex gap-2">
-                        <button type="button" class="approve-doctor-btn bg-green-100 text-green-700 text-xs font-bold px-3 py-1.5 rounded-full hover:bg-green-200 transition" data-id="${d.id}">${T('ad.approve')}</button>
-                        <button type="button" class="decline-doctor-btn bg-red-50 text-red-600 text-xs font-bold px-3 py-1.5 rounded-full hover:bg-red-100 transition" data-id="${d.id}">${T('ad.decline')}</button>
-                    </div>
-                </td>
-            </tr>`).join('')
-            : `<tr><td colspan="5" class="text-center text-slate-400 py-8">${T('ad.noPending')}</td></tr>`;
+        list.innerHTML = pendingDoctors.length ? pendingDoctors.map(d => {
+            const key = 'p:' + d.id;
+            return `<li class="um-row">
+                <span class="um-avatar um-av-pending">${initials(d.name)}</span>
+                <div class="um-id">
+                    <p class="um-name">${nameLabel(d.name)}</p>
+                    ${d.email ? `<p class="um-meta">${d.email}</p>` : ''}
+                    <p class="um-meta um-meta-sub">${Tp('ad.appliedOn', { d: d.applied })}</p>
+                </div>
+                <div class="um-badges">
+                    <span class="um-badge um-role-doctor">${specLabel(d.specialty)}</span>
+                    <span class="um-badge um-lic"><i data-lucide="id-card"></i>${d.license}</span>
+                </div>
+                ${userAction && userAction.key === key
+                    ? `<div class="um-confirm" role="group">
+                          <p class="um-confirm-text"><i data-lucide="alert-triangle"></i><span><strong>${Tp('ad.declineConfirm', { name: nameLabel(d.name) })}</strong> ${T('ad.declineWarn')}</span></p>
+                          <div class="um-confirm-actions">
+                              <button type="button" class="um-btn um-btn-danger" data-um-confirm="${key}">${T('ad.decline')}</button>
+                              <button type="button" class="um-btn um-btn-quiet" data-um-cancel="${key}">${T('action.cancel')}</button>
+                          </div>
+                      </div>`
+                    : `<div class="um-actions">
+                          <button type="button" class="um-btn um-btn-solid" data-um-approve="${d.id}"><i data-lucide="check"></i>${T('ad.approve')}</button>
+                          <button type="button" class="um-btn um-btn-warn" data-um-decline="${d.id}"><i data-lucide="x"></i>${T('ad.decline')}</button>
+                      </div>`}
+            </li>`;
+        }).join('')
+        : `<li class="um-empty">${T('ad.noPending')}</li>`;
         refreshIcons();
     }
 
+    function visibleUsers() {
+        const q = userQuery.trim().toLowerCase();
+        return users.filter(u => {
+            if (userRole !== 'all' && u.role !== userRole) return false;
+            if (!q) return true;
+            return [u.name, u.email, u.detail].filter(Boolean).some(v => String(v).toLowerCase().includes(q));
+        });
+    }
+
     function renderUsers() {
-        const tbody = document.getElementById('usersTable');
-        tbody.innerHTML = users.map(u => `
-            <tr>
-                <td><strong>${nameLabel(u.name)}</strong></td>
-                <td>${T(u.role === 'Doctor' ? 'role.doctor' : 'role.patient')}</td>
-                <td class="text-slate-500">${u.detailKey === 'conds' ? condsLabel(u.detail) : (SPEC_KEYS[u.detail.split(' • ')[0]] ? specLabel(u.detail.split(' • ')[0]) + ' • ' + u.detail.split(' • ')[1] : u.detail)}</td>
-                <td>${u.status === 'Active'
-                    ? `<span class="status reviewed">${T('st.active')}</span>`
-                    : `<span class="status archived">${T('st.deactivated')}</span>`}</td>
-                <td><button type="button" class="toggle-user-btn more-btn" data-id="${u.id}">${u.status === 'Active' ? T('ad.deactivate') : T('ad.activate')}</button></td>
-            </tr>`).join('');
+        const list = document.getElementById('usersList');
+        document.getElementById('usersCount').textContent = Tp('ad.accountsN', { n: users.length });
+        document.getElementById('umCountAll').textContent = users.length;
+        document.getElementById('umCountDoctors').textContent = users.filter(u => u.role === 'Doctor').length;
+        document.getElementById('umCountPatients').textContent = users.filter(u => u.role === 'Patient').length;
+        const rows = visibleUsers();
+        list.innerHTML = rows.length ? rows.map(u => {
+            const key = 'u:' + u.id;
+            const active = u.status === 'Active';
+            const isSelf = meId != null && u.id === meId;
+            const meta = detailText(u);
+            return `<li class="um-row${active ? '' : ' is-off'}">
+                <span class="um-avatar ${u.role === 'Doctor' ? 'um-av-doctor' : 'um-av-patient'}">${initials(u.name)}</span>
+                <div class="um-id">
+                    <p class="um-name">${nameLabel(u.name)}${isSelf ? ` <span class="um-you">${T('ad.you')}</span>` : ''}</p>
+                    ${u.email ? `<p class="um-meta">${u.email}</p>` : ''}
+                    ${meta ? `<p class="um-meta um-meta-sub">${meta}</p>` : ''}
+                </div>
+                <div class="um-badges">
+                    <span class="um-badge ${u.role === 'Doctor' ? 'um-role-doctor' : 'um-role-patient'}">${T(u.role === 'Doctor' ? 'role.doctor' : 'role.patient')}</span>
+                    <span class="um-badge ${active ? 'um-st-active' : 'um-st-off'}"><span class="um-dot"></span>${statusLabel(u.status)}</span>
+                </div>
+                ${userAction && userAction.key === key
+                    ? confirmBar(key, userAction.kind, nameLabel(u.name))
+                    : `<div class="um-actions">
+                          ${active
+                              ? `<button type="button" class="um-btn um-btn-ghost" data-um-toggle="${u.id}"><i data-lucide="user-x"></i>${T('ad.deactivate')}</button>`
+                              : `<button type="button" class="um-btn um-btn-solid" data-um-toggle="${u.id}"><i data-lucide="user-check"></i>${T('ad.activate')}</button>`}
+                          ${isSelf ? '' : `<button type="button" class="um-btn um-btn-icon" data-um-delete="${u.id}" aria-label="${T('ad.deleteAccount')}" title="${T('ad.deleteAccount')}"><i data-lucide="trash-2"></i></button>`}
+                      </div>`}
+            </li>`;
+        }).join('')
+        : `<li class="um-empty">${T('ad.noUsers')}</li>`;
         refreshIcons();
     }
+
+    document.getElementById('umSearch').addEventListener('input', (e) => {
+        userQuery = e.target.value || '';
+        renderUsers();
+    });
+    document.querySelectorAll('[data-um-filter]').forEach(chip => {
+        chip.addEventListener('click', () => {
+            userRole = chip.getAttribute('data-um-filter');
+            document.querySelectorAll('[data-um-filter]').forEach(c => c.classList.toggle('is-active', c === chip));
+            renderUsers();
+        });
+    });
 
     // Toast notifications
     function showToast(message, type) {
@@ -208,39 +298,110 @@ document.addEventListener('DOMContentLoaded', async () => {
         }, 2600);
     }
 
+    // ---- Account actions (approve, decline, deactivate, activate, delete) ----
+    const findUser = id => users.find(x => x.id === Number(id));
+
+    async function approveDoctor(d) {
+        if (apiMode && window.CCApi) {
+            try { await CCApi.post('/admin/users/' + d.id + '/approve/'); }
+            catch (err) { showToast(apiError(err, 'ad.actionFailed'), 'warn'); return; }
+        }
+        pendingDoctors.splice(pendingDoctors.indexOf(d), 1);
+        users.push({ id: d.id, name: d.name, email: d.email || '', role: 'Doctor', detail: `${d.specialty} • ${d.license}`, status: 'Active' });
+        auditEvents.unshift({ time: 'just now', user: 'Administrator', action: 'approve', details: Tp('au.dynApprove', { n: nameLabel(d.name) }) });
+        userAction = null;
+        renderPending(); renderUsers(); renderAudit(); renderAnalytics();
+        showToast(Tp('toast.approved', { name: nameLabel(d.name) }));
+    }
+
+    async function declineDoctor(d) {
+        if (apiMode && window.CCApi) {
+            try { await CCApi.post('/admin/users/' + d.id + '/deactivate/'); }
+            catch (err) { showToast(apiError(err, 'ad.actionFailed'), 'warn'); return; }
+        }
+        pendingDoctors.splice(pendingDoctors.indexOf(d), 1);
+        auditEvents.unshift({ time: 'just now', user: 'Administrator', action: 'deactivate', details: Tp('au.dynStatus', { s: statusLabel('Deactivated'), n: nameLabel(d.name) }) });
+        userAction = null;
+        renderPending(); renderUsers(); renderAudit(); renderAnalytics();
+        showToast(Tp('toast.declined', { name: nameLabel(d.name) }), 'warn');
+    }
+
+    async function toggleUser(u) {
+        const activating = u.status !== 'Active';
+        if (apiMode && window.CCApi) {
+            try { await CCApi.post('/admin/users/' + u.id + (activating ? '/activate/' : '/deactivate/')); }
+            catch (err) { showToast(apiError(err, 'ad.actionFailed'), 'warn'); userAction = null; renderUsers(); return; }
+        }
+        u.status = activating ? 'Active' : 'Deactivated';
+        auditEvents.unshift({ time: 'just now', user: 'Administrator', action: activating ? 'activate' : 'deactivate', details: Tp('au.dynStatus', { s: statusLabel(u.status), n: nameLabel(u.name) }) });
+        userAction = null;
+        renderUsers(); renderAudit();
+        showToast(Tp(activating ? 'toast.reactivated' : 'toast.deactivated', { name: nameLabel(u.name) }), activating ? undefined : 'warn');
+    }
+
+    async function deleteUser(u) {
+        if (apiMode && window.CCApi) {
+            try { await CCApi.req('/admin/users/' + u.id + '/delete_account/', { method: 'DELETE' }); }
+            catch (err) { showToast(apiError(err, 'ad.deleteFailed'), 'warn'); userAction = null; renderUsers(); return; }
+        }
+        const i = users.indexOf(u);
+        if (i > -1) users.splice(i, 1);
+        auditEvents.unshift({ time: 'just now', user: 'Administrator', action: 'delete', details: Tp('au.dynDelete', { n: nameLabel(u.name) }) });
+        userAction = null;
+        renderUsers(); renderAudit(); renderAnalytics();
+        showToast(Tp('toast.userDeleted', { name: nameLabel(u.name) }));
+    }
+
     document.addEventListener('click', (e) => {
-        const approveBtn = e.target.closest('.approve-doctor-btn');
+        const approveBtn = e.target.closest('[data-um-approve]');
         if (approveBtn) {
-            const d = pendingDoctors.find(x => x.id === Number(approveBtn.dataset.id));
-            if (!d) return;
-            if (apiMode && window.CCApi) CCApi.post('/admin/users/' + d.id + '/approve/').catch(() => {});
-            pendingDoctors.splice(pendingDoctors.indexOf(d), 1);
-            users.push({ id: apiMode ? d.id : 100 + d.id, name: d.name, role: 'Doctor', detail: `${d.specialty} • ${d.license}`, status: 'Active' });
-            auditEvents.unshift({ time: 'just now', user: 'Administrator', action: 'approve', details: Tp('au.dynApprove', { n: nameLabel(d.name) }) });
-            renderPending(); renderUsers(); renderAudit(); renderAnalytics();
-            showToast(Tp('toast.approved', { name: nameLabel(d.name) }));
+            const d = pendingDoctors.find(x => x.id === Number(approveBtn.getAttribute('data-um-approve')));
+            if (d) approveDoctor(d);
             return;
         }
-        const declineBtn = e.target.closest('.decline-doctor-btn');
+        const declineBtn = e.target.closest('[data-um-decline]');
         if (declineBtn) {
-            const d = pendingDoctors.find(x => x.id === Number(declineBtn.dataset.id));
-            if (!d) return;
-            if (!confirm(Tp('ad.declineConfirm', { name: nameLabel(d.name) }))) return;
-            if (apiMode && window.CCApi) CCApi.post('/admin/users/' + d.id + '/deactivate/').catch(() => {});
-            pendingDoctors.splice(pendingDoctors.indexOf(d), 1);
-            renderPending(); renderAnalytics();
-            showToast(Tp('toast.declined', { name: nameLabel(d.name) }), 'warn');
+            userAction = { key: 'p:' + declineBtn.getAttribute('data-um-decline'), kind: 'decline' };
+            renderPending();
             return;
         }
-        const toggleBtn = e.target.closest('.toggle-user-btn');
+        const toggleBtn = e.target.closest('[data-um-toggle]');
         if (toggleBtn) {
-            const u = users.find(x => x.id === Number(toggleBtn.dataset.id));
+            const u = findUser(toggleBtn.getAttribute('data-um-toggle'));
             if (!u) return;
-            u.status = u.status === 'Active' ? 'Deactivated' : 'Active';
-            if (apiMode && window.CCApi) CCApi.post('/admin/users/' + u.id + (u.status === 'Active' ? '/activate/' : '/deactivate/')).catch(() => {});
-            auditEvents.unshift({ time: 'just now', user: 'Administrator', action: u.status === 'Active' ? 'approve' : 'revoke', details: Tp('au.dynStatus', { s: statusLabel(u.status), n: nameLabel(u.name) }) });
-            renderUsers(); renderAudit();
-            showToast(Tp(u.status === 'Active' ? 'toast.reactivated' : 'toast.deactivated', { name: nameLabel(u.name) }), u.status === 'Active' ? undefined : 'warn');
+            if (u.status === 'Active') {
+                userAction = { key: 'u:' + u.id, kind: 'deactivate' };
+                renderUsers();
+            } else {
+                toggleUser(u);
+            }
+            return;
+        }
+        const delBtn = e.target.closest('[data-um-delete]');
+        if (delBtn) {
+            userAction = { key: 'u:' + delBtn.getAttribute('data-um-delete'), kind: 'delete' };
+            renderUsers();
+            return;
+        }
+        const cancelBtn = e.target.closest('[data-um-cancel]');
+        if (cancelBtn) {
+            userAction = null;
+            renderPending(); renderUsers();
+            return;
+        }
+        const confirmBtn = e.target.closest('[data-um-confirm]');
+        if (confirmBtn) {
+            const key = String(confirmBtn.getAttribute('data-um-confirm'));
+            const id = Number(key.slice(2));
+            if (key.startsWith('p:')) {
+                const d = pendingDoctors.find(x => x.id === id);
+                if (d) declineDoctor(d);
+                return;
+            }
+            const u = findUser(id);
+            if (!u) return;
+            if (userAction && userAction.kind === 'deactivate') toggleUser(u);
+            else deleteUser(u);
         }
     });
 
@@ -478,6 +639,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             view: 'bg-slate-100 text-slate-600', download: 'bg-blue-100 text-blue-700',
             share: 'bg-green-100 text-green-700', revoke: 'bg-red-100 text-red-700',
             approve: 'bg-cyan-100 text-cyan-800', note: 'bg-violet-100 text-violet-700',
+            delete: 'bg-red-100 text-red-700', deactivate: 'bg-amber-100 text-amber-800',
+            activate: 'bg-green-100 text-green-700',
         };
         document.getElementById('auditTable').innerHTML = rows.map(a => `
             <tr>

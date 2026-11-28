@@ -297,21 +297,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('patientRecordsSubtitle').textContent =
             Tp('dp.recordsSub', { cond: condsLabel(p.conditions), d: fmtDate(p.lastShared) });
 
-        document.getElementById('patientFilesTable').innerHTML = p.files.map(f => `
-            <tr>
-                <td><span class="file-icon">PDF</span><strong>${f.name}</strong></td>
-                <td>${catLabel(f.category)}</td>
-                <td>${fmtDate(f.date)}</td>
-                <td><button type="button" class="more-btn view-shared-file" data-name="${f.name}" data-api-id="${f.apiId || ''}" title="Open"><i data-lucide="eye" class="w-4 h-4"></i></button></td>
-            </tr>`).join('');
+        document.getElementById('patientFilesCount').textContent = Tp('dp.filesN', { n: p.files.length });
+        document.getElementById('patientFilesList').innerHTML = p.files.map(f => `
+            <li class="dr-row">
+                <span class="dr-file">PDF</span>
+                <div class="dr-id">
+                    <p class="dr-title">${f.name}</p>
+                    <p class="dr-meta">${catLabel(f.category)} <span class="dr-sep">·</span> ${fmtDate(f.date)}</p>
+                </div>
+                <button type="button" class="dr-open view-shared-file" data-name="${f.name}" data-api-id="${f.apiId || ''}" aria-label="${T('pr.view')}" title="${T('pr.view')}"><i data-lucide="eye"></i><span>${T('pr.view')}</span></button>
+            </li>`).join('') || `<li class="dr-empty">${T('pr.noFiles')}</li>`;
 
-        document.getElementById('patientLabsTable').innerHTML = p.labs.map(l => `
-            <tr class="${outOfRange(l) ? 'bg-red-50' : ''}">
-                <td>${labName(l.test)}</td>
-                <td class="font-bold ${outOfRange(l) ? 'text-red-600' : ''}">${l.value} <span class="text-xs font-semibold text-slate-400">${l.unit}</span></td>
-                <td class="text-slate-500">${l.min != null ? l.min : ''}${l.max != null ? ' - ' + l.max : '+'} ${l.unit}</td>
-                <td class="text-slate-500">${fmtDate(l.date)}</td>
-            </tr>`).join('');
+        document.getElementById('patientLabsCount').textContent = Tp('pr.resultsN', { n: p.labs.length });
+        document.getElementById('patientLabsList').innerHTML = p.labs.map(l => {
+            const oor = outOfRange(l);
+            const low = oor && l.min != null && l.value < l.min;
+            const range = (l.min != null ? l.min : '') + (l.max != null ? ' - ' + l.max : (l.min != null ? '+' : '')) + ' ' + l.unit;
+            return `<li class="dr-row">
+                <div class="dr-id">
+                    <p class="dr-title">${labName(l.test)}${oor ? ` <span class="dr-tag ${low ? 'dr-tag-low' : 'dr-tag-high'}">${T(low ? 'pr.low' : 'pr.high')}</span>` : ''}</p>
+                    <p class="dr-meta">${Tp('pr.ref', { r: range })} <span class="dr-sep">·</span> ${fmtDate(l.date)}</p>
+                </div>
+                <p class="dr-value${oor ? ' is-out' : ''}">${l.value} <span class="dr-unit">${l.unit}</span></p>
+            </li>`;
+        }).join('') || `<li class="dr-empty">${T('pr.noLabs')}</li>`;
 
         renderNotes(p);
         refreshIcons();
@@ -320,11 +329,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     function renderNotes(p) {
         const list = document.getElementById('notesList');
         list.innerHTML = p.notes.length ? p.notes.map(n => `
-            <div class="bg-slate-50 border border-slate-100 rounded-xl p-4">
-                <p class="text-xs text-slate-400 mb-1">${fmtDate(n.date)} • ${n.doctor || T('name.farouk')}</p>
-                <p class="text-sm text-slate-700">${n.textKey ? T(n.textKey) : n.text}</p>
-            </div>`).join('')
-            : `<p class="text-sm text-slate-400">${T('dp.noNotes')}</p>`;
+            <li class="dr-note">
+                <p class="dr-note-meta">${fmtDate(n.date)} <span class="dr-sep">·</span> ${n.doctor || T('name.farouk')}</p>
+                <p class="dr-note-text">${n.textKey ? T(n.textKey) : n.text}</p>
+            </li>`).join('')
+            : `<li class="dr-empty">${T('dp.noNotes')}</li>`;
     }
 
     document.addEventListener('click', (e) => {

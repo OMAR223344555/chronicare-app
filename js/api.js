@@ -325,13 +325,15 @@ window.CCApi = (function () {
         refs.cats = cats; refs.conds = conds; refs.testTypes = types;
         d.pendingDoctors.length = 0;
         usersL.filter(u => u.role === 'doctor' && u.status === 'pending').forEach(u => d.pendingDoctors.push({
-            id: u.id, name: u.full_name, specialty: u.specialty || '-',
+            id: u.id, name: u.full_name || u.email, email: u.email, specialty: u.specialty || '-',
             license: u.license_number || '-', applied: String(u.date_joined || '').slice(0, 10),
         }));
         d.users.length = 0;
         usersL.filter(u => u.role !== 'admin' && u.status !== 'pending').forEach(u => d.users.push({
             id: u.id,
-            name: u.full_name,
+            name: u.full_name || u.email,
+            email: u.email,
+            joined: String(u.date_joined || '').slice(0, 10),
             role: u.role === 'doctor' ? 'Doctor' : 'Patient',
             detail: u.role === 'doctor'
                 ? (u.specialty || '-') + ' • ' + (u.license_number || '-')

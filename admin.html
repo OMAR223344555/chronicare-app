@@ -77,7 +77,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@1.82.0/dist/umd/lucide.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./css/style.css?v=41">
+    <link rel="stylesheet" href="./css/style.css?v=42">
 </head>
 
 <body class="portal-luxe bg-slate-100 min-h-screen font-[Inter] antialiased">
@@ -250,50 +250,47 @@
                     </div>
                 </div>
 
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden mb-6">
-                    <div class="p-5 border-b border-slate-100 flex justify-between items-center">
-                        <div>
-                            <h3 class="font-bold text-[#0c2340]" data-i18n="ad.pending">Pending doctor verification</h3>
-                            <p class="text-xs text-slate-500" data-i18n="ad.pendingSub">Approve only after checking the license number</p>
+                <!-- Pending doctor verification: the first thing an admin must act on -->
+                <section class="um-panel um-panel-pending" aria-labelledby="umPendingTitle">
+                    <header class="um-panel-head">
+                        <div class="um-panel-title">
+                            <span class="um-panel-icon"><i data-lucide="shield-check"></i></span>
+                            <div>
+                                <h2 id="umPendingTitle" data-i18n="ad.pending">Pending doctor verification</h2>
+                                <p data-i18n="ad.pendingSub">Approve only after checking the license number</p>
+                            </div>
                         </div>
-                        <span id="pendingCount" class="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full">0 pending</span>
-                    </div>
-                    <div class="table-wrapper">
-                        <table class="records-table w-full">
-                            <thead>
-                                <tr>
-                                    <th data-i18n="th.doctor">DOCTOR</th>
-                                    <th data-i18n="th.specialty">SPECIALTY</th>
-                                    <th data-i18n="th.license">LICENSE NO.</th>
-                                    <th data-i18n="th.applied">APPLIED</th>
-                                    <th data-i18n="th.action">ACTION</th>
-                                </tr>
-                            </thead>
-                            <tbody id="pendingDoctorsTable"></tbody>
-                        </table>
-                    </div>
-                </div>
+                        <span id="pendingCount" class="um-count um-count-amber">0</span>
+                    </header>
+                    <ul id="pendingDoctorsList" class="um-list"></ul>
+                </section>
 
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                    <div class="p-5 border-b border-slate-100">
-                        <h3 class="font-bold text-[#0c2340]" data-i18n="ad.activeAccounts">Active accounts</h3>
-                        <p class="text-xs text-slate-500" data-i18n="ad.activeSub">Approved doctors and registered patients</p>
+                <!-- Accounts -->
+                <section class="um-panel" aria-labelledby="umUsersTitle">
+                    <header class="um-panel-head">
+                        <div class="um-panel-title">
+                            <span class="um-panel-icon"><i data-lucide="users"></i></span>
+                            <div>
+                                <h2 id="umUsersTitle" data-i18n="ad.activeAccounts">Accounts</h2>
+                                <p data-i18n="ad.activeSub">Approved doctors and registered patients</p>
+                            </div>
+                        </div>
+                        <span id="usersCount" class="um-count">0</span>
+                    </header>
+                    <div class="um-toolbar">
+                        <label class="um-search">
+                            <i data-lucide="search"></i>
+                            <input id="umSearch" type="search" autocomplete="off"
+                                   data-i18n-placeholder="ad.searchPh" placeholder="Search by name or email">
+                        </label>
+                        <div class="um-filters" role="group" aria-label="Filter accounts">
+                            <button type="button" class="um-chip is-active" data-um-filter="all"><span data-i18n="ad.filterAll">All</span> <b id="umCountAll">0</b></button>
+                            <button type="button" class="um-chip" data-um-filter="Doctor"><span data-i18n="ad.filterDoctors">Doctors</span> <b id="umCountDoctors">0</b></button>
+                            <button type="button" class="um-chip" data-um-filter="Patient"><span data-i18n="ad.filterPatients">Patients</span> <b id="umCountPatients">0</b></button>
+                        </div>
                     </div>
-                    <div class="table-wrapper">
-                        <table class="records-table w-full">
-                            <thead>
-                                <tr>
-                                    <th data-i18n="th.name">NAME</th>
-                                    <th data-i18n="th.role">ROLE</th>
-                                    <th data-i18n="th.detail">DETAIL</th>
-                                    <th data-i18n="th.status">STATUS</th>
-                                    <th data-i18n="th.action">ACTION</th>
-                                </tr>
-                            </thead>
-                            <tbody id="usersTable"></tbody>
-                        </table>
-                    </div>
-                </div>
+                    <ul id="usersList" class="um-list"></ul>
+                </section>
             </section>
 
             <!-- SUBVIEW: CATEGORIES & REFERENCE RANGES -->
@@ -365,6 +362,7 @@
                         <option value="share" data-i18n="au.shares">Shares</option>
                         <option value="revoke" data-i18n="au.revokes">Revokes</option>
                         <option value="approve" data-i18n="au.approvals">Approvals</option>
+                        <option value="delete" data-i18n="au.deletes">Deleted accounts</option>
                     </select>
                 </div>
 
@@ -390,10 +388,10 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="./js/api.js?v=41"></script>
-    <script src="./js/shared.js?v=41"></script>
-    <script src="./js/i18n.js?v=41"></script>
-    <script src="./js/admin.js?v=41"></script>
+    <script src="./js/api.js?v=42"></script>
+    <script src="./js/shared.js?v=42"></script>
+    <script src="./js/i18n.js?v=42"></script>
+    <script src="./js/admin.js?v=42"></script>
 
     <!-- Floating theme + language controls -->
     <div class="fab-stack">
