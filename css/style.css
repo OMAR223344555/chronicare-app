@@ -2406,3 +2406,11 @@ html.dark .records-table tbody tr:hover { background: #10233a; }
     /* cards: slightly tighter radius on small screens */
     .au-panel { border-radius: 16px; }
 }
+
+/* Auth bottom on mobile: the clearance for the floating buttons must share
+   the form's own background, otherwise the body colour shows as a separate
+   flat band under the form with a visible seam. */
+@media (max-width: 767px) {
+    #auth-view { padding-bottom: 0; }
+    #auth-view .form-section { padding-bottom: 132px; }
+}
