@@ -891,7 +891,6 @@ html.dark mark { background: rgba(34,211,238,.25); color: #e6eef7; }
 html.dark .fab-btn { background: #16283c; border-color: #22364d; color: #e6eef7; }
 
 /* Keep floating buttons clear of page content */
-#auth-view { padding-bottom: 110px; }
 .portal-subview { padding-bottom: 96px; }
 @media (max-width: 480px) {
     .fab-stack { bottom: 12px; right: 12px; gap: 8px; }
@@ -2407,12 +2406,15 @@ html.dark .records-table tbody tr:hover { background: #10233a; }
     .au-panel { border-radius: 16px; }
 }
 
-/* Auth bottom on mobile: the clearance for the floating buttons must share
-   the form's own background, otherwise the body colour shows as a separate
-   flat band under the form with a visible seam. */
-@media (max-width: 767px) {
-    #auth-view { padding-bottom: 0; }
-    #auth-view .form-section { padding-bottom: 132px; }
+/* Auth bottom: the clearance for the floating buttons lives inside the form
+   panel's own background, so the page background never shows as a separate
+   flat band beneath the panels - on mobile and desktop alike. */
+#auth-view .form-section { padding-bottom: 110px; }
+
+/* The white wave divider was drawn for the light form; recolor it to the
+   dark form background in dark mode so it stops looking like a white scar. */
+html.dark .form-section::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 800' preserveAspectRatio='none'%3E%3Cpath fill='%23101f31' d='M120 0 C35 70 35 160 80 250 C125 340 115 430 65 520 C20 610 35 710 120 800 L120 0Z'/%3E%3C/svg%3E");
 }
 
 /* Decorative plus on the auth form: a desktop-panel ornament. It reads as a
