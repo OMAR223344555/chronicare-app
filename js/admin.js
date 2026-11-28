@@ -245,7 +245,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // ---- Categories, conditions, ranges ----
+    let pendingDelete = null; // "cat:2" while a row is asking for confirmation
+
     function delButton(kind, index) {
+        if (pendingDelete === kind + ':' + index) {
+            return `<span class="flex items-center gap-1.5 shrink-0">
+                <button type="button" class="cc-confirm-del" data-del-${kind}="${index}" data-confirm="1">${T('rf.delete')}</button>
+                <button type="button" class="cc-cancel-del" data-cancel-${kind}="${index}">${T('action.cancel')}</button>
+            </span>`;
+        }
         return `<button type="button" class="cc-del-btn shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-xl" data-del-${kind}="${index}"
             aria-label="${T('rf.delete')}" title="${T('rf.delete')}"><i data-lucide="trash-2" class="w-4 h-4"></i></button>`;
     }
@@ -304,7 +312,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const list = kind === 'cat' ? categories : conditions;
         const name = list[index];
         if (name == null) return;
-        if (!confirm(Tp('rf.deleteConfirm', { n: name }))) return;
+        pendingDelete = null;
         if (apiMode && window.CCApi) {
             const id = apiIdFor(kind, name);
             if (!id) { showToast(T('rf.deleteFailed'), 'warn'); return; }
@@ -329,14 +337,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         showToast(Tp(kind === 'cat' ? 'toast.catDeleted' : 'toast.condDeleted', { n: name }));
     }
 
-    document.getElementById('categoriesList').addEventListener('click', (e) => {
-        const btn = e.target.closest('[data-del-cat]');
-        if (btn) removeListItem('cat', Number(btn.dataset.delCat));
-    });
-    document.getElementById('conditionsList').addEventListener('click', (e) => {
-        const btn = e.target.closest('[data-del-cond]');
-        if (btn) removeListItem('cond', Number(btn.dataset.delCond));
-    });
+    function handleListClick(kind, e) {
+        const cancel = e.target.closest(kind === 'cat' ? '[data-cancel-cat]' : '[data-cancel-cond]');
+        if (cancel) { pendingDelete = null; renderLists(); return; }
+        const btn = e.target.closest(kind === 'cat' ? '[data-del-cat]' : '[data-del-cond]');
+        if (!btn) return;
+        const index = Number(kind === 'cat' ? btn.dataset.delCat : btn.dataset.delCond);
+        // Two-step confirm in the row itself: no native dialog, works the same
+        // on phones and desktops, and the name stays visible while deciding.
+        if (btn.dataset.confirm === '1') { removeListItem(kind, index); return; }
+        pendingDelete = kind + ':' + index;
+        renderLists();
+    }
+    document.getElementById('categoriesList').addEventListener('click', (e) => handleListClick('cat', e));
+    document.getElementById('conditionsList').addEventListener('click', (e) => handleListClick('cond', e));
 
     document.addEventListener('change', (e) => {
         const input = e.target.closest('.range-min, .range-max');

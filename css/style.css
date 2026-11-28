@@ -1741,3 +1741,25 @@ html.dark .archive-btn { background: #16283c; border-color: #22364d; color: #c9d
 html.dark .archive-btn:hover { background: #1a2c42; }
 html.dark .sort-btn { background: #16283c; color: #8ea2b8; }
 html.dark .sort-btn:hover { background: #1a2c42; color: #b3c2d4; }
+
+/* ---------- In-row delete confirmation (admin lists) ---------- */
+.cc-confirm-del,
+.cc-cancel-del {
+    border: 0;
+    border-radius: 10px;
+    padding: 6px 10px;
+    font-size: 11.5px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color .15s ease, color .15s ease;
+}
+.cc-confirm-del { background: #fee2e2; color: #b91c1c; }
+.cc-confirm-del:hover { background: #fecaca; }
+.cc-cancel-del { background: #e2e8f0; color: #475569; }
+.cc-cancel-del:hover { background: #cbd5e1; }
+html.dark .cc-confirm-del { background: rgba(239, 68, 68, .18); color: #fca5a5; }
+html.dark .cc-confirm-del:hover { background: rgba(239, 68, 68, .28); }
+html.dark .cc-cancel-del { background: #22364d; color: #c9d6e4; }
+html.dark .cc-cancel-del:hover { background: #2a4258; }
