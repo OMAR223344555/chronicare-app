@@ -143,6 +143,16 @@ doctor confirms or declines from their own Appointments page; either side can
 cancel, and the other side is notified every time. Bookings in the past are
 rejected, and each user only ever sees their own appointments.
 
+## Medications and the care plan
+
+A patient's *Today's care plan* card is real data too. Each row in the
+`medications` table is one daily medication (name, dose, due time). When the
+patient taps **Mark taken**, the backend writes one `medication_intakes` row
+for that medication and day - asking twice changes nothing, so the card
+survives reloads. Doctors can read a patient's medication list only while an
+active share with that patient exists; adding, changing, removing and taking
+doses is patients-only. Every change lands in the audit log.
+
 *Analogy: the clinic's appointment book - the patient writes a request, the
 doctor inks it in or crosses it out, and nobody waits by the phone.*
 

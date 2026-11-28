@@ -13,6 +13,8 @@ to built-in demo data.
 - **New here? Read [HOW_IT_WORKS.md](HOW_IT_WORKS.md)** - the whole system
   explained in plain language.
 - Backend setup, API map and tests: [backend/README.md](backend/README.md)
+- Live features: records, labs, sharing, audit log, notifications,
+  appointments, medications (daily meds + taken tracking), admin analytics.
 - Database: `chronicare-schema.sql` (MySQL script matching the ERD; Django
   models use the same table names)
 - Design/spec: Tailwind + Inter + lucide, Arabic/English, dark mode.

@@ -16,6 +16,7 @@ urlpatterns = [
     path("api/", include("labs.urls")),
     path("api/", include("sharing.urls")),
     path("api/", include("appointments.urls")),
+    path("api/", include("medications.urls")),
     path("api/admin/", include("accounts.urls_admin")),
     path("api/admin/", include("auditlog.urls")),
 ]

@@ -785,6 +785,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         refreshIcons();
     }
     const apptForm = document.getElementById('apptForm');
+    function localDTValue(d) {
+        const p = n => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+    }
+    function apptInitWhen() {
+        const when = document.getElementById('apptWhen');
+        if (!when) return;
+        const now = new Date();
+        when.min = localDTValue(now);
+        if (!when.value || new Date(when.value).getTime() <= now.getTime()) {
+            const t = new Date(now.getTime() + 86400000);
+            t.setHours(9, 0, 0, 0);
+            when.value = localDTValue(t);
+        }
+    }
     if (apptForm) {
         apptForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -796,6 +811,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (!apiMode || !window.CCApi) {
                 if (msg) { msg.textContent = T('appt.booked', 'Request sent - your doctor has been notified.'); msg.className = 'appt-msg ok'; }
                 apptForm.reset();
+                apptInitWhen();
+                return;
+            }
+            const whenDate = new Date(when.value);
+            if (!when.value || isNaN(whenDate) || whenDate.getTime() <= Date.now()) {
+                if (msg) { msg.textContent = T('appt.pastErr', 'Please pick a date and time in the future.'); msg.className = 'appt-msg err'; msg.classList.remove('hidden'); }
                 return;
             }
             btn.disabled = true;
@@ -803,30 +824,39 @@ document.addEventListener('DOMContentLoaded', async () => {
             try {
                 await CCApi.post('/appointments/', {
                     doctor: Number(sel.value),
-                    scheduled_at: new Date(when.value).toISOString(),
+                    scheduled_at: whenDate.toISOString(),
                     reason: reason.value.trim(),
                 });
                 if (msg) { msg.textContent = T('appt.booked', 'Request sent - your doctor has been notified.'); msg.className = 'appt-msg ok'; }
                 apptForm.reset();
+                apptInitWhen();
                 apptDoctorsLoaded = false; populateApptDoctors();
                 await loadAppointments(true);
             } catch (err) {
-                if (msg) { msg.textContent = T('appt.bookErr', 'Could not book right now - please try again.'); msg.className = 'appt-msg err'; }
+                let text = T('appt.bookErr', 'Could not book right now - please try again.');
+                const d = err && err.data;
+                if (d) {
+                    if (d.scheduled_at) text = T('appt.pastErr', 'Please pick a date and time in the future.');
+                    else if (typeof d.detail === 'string') text = d.detail;
+                    else { const k = Object.keys(d)[0]; if (k && d[k]) text = String(Array.isArray(d[k]) ? d[k][0] : d[k]); }
+                }
+                if (msg) { msg.textContent = text; msg.className = 'appt-msg err'; }
             }
             btn.disabled = false;
         });
     }
+    apptInitWhen();
     document.addEventListener('cc:lang', () => {
         apptDoctorsLoaded = false; populateApptDoctors();
         if (apptLoaded) { if (!apiMode) apptItems = apptDemo(); renderAppointments(); }
     });
     function apptMaybeLoad() {
-        if (window.location.hash.replace('#', '').trim() === 'appointments') { populateApptDoctors(); loadAppointments(); }
+        if (window.location.hash.replace('#', '').trim() === 'appointments') { apptInitWhen(); populateApptDoctors(); loadAppointments(); }
     }
     window.addEventListener('hashchange', apptMaybeLoad);
     document.addEventListener('cc:popview', apptMaybeLoad);
     document.querySelectorAll('[data-navigate="appointments"]').forEach(b =>
-        b.addEventListener('click', () => { populateApptDoctors(); loadAppointments(); }));
+        b.addEventListener('click', () => { apptInitWhen(); populateApptDoctors(); loadAppointments(); }));
     apptMaybeLoad();
 
     const signOutBtn = document.getElementById('sign-out-btn');
@@ -1747,9 +1777,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             chips.innerHTML = conds.map(c => `<span class="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-xs font-semibold">${condLabel(c)}</span>`).join('');
         }
 
-        // medications and appointments are not part of the backend - hide for real accounts
-        const cp = document.getElementById('carePlanCard');
-        if (cp) cp.classList.add('hidden');
+        // medications + appointments are live for real accounts (backend medications app)
+        const cpToggle = document.getElementById('medAddToggle');
+        if (cpToggle) cpToggle.classList.remove('hidden');
+        renderCarePlan();
 
         // timeline: derive from the real records and lab results
         const mon = d => new Date(String(d) + 'T00:00:00').toLocaleDateString('en-US', { month: 'short' });
@@ -1831,33 +1862,79 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <i data-lucide="${m.taken ? 'check-circle-2' : 'pill'}" class="w-4.5 h-4.5"></i>
                 </span>
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-bold text-[#0c2340] ${m.taken ? 'line-through opacity-60' : ''}">${T(m.nameKey)}</p>
-                    <p class="text-xs text-slate-500">${T(m.doseKey)} • ${m.time}</p>
+                    <p class="text-sm font-bold text-[#0c2340] ${m.taken ? 'line-through opacity-60' : ''}">${m.live ? m.name : T(m.nameKey)}</p>
+                    <p class="text-xs text-slate-500">${m.live ? m.dose : T(m.doseKey)} • ${m.time}</p>
                 </div>
                 <button type="button" class="med-take-btn text-xs font-bold ${m.taken ? 'text-green-600' : 'text-cyan-700 hover:underline'}" data-id="${m.id}" ${m.taken ? 'disabled' : ''}>${m.taken ? T('cp.taken') : T('cp.mark')}</button>
+                ${m.live ? `<button type="button" class="med-del-btn text-xs font-bold text-slate-400 hover:text-red-500" data-id="${m.id}" title="${T('cp.remove', 'Remove')}"><i data-lucide="x" class="w-4 h-4"></i></button>` : ''}
             </div>`).join('');
         const apptCards = state.appointments.map(a => `
             <div class="flex items-center gap-3 border border-cyan-100 bg-cyan-50/50 rounded-xl p-3.5">
                 <span class="w-9 h-9 rounded-lg bg-cyan-100 text-cyan-700 flex items-center justify-center shrink-0"><i data-lucide="calendar-clock" class="w-4.5 h-4.5"></i></span>
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-bold text-[#0c2340]">${Tp('cp.appt', { name: T(a.doctorKey) })}</p>
-                    <p class="text-xs text-slate-500">${T(a.specKey)} • ${fmtDate(a.date)} ${a.time} • ${T(a.placeKey)}</p>
+                    <p class="text-sm font-bold text-[#0c2340]">${Tp('cp.appt', { name: a.live ? a.doctor : T(a.doctorKey) })}</p>
+                    <p class="text-xs text-slate-500">${[a.live ? a.spec : T(a.specKey), fmtDate(a.date) + ' ' + a.time, a.live ? a.place : T(a.placeKey)].filter(Boolean).join(' • ')}</p>
                 </div>
                 <span class="text-[10px] font-bold text-cyan-700 bg-cyan-100 px-2 py-1 rounded-full uppercase tracking-wide">${T('cp.upcoming')}</span>
             </div>`).join('');
-        carePlanList.innerHTML = medCards + apptCards;
+        carePlanList.innerHTML = (medCards + apptCards) || `<p class="text-sm text-slate-400 md:col-span-2">${T('cp.empty', 'No medications or appointments yet - add your first medication below.')}</p>`;
         refreshIcons();
     }
-    document.addEventListener('click', (e) => {
+    document.addEventListener('click', async (e) => {
         const takeBtn = e.target.closest('.med-take-btn');
-        if (!takeBtn) return;
-        const med = state.meds.find(m => m.id === Number(takeBtn.dataset.id));
-        if (med && !med.taken) {
-            med.taken = true;
-            renderCarePlan();
-            showToast(Tp('toast.medTaken', { n: T(med.nameKey, '') }));
+        if (takeBtn) {
+            const med = state.meds.find(m => String(m.id) === String(takeBtn.dataset.id));
+            if (med && !med.taken) {
+                if (med.live && window.CCApi) {
+                    takeBtn.disabled = true;
+                    try { await CCApi.post(`/medications/${med.id}/taken/`); }
+                    catch (err) { takeBtn.disabled = false; showToast(T('cp.err', 'Something went wrong - please try again.'), 'warn'); return; }
+                }
+                med.taken = true;
+                renderCarePlan();
+                showToast(Tp('toast.medTaken', { n: med.live ? med.name : T(med.nameKey, '') }));
+            }
+            return;
+        }
+        const delBtn = e.target.closest('.med-del-btn');
+        if (delBtn) {
+            const med = state.meds.find(m => String(m.id) === String(delBtn.dataset.id));
+            if (med && med.live && window.CCApi) {
+                delBtn.disabled = true;
+                try { await CCApi.req(`/medications/${med.id}/`, { method: 'DELETE' }); }
+                catch (err) { delBtn.disabled = false; return; }
+                state.meds = state.meds.filter(m => m !== med);
+                renderCarePlan();
+                showToast(T('toast.medRemoved', 'Medication removed'));
+            }
         }
     });
+    const medAddToggle = document.getElementById('medAddToggle');
+    const medAddForm = document.getElementById('medAddForm');
+    if (medAddToggle && medAddForm) {
+        medAddToggle.addEventListener('click', () => medAddForm.classList.toggle('hidden'));
+        medAddForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('medName').value.trim();
+            const dose = document.getElementById('medDose').value.trim();
+            const time = document.getElementById('medTime').value;
+            if (!name || !dose || !time) return;
+            const saveBtn = document.getElementById('medAddSave');
+            saveBtn.disabled = true;
+            try {
+                const m = await CCApi.post('/medications/', { name, dose, time });
+                state.meds.push({ id: m.id, live: true, name: m.name, dose: m.dose, time: m.time, taken: !!m.taken_today });
+                state.meds.sort((a, b) => String(a.time).localeCompare(String(b.time)));
+                medAddForm.reset();
+                medAddForm.classList.add('hidden');
+                renderCarePlan();
+                showToast(T('toast.medAdded', 'Medication added'));
+            } catch (err) {
+                showToast(T('cp.err', 'Something went wrong - please try again.'), 'warn');
+            }
+            saveBtn.disabled = false;
+        });
+    }
     renderCarePlan();
 
     // --- Timeline filter chips ---

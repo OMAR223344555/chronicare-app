@@ -22,6 +22,8 @@ class AuditLog(models.Model):
         ACTIVATE = "activate", "Account reactivated"
         DELETE = "delete", "Account deleted"
         APPOINTMENT = "appointment", "Appointment booked or changed"
+        MED_ADD = "med_add", "Medication added, changed or removed"
+        MED_TAKEN = "med_taken", "Dose marked taken"
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,

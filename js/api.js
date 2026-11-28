@@ -299,10 +299,23 @@ window.CCApi = (function () {
 
     // ---- hydration -------------------------------------------------------
     async function hydratePatient(state, condLabels, catLabels) {
-        const [cats, conds, testTypes, files, labs, shares, notes] = await Promise.all([
+        const [cats, conds, testTypes, files, labs, shares, notes, meds, appts] = await Promise.all([
             all('/categories/'), all('/conditions/'), all('/lab-test-types/'),
             all('/files/'), all('/lab-results/'), all('/shares/'), all('/notes/'),
+            all('/medications/'), all('/appointments/'),
         ]);
+        const nowTs = Date.now();
+        state.meds = meds.map(m => ({
+            id: m.id, live: true, name: m.name, dose: m.dose, time: m.time, taken: !!m.taken_today,
+        }));
+        state.appointments = appts
+            .filter(a => ['pending', 'confirmed'].includes(a.status) && new Date(a.scheduled_at).getTime() > nowTs)
+            .map(a => ({
+                id: a.id, live: true, doctor: a.doctor_name || '', spec: a.doctor_specialty || '',
+                date: String(a.scheduled_at).slice(0, 10),
+                time: new Date(a.scheduled_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+                place: a.reason || '',
+            }));
         refs.cats = cats; refs.conds = conds; refs.testTypes = testTypes;
         conds.forEach(c => { c._key = keyOf(c.name, COND_KEY); condLabels[c._key] = c.name; });
         cats.forEach(c => { c._key = keyOf(c.name, CAT_KEY); catLabels[c._key] = c.name; });
