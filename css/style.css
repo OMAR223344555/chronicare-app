@@ -2408,8 +2408,12 @@ html.dark .records-table tbody tr:hover { background: #10233a; }
 
 /* Auth bottom: the clearance for the floating buttons lives inside the form
    panel's own background, so the page background never shows as a separate
-   flat band beneath the panels - on mobile and desktop alike. */
-#auth-view .form-section { padding-bottom: 110px; }
+   flat band beneath the panels. Mobile only: on desktop the fixed buttons
+   sit far right of the centered form content, and extra padding would just
+   force a scroll on short viewports (e.g. 1280x720). */
+@media (max-width: 767px) {
+    #auth-view .form-section { padding-bottom: 110px; }
+}
 
 /* The white wave divider was drawn for the light form; recolor it to the
    dark form background in dark mode so it stops looking like a white scar. */
